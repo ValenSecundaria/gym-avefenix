@@ -30,6 +30,7 @@ export interface DashboardStats {
   activeMembers: number;
   debtorsCount: number;
   absentCount: number;
+  expiringSoonCount: number; // cuota al día que vence en los próximos 7 días
   monthlyRevenue: number;
 }
 
@@ -120,7 +121,6 @@ export interface AttendanceAnalytics {
     visitsSoFar: number;
     typicalSoFar: number;
     pctVsTypical: number | null;
-    estimatedInGymNow: number;
     hourly: HourlyPoint[];
   };
   weeklyTrend: WeeklyTrendPoint[];

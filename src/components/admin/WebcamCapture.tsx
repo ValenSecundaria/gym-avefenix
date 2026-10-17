@@ -92,24 +92,24 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
 
   return (
     <div className="flex flex-col gap-3 w-full">
-      <label className="text-xs sm:text-sm text-[#F4F5F7] font-bold flex items-center gap-2">
-        <Camera className="w-4 h-4 text-[#F95716]" />
+      <label className="text-xs sm:text-sm text-fx-text font-bold flex items-center gap-2">
+        <Camera className="w-4 h-4 text-fx-orange" />
         <span>Foto de Identificación Biométrica</span>
       </label>
 
-      <div className="relative w-full aspect-4/3 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] overflow-hidden flex items-center justify-center">
+      <div className="relative w-full aspect-4/3 rounded-xl bg-fx-base border border-fx-border overflow-hidden flex items-center justify-center">
         {capturedUrl ? (
           <img src={capturedUrl} alt="Vista previa del socio" className="w-full h-full object-cover" />
         ) : cameraActive ? (
           <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
         ) : (
-          <div className="p-6 text-center flex flex-col items-center gap-2 text-[#8A909A]">
-            <VideoOff className="w-9 h-9 text-[#F95716]" />
+          <div className="p-6 text-center flex flex-col items-center gap-2 text-fx-muted">
+            <VideoOff className="w-9 h-9 text-fx-orange" />
             <p className="text-xs">{cameraError || "Cámara en espera"}</p>
           </div>
         )}
-        <div className="absolute inset-3 rounded-xl border-2 border-dashed border-[#F95716]/60 pointer-events-none flex items-end justify-center pb-2">
-          <span className="text-[11px] bg-[#0B0B0C]/80 border border-[#F95716]/40 text-[#F4F5F7] px-3 py-0.5 rounded-full font-semibold">
+        <div className="absolute inset-3 rounded-xl border-2 border-dashed border-fx-orange/60 pointer-events-none flex items-end justify-center pb-2">
+          <span className="text-[11px] bg-fx-base/80 border border-fx-orange/40 text-fx-text px-3 py-0.5 rounded-full font-semibold">
             {capturedUrl ? "✓ Foto Capturada" : "Encuadrar Rostro"}
           </span>
         </div>
@@ -117,24 +117,24 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
       </div>
 
       {capturedUrl ? (
-        <button type="button" onClick={handleRetake} className="min-h-[48px] w-full rounded-xl bg-[#23232A] hover:bg-[#2C2D35] border border-[#2C2D35] text-sm font-bold text-[#F4F5F7] inline-flex items-center justify-center gap-2 cursor-pointer">
-          <RefreshCw className="w-4 h-4 text-[#F95716]" />
+        <button type="button" onClick={handleRetake} className="min-h-[48px] w-full rounded-xl bg-fx-hover hover:bg-fx-border border border-fx-border text-sm font-bold text-fx-text inline-flex items-center justify-center gap-2 cursor-pointer">
+          <RefreshCw className="w-4 h-4 text-fx-orange" />
           <span>Volver a sacar foto</span>
         </button>
       ) : (
-        <button type="button" onClick={handleCapture} disabled={!cameraActive} className="min-h-[48px] w-full rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-white font-bold text-sm inline-flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(249,87,22,0.35)] disabled:opacity-40 cursor-pointer">
+        <button type="button" onClick={handleCapture} disabled={!cameraActive} className="min-h-[48px] w-full rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-bold text-sm inline-flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(249,87,22,0.35)] disabled:opacity-40 cursor-pointer">
           <Camera className="w-4 h-4" />
           <span>📷 Tomar Foto del Socio</span>
         </button>
       )}
 
       <div className="flex items-center justify-between px-1 text-xs">
-        <span className="text-[#10B981] font-bold inline-flex items-center gap-1">
+        <span className="text-fx-green font-bold inline-flex items-center gap-1">
           <CheckCircle2 className="w-3.5 h-3.5" />
           {cameraActive ? "Cámara Frontal HD Activa" : "Modo Archivo / Captura"}
         </span>
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} className="hidden" />
-        <button type="button" onClick={() => fileInputRef.current?.click()} className="text-[#8A909A] hover:text-[#F95716] underline inline-flex items-center gap-1 cursor-pointer">
+        <button type="button" onClick={() => fileInputRef.current?.click()} className="text-fx-muted hover:text-fx-orange underline inline-flex items-center gap-1 cursor-pointer">
           <Upload className="w-3.5 h-3.5" />
           <span>Subir foto local</span>
         </button>

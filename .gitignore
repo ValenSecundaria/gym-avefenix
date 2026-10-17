@@ -45,3 +45,5 @@ next-env.d.ts
 .antigravity/**
 .agents/
 .agents/**
+# Configuración local de Claude Code
+.claude/

@@ -39,3 +39,53 @@ body {
   color: #F4F5F7;
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* -------------------------------------------------------------
+   Tema del panel de administración (oscuro por defecto, claro opcional).
+   Los componentes de /admin usan solo estas variables (--fx-*).
+   ------------------------------------------------------------- */
+:root {
+  --fx-base: #0B0B0C;
+  --fx-surface: #17171C;
+  --fx-hover: #23232A;
+  --fx-border: #2C2D35;
+  --fx-text: #F4F5F7;
+  --fx-muted: #8A909A;
+  --fx-orange: #F95716;
+  --fx-red: #D92614;
+  --fx-amber: #FFB300;
+  --fx-green: #10B981;
+}
+
+/* Colores de acento oscurecidos en claro para que el texto mantenga contraste sobre blanco. */
+[data-theme="light"] {
+  --fx-base: #F4F5F7;
+  --fx-surface: #FFFFFF;
+  --fx-hover: #ECEDF1;
+  --fx-border: #DCDEE4;
+  --fx-text: #16171C;
+  --fx-muted: #5F6570;
+  --fx-orange: #E04E12;
+  --fx-red: #C4210F;
+  --fx-amber: #B26F00;
+  --fx-green: #05875F;
+}
+
+/* Expone las variables como colores de Tailwind (bg-fx-orange, text-fx-text/60, ...).
+   "inline" hace que cada clase lea la variable en su lugar, así el tema claro las pisa. */
+@theme inline {
+  --color-fx-base: var(--fx-base);
+  --color-fx-surface: var(--fx-surface);
+  --color-fx-hover: var(--fx-hover);
+  --color-fx-border: var(--fx-border);
+  --color-fx-text: var(--fx-text);
+  --color-fx-muted: var(--fx-muted);
+  --color-fx-orange: var(--fx-orange);
+  --color-fx-red: var(--fx-red);
+  --color-fx-amber: var(--fx-amber);
+  --color-fx-green: var(--fx-green);
+}
+
+body:has([data-theme="light"]) {
+  background-color: #F4F5F7;
+}

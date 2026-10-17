@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Activity, AlertOctagon, UserMinus, CheckCircle2, Search, BarChart3 } from "lucide-react";
+import { CheckCircle2, Menu, Search } from "lucide-react";
 import type {
   AbsentMemberItem,
   DashboardStats,
@@ -15,14 +15,16 @@ import { LiveFeedTable } from "./LiveFeedTable";
 import { DebtorsTable } from "./DebtorsTable";
 import { AbsentMembersTable } from "./AbsentMembersTable";
 import { MetricsPanel } from "./MetricsPanel";
+import { ADMIN_SECTIONS, AdminSidebar } from "./AdminSidebar";
 import { NewMemberModal, type NewMemberFormValues } from "./NewMemberModal";
 import { PaymentModal } from "./PaymentModal";
 import { createMember } from "@/actions/members.actions";
 import { registerPayment } from "@/actions/payments.actions";
 import { getDashboardOverview } from "@/actions/dashboard.actions";
 import { getTodayCheckIns } from "@/actions/checkin.actions";
+import { useAdminTheme, type AdminTheme } from "@/lib/use-admin-theme";
 
-type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "METRICS";
+export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "METRICS";
 
 interface AdminDashboardClientProps {
   initialStats: DashboardStats;
@@ -30,6 +32,7 @@ interface AdminDashboardClientProps {
   initialDebtors: DebtorMemberItem[];
   initialAbsent: AbsentMemberItem[];
   plans: PlanOption[];
+  initialTheme: AdminTheme;
 }
 
 export function AdminDashboardClient({
@@ -38,6 +41,7 @@ export function AdminDashboardClient({
   initialDebtors,
   initialAbsent,
   plans,
+  initialTheme,
 }: AdminDashboardClientProps) {
   const [activeTab, setActiveTab] = useState<AdminTab>("LIVE_FEED");
   const [stats, setStats] = useState<DashboardStats>(initialStats);
@@ -49,6 +53,10 @@ export function AdminDashboardClient({
   const [isNewMemberOpen, setIsNewMemberOpen] = useState(false);
   const [selectedDebtor, setSelectedDebtor] = useState<DebtorMemberItem | null>(null);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
+  const { theme, toggleTheme } = useAdminTheme(initialTheme);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
   const refreshAllData = useCallback(async () => {
     setIsRefreshing(true);
@@ -101,58 +109,59 @@ export function AdminDashboardClient({
 
   const q = searchQuery.trim().toLowerCase();
   const match = (name: string, dni: string) => !q || name.toLowerCase().includes(q) || dni.includes(q);
-  const tabCls = (t: AdminTab) =>
-    `min-h-[52px] px-5 rounded-xl text-sm font-bold inline-flex items-center gap-2.5 transition-all cursor-pointer ${
-      activeTab === t ? "bg-[#F95716] text-white shadow-[0_0_16px_rgba(249,87,22,0.35)]" : "bg-[#0B0B0C] border border-[#2C2D35] text-[#8A909A] hover:text-[#F4F5F7]"
-    }`;
+  const section = ADMIN_SECTIONS.find((s) => s.tab === activeTab) || ADMIN_SECTIONS[0];
+  const SectionIcon = section.icon;
 
   return (
-    <div className="min-h-screen bg-[#0B0B0C] text-[#F4F5F7] p-4 sm:p-6 lg:p-8">
+    <div data-theme={theme} className="min-h-screen bg-fx-base text-fx-text flex">
+      <AdminSidebar
+        activeTab={activeTab}
+        onSelect={setActiveTab}
+        counts={{ LIVE_FEED: checkIns.length, DEBTORS: debtors.length, ABSENT: absentMembers.length }}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={closeMobileMenu}
+      />
+
+      <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <HeaderStats stats={stats} onOpenNewMember={() => setIsNewMemberOpen(true)} onRefresh={refreshAllData} isRefreshing={isRefreshing} />
+        <HeaderStats stats={stats} onOpenNewMember={() => setIsNewMemberOpen(true)} onRefresh={refreshAllData} isRefreshing={isRefreshing} theme={theme} onToggleTheme={toggleTheme} />
 
         {feedbackBanner && (
-          <div className="flex items-center gap-2.5 p-4 rounded-2xl bg-[#10B981]/15 border border-[#10B981] text-sm font-bold text-[#10B981]">
+          <div className="flex items-center gap-2.5 p-4 rounded-2xl bg-fx-green/15 border border-fx-green text-sm font-bold text-fx-green">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <span>{feedbackBanner}</span>
           </div>
         )}
 
-        <div className="flex flex-col rounded-2xl bg-[#17171C] border border-[#2C2D35] shadow-lg p-5 sm:p-6 gap-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-[#2C2D35]">
-            <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={() => setActiveTab("LIVE_FEED")} className={tabCls("LIVE_FEED")}>
-                <Activity className="w-4 h-4" />
-                <span>Ingresos de Hoy (En Vivo)</span>
-                <span className="px-2.5 py-0.5 text-xs font-mono rounded-full bg-black/40 text-white">{checkIns.length}</span>
+        <div className="flex flex-col rounded-2xl bg-fx-surface border border-fx-border shadow-lg p-5 sm:p-6 gap-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-fx-border">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Abrir menú"
+                className="lg:hidden w-11 h-11 rounded-xl bg-fx-base border border-fx-border flex items-center justify-center text-fx-text cursor-pointer"
+              >
+                <Menu className="w-5 h-5" />
               </button>
-              <button type="button" onClick={() => setActiveTab("DEBTORS")} className={tabCls("DEBTORS")}>
-                <AlertOctagon className="w-4 h-4" />
-                <span>Cuotas Pendientes y Deudores</span>
-                <span className="px-2.5 py-0.5 text-xs font-mono rounded-full bg-[#D92614]/20 border border-[#D92614]/40 text-[#D92614]">{debtors.length}</span>
-              </button>
-              <button type="button" onClick={() => setActiveTab("ABSENT")} className={tabCls("ABSENT")}>
-                <UserMinus className="w-4 h-4" />
-                <span>Socios Ausentes / Recuperación</span>
-                <span className="px-2.5 py-0.5 text-xs font-mono rounded-full bg-[#FFB300]/20 border border-[#FFB300]/40 text-[#FFB300]">{absentMembers.length}</span>
-              </button>
-              <button type="button" onClick={() => setActiveTab("METRICS")} className={tabCls("METRICS")}>
-                <BarChart3 className="w-4 h-4" />
-                <span>Métricas de Asistencia</span>
-              </button>
+              <SectionIcon className="w-5 h-5 text-fx-orange" />
+              <h2 className="text-lg font-extrabold text-fx-text">{section.label}</h2>
             </div>
 
             <div className={`relative w-full lg:w-72 ${activeTab === "METRICS" ? "hidden" : ""}`}>
-              <Search className="w-4 h-4 text-[#8A909A] absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar por DNI o apellido..." className="w-full min-h-[48px] pl-10 pr-4 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] focus:border-[#F95716] focus:outline-none text-sm text-[#F4F5F7]" />
+              <Search className="w-4 h-4 text-fx-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar por DNI o apellido..." className="w-full min-h-[48px] pl-10 pr-4 rounded-xl bg-fx-base border border-fx-border focus:border-fx-orange focus:outline-none text-sm text-fx-text" />
             </div>
           </div>
 
           {activeTab === "LIVE_FEED" && <LiveFeedTable items={checkIns.filter((c) => match(c.fullName, c.dni))} />}
           {activeTab === "DEBTORS" && <DebtorsTable debtors={debtors.filter((d) => match(d.fullName, d.dni))} onRegisterPayment={setSelectedDebtor} />}
           {activeTab === "ABSENT" && <AbsentMembersTable absentMembers={absentMembers.filter((a) => match(a.fullName, a.dni))} />}
-          {activeTab === "METRICS" && <MetricsPanel />}
+          {activeTab === "METRICS" && <MetricsPanel stats={stats} onGoToTab={setActiveTab} />}
         </div>
+      </div>
       </div>
 
       <NewMemberModal isOpen={isNewMemberOpen} onClose={() => setIsNewMemberOpen(false)} plans={plans} onSubmitMember={handleCreateMember} />

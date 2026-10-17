@@ -57,6 +57,7 @@ export async function getDashboardOverview(): Promise<ActionResponse<DashboardOv
     const debtors: DebtorMemberItem[] = [];
     const absentMembers: AbsentMemberItem[] = [];
     let activeMembersCount = 0;
+    let expiringSoonCount = 0;
 
     for (const member of members) {
       const latestMembership = member.memberships[0];
@@ -64,7 +65,10 @@ export async function getDashboardOverview(): Promise<ActionResponse<DashboardOv
       const photoUrl = getMemberPhotoUrl(member.dni, member.photoFilename);
       const isCurrent =
         latestMembership && latestMembership.status === "ACTIVA" && latestMembership.validUntil >= now;
-      if (isCurrent) activeMembersCount++;
+      if (isCurrent) {
+        activeMembersCount++;
+        if (latestMembership.validUntil.getTime() - now.getTime() <= 7 * MS_PER_DAY) expiringSoonCount++;
+      }
 
       // Ausente = dejó de venir (sin ingresos en ABSENT_DAYS_THRESHOLD días), tenga o no la cuota al día.
       // Un ausente no se lista como deudor: es para recuperar, no para cobrar en mostrador.
@@ -110,6 +114,7 @@ export async function getDashboardOverview(): Promise<ActionResponse<DashboardOv
       activeMembers: activeMembersCount,
       debtorsCount: debtors.length,
       absentCount: absentMembers.length,
+      expiringSoonCount,
       monthlyRevenue: Number(monthlyPaymentAgg._sum.amount || 0),
     };
 

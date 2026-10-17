@@ -19,7 +19,7 @@ interface PaymentModalProps {
 }
 
 const INPUT_CLS =
-  "w-full min-h-[48px] px-3.5 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] focus:border-[#F95716] focus:outline-none text-sm text-[#F4F5F7]";
+  "w-full min-h-[48px] px-3.5 rounded-xl bg-fx-base border border-fx-border focus:border-fx-orange focus:outline-none text-sm text-fx-text";
 
 export function PaymentModal({ debtor, plans, onClose, onConfirmPayment }: PaymentModalProps) {
   const [selectedPlanId, setSelectedPlanId] = useState(debtor?.planId || plans[0]?.id || "");
@@ -57,33 +57,33 @@ export function PaymentModal({ debtor, plans, onClose, onConfirmPayment }: Payme
 
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-lg bg-[#17171C] border border-[#2C2D35] rounded-3xl shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2C2D35] bg-[#0B0B0C]/60">
+      <div className="w-full max-w-lg bg-fx-surface border border-fx-border rounded-3xl shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-fx-border bg-fx-base/60">
           <div className="flex items-center gap-2.5">
-            <CreditCard className="w-5 h-5 text-[#F95716]" />
-            <h2 className="text-lg font-extrabold text-[#F4F5F7]">Registrar Cobro de Cuota</h2>
+            <CreditCard className="w-5 h-5 text-fx-orange" />
+            <h2 className="text-lg font-extrabold text-fx-text">Registrar Cobro de Cuota</h2>
           </div>
-          <button type="button" onClick={onClose} disabled={isSubmitting} className="min-h-[48px] min-w-[48px] rounded-xl bg-[#23232A] hover:bg-[#2C2D35] text-[#8A909A] hover:text-[#F4F5F7] flex items-center justify-center cursor-pointer">
+          <button type="button" onClick={onClose} disabled={isSubmitting} className="min-h-[48px] min-w-[48px] rounded-xl bg-fx-hover hover:bg-fx-border text-fx-muted hover:text-fx-text flex items-center justify-center cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-[#D92614]/20 border border-[#D92614] text-sm text-[#F4F5F7]">
-              <AlertCircle className="w-4 h-4 text-[#D92614] shrink-0" />
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-fx-red/20 border border-fx-red text-sm text-fx-text">
+              <AlertCircle className="w-4 h-4 text-fx-red shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          <div className="p-4 rounded-2xl bg-[#0B0B0C] border border-[#2C2D35]">
-            <p className="text-xs font-bold uppercase text-[#8A909A]">Socio</p>
-            <p className="text-base font-extrabold text-[#F4F5F7] mt-0.5">{debtor.fullName}</p>
-            <p className="text-xs font-mono text-[#8A909A]">DNI: {debtor.dni}</p>
+          <div className="p-4 rounded-2xl bg-fx-base border border-fx-border">
+            <p className="text-xs font-bold uppercase text-fx-muted">Socio</p>
+            <p className="text-base font-extrabold text-fx-text mt-0.5">{debtor.fullName}</p>
+            <p className="text-xs font-mono text-fx-muted">DNI: {debtor.dni}</p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase text-[#8A909A] mb-1.5">Plan a Renovar</label>
+            <label className="block text-xs font-bold uppercase text-fx-muted mb-1.5">Plan a Renovar</label>
             <select value={activePlan?.id || ""} onChange={(e) => setSelectedPlanId(e.target.value)} className={INPUT_CLS}>
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>{p.name} — {formatCurrencyARS(p.price)} ({p.durationDays} días)</option>
@@ -92,7 +92,7 @@ export function PaymentModal({ debtor, plans, onClose, onConfirmPayment }: Payme
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase text-[#8A909A] mb-1.5">Método de Pago</label>
+            <label className="block text-xs font-bold uppercase text-fx-muted mb-1.5">Método de Pago</label>
             <div className="grid grid-cols-2 gap-2.5">
               {(["EFECTIVO", "TRANSFERENCIA"] as PaymentMethodType[]).map((m) => (
                 <button
@@ -100,7 +100,7 @@ export function PaymentModal({ debtor, plans, onClose, onConfirmPayment }: Payme
                   type="button"
                   onClick={() => setMethod(m)}
                   className={`min-h-[48px] rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                    method === m ? "bg-[#F95716]/20 border-[#F95716] text-[#F4F5F7]" : "bg-[#0B0B0C] border-[#2C2D35] text-[#8A909A] hover:text-[#F4F5F7]"
+                    method === m ? "bg-fx-orange/20 border-fx-orange text-fx-text" : "bg-fx-base border-fx-border text-fx-muted hover:text-fx-text"
                   }`}
                 >
                   {m}
@@ -110,20 +110,20 @@ export function PaymentModal({ debtor, plans, onClose, onConfirmPayment }: Payme
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase text-[#8A909A] mb-1.5">Notas (Opcional)</label>
+            <label className="block text-xs font-bold uppercase text-fx-muted mb-1.5">Notas (Opcional)</label>
             <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej: Comprobante transferencia..." className={INPUT_CLS} />
           </div>
 
-          <div className="pt-4 border-t border-[#2C2D35] flex items-center justify-between">
+          <div className="pt-4 border-t border-fx-border flex items-center justify-between">
             <div>
-              <span className="text-xs text-[#8A909A] block">Total a cobrar</span>
-              <span className="text-2xl font-extrabold text-[#10B981]">{formatCurrencyARS(amount)}</span>
+              <span className="text-xs text-fx-muted block">Total a cobrar</span>
+              <span className="text-2xl font-extrabold text-fx-green">{formatCurrencyARS(amount)}</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <button type="button" onClick={onClose} disabled={isSubmitting} className="min-h-[48px] px-4 rounded-xl bg-[#23232A] text-sm font-bold text-[#8A909A] hover:text-[#F4F5F7] cursor-pointer">
+              <button type="button" onClick={onClose} disabled={isSubmitting} className="min-h-[48px] px-4 rounded-xl bg-fx-hover text-sm font-bold text-fx-muted hover:text-fx-text cursor-pointer">
                 Cancelar
               </button>
-              <button type="submit" disabled={isSubmitting} className="min-h-[48px] px-5 rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-sm font-extrabold text-[#F4F5F7] inline-flex items-center gap-2 shadow-lg shadow-[#F95716]/25 disabled:opacity-50 cursor-pointer">
+              <button type="submit" disabled={isSubmitting} className="min-h-[48px] px-5 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-sm font-extrabold text-white inline-flex items-center gap-2 shadow-lg shadow-fx-orange/25 disabled:opacity-50 cursor-pointer">
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 <span>Confirmar Cobro</span>
               </button>

@@ -1,6 +1,8 @@
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { connection } from "next/server";
+import { ADMIN_THEME_COOKIE } from "@/lib/constants";
 import { getDashboardOverview } from "@/actions/dashboard.actions";
 import { getTodayCheckIns } from "@/actions/checkin.actions";
 import { AdminDashboardClient } from "@/components/admin/AdminDashboardClient";
@@ -12,6 +14,8 @@ export const metadata: Metadata = {
 
 async function AdminDashboardLoader() {
   await connection();
+  const cookieStore = await cookies();
+  const initialTheme = cookieStore.get(ADMIN_THEME_COOKIE)?.value === "light" ? "light" : "dark";
   const [overviewRes, checkInsRes] = await Promise.all([
     getDashboardOverview(),
     getTodayCheckIns(),
@@ -23,6 +27,7 @@ async function AdminDashboardLoader() {
       activeMembers: 0,
       debtorsCount: 0,
       absentCount: 0,
+      expiringSoonCount: 0,
       monthlyRevenue: 0,
     },
     debtors: [],
@@ -39,6 +44,7 @@ async function AdminDashboardLoader() {
       initialDebtors={overview.debtors}
       initialAbsent={overview.absentMembers}
       plans={overview.plans}
+      initialTheme={initialTheme}
     />
   );
 }

@@ -2,7 +2,7 @@
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { AVG_STAY_MINUTES, GYM_TIMEZONE } from "@/lib/constants";
+import { GYM_TIMEZONE } from "@/lib/constants";
 import type {
   ActionResponse,
   AnalyticsPeriodDays,
@@ -93,7 +93,7 @@ export async function getAttendanceAnalytics(
     const historyStart = addDays(today, -Math.max(periodDays, TREND_MIN_DAYS));
     const frequencyStart = addDays(today, -FREQUENCY_WINDOW_DAYS);
 
-    const [heatmapRows, dailyRows, todayRows, frequencyRows, inGymNow, rejectedRows] = await Promise.all([
+    const [heatmapRows, dailyRows, todayRows, frequencyRows, rejectedRows] = await Promise.all([
       prisma.$queryRaw<{ dow: number; hour: number; n: number }[]>`
         ${visitsCte(periodStart, today)}
         SELECT EXTRACT(ISODOW FROM first_ts)::int AS dow, EXTRACT(HOUR FROM first_ts)::int AS hour, count(*)::int AS n
@@ -111,10 +111,6 @@ export async function getAttendanceAnalytics(
         SELECT days, count(*)::int AS members
         FROM (SELECT "memberId", count(*)::int AS days FROM visits GROUP BY 1) t
         GROUP BY days`,
-      prisma.checkIn.groupBy({
-        by: ["memberId"],
-        where: { status: "HABILITADO", createdAt: { gte: new Date(now.getTime() - AVG_STAY_MINUTES * 60_000) } },
-      }),
       prisma.checkIn.groupBy({
         by: ["status"],
         _count: { _all: true },
@@ -233,7 +229,6 @@ export async function getAttendanceAnalytics(
           visitsSoFar,
           typicalSoFar: round1(typicalSoFar),
           pctVsTypical: pctChange(visitsSoFar, typicalSoFar),
-          estimatedInGymNow: inGymNow.length,
           hourly,
         },
         weeklyTrend,
