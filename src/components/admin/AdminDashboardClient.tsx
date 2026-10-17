@@ -23,6 +23,8 @@ import { registerPayment } from "@/actions/payments.actions";
 import { getDashboardOverview } from "@/actions/dashboard.actions";
 import { getTodayCheckIns } from "@/actions/checkin.actions";
 import { useAdminTheme, type AdminTheme } from "@/lib/use-admin-theme";
+import { gymBroadcast } from "@/lib/screens/broadcast-channel";
+import { useAuthSession } from "@/context/auth-session-context";
 
 export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "METRICS";
 
@@ -54,9 +56,16 @@ export function AdminDashboardClient({
   const [selectedDebtor, setSelectedDebtor] = useState<DebtorMemberItem | null>(null);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
   const { theme, toggleTheme } = useAdminTheme(initialTheme);
+  const { status: authStatus } = useAuthSession();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
+
+  useEffect(() => {
+    if (authStatus === "UNAUTHENTICATED") {
+      window.location.href = "/login";
+    }
+  }, [authStatus]);
 
   const refreshAllData = useCallback(async () => {
     setIsRefreshing(true);
@@ -75,7 +84,15 @@ export function AdminDashboardClient({
 
   useEffect(() => {
     const interval = window.setInterval(refreshAllData, 15000);
-    return () => window.clearInterval(interval);
+    const unsubscribe = gymBroadcast.subscribe((msg) => {
+      if (msg.type === "CHECKIN_EVENT" || msg.type === "REFRESH_DASHBOARD") {
+        refreshAllData();
+      }
+    });
+    return () => {
+      window.clearInterval(interval);
+      unsubscribe();
+    };
   }, [refreshAllData]);
 
   const showToast = (msg: string) => {

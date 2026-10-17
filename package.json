@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "demo:seed": "node --env-file=.env scripts/demo-data/seed.mjs",
-    "demo:clear": "node --env-file=.env scripts/demo-data/clear.mjs"
+    "demo:clear": "node --env-file=.env scripts/demo-data/clear.mjs",
+    "pwa:icons": "node scripts/pwa/generate-icons.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

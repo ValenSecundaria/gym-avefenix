@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Flame, LayoutDashboard } from "lucide-react";
 import type { CheckInVerificationResult } from "@/types";
+import { gymBroadcast } from "@/lib/screens/broadcast-channel";
 import { KeypadInput } from "./KeypadInput";
 import { MemberResultCard } from "./MemberResultCard";
 import { IdleDisplay } from "./IdleDisplay";
@@ -25,6 +26,21 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
   const [currentResult, setCurrentResult] = useState<CheckInVerificationResult | null>(null);
   const [lastEnabledResult, setLastEnabledResult] = useState<CheckInVerificationResult | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+
+  // Sincronización inter-pantallas mediante BroadcastChannel
+  useEffect(() => {
+    const unsubscribe = gymBroadcast.subscribe((msg) => {
+      if (msg.type === "RESET_CHECKIN") {
+        setCurrentResult(null);
+        setDniInput("");
+      } else if (msg.type === "REQUEST_FULLSCREEN") {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      }
+    });
+    return unsubscribe;
+  }, []);
 
   // Regla 03: CUOTA_VENCIDA o LIMITE_ALCANZADO se borra a los 60s y vuelve a reposo o último HABILITADO
   useEffect(() => {
@@ -62,6 +78,9 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
       const verified = response.data;
       setCurrentResult(verified);
       setDniInput("");
+
+      // Notificar al Dashboard de recepción en vivo
+      gymBroadcast.postMessage({ type: "CHECKIN_EVENT", payload: verified });
 
       if (verified.status === "HABILITADO") {
         setLastEnabledResult(verified);

@@ -4,14 +4,18 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Flame, Lock, User, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
-import { authenticateUser } from "@/actions/auth.actions";
+import { useAuthSession } from "@/context/auth-session-context";
+import { warmCacheRoutes } from "@/lib/pwa/register-sw";
+import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
 
 export function LoginForm() {
   const router = useRouter();
+  const { login } = useAuthSession();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsManualLaunch, setNeedsManualLaunch] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,19 +23,70 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      const res = await authenticateUser({ username: username.trim(), password });
-      if (!res.success) {
-        setError(res.error || "Credenciales inválidas");
+      const outcome = await login(username.trim(), password);
+      if (!outcome.ok) {
+        setError(outcome.error || "Credenciales inválidas");
+        setIsLoading(false);
         return;
       }
+
+      warmCacheRoutes(["/admin", "/check-in"]);
+
+      const dispatchRes = await dispatchScreens();
+      if (dispatchRes.popupBlocked) {
+        setNeedsManualLaunch(true);
+        setIsLoading(false);
+        return;
+      }
+
       router.push("/admin");
       router.refresh();
     } catch {
       setError("Error de conexión al intentar iniciar sesión.");
-    } finally {
       setIsLoading(false);
     }
   };
+
+  const handleManualLaunch = async () => {
+    setIsLoading(true);
+    await dispatchScreens();
+    router.push("/admin");
+    router.refresh();
+  };
+
+  if (needsManualLaunch) {
+    return (
+      <div className="w-full max-w-md bg-[#17171C] border border-[#2C2D35] rounded-3xl p-8 shadow-2xl">
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-[#F95716] flex items-center justify-center shadow-lg shadow-[#F95716]/30 mb-4">
+            <Flame className="w-8 h-8 text-[#F4F5F7]" />
+          </div>
+          <h1 className="text-2xl font-extrabold text-[#F4F5F7] uppercase tracking-tight">
+            Iniciando <span className="text-[#F95716]">Sistema...</span>
+          </h1>
+          <p className="text-sm text-[#8A909A] mt-1">
+            Sesión validada. Haz clic para desplegar el monitor de Check-In y acceder a recepción.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleManualLaunch}
+          disabled={isLoading}
+          className="w-full min-h-[48px] rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-[#F4F5F7] font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#F95716]/25 transition-all cursor-pointer disabled:opacity-50"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Desplegando...</span>
+            </>
+          ) : (
+            <span>Lanzar Pantallas</span>
+          )}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md bg-[#17171C] border border-[#2C2D35] rounded-3xl p-8 shadow-2xl">
