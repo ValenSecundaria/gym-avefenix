@@ -2,15 +2,18 @@ import fs from "fs/promises";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import {
-  generateFallbackAvatarWebp,
-  getLocalPhotosDir,
-} from "@/lib/photo-storage";
+import { getLocalPhotosDir } from "@/lib/photo-storage";
 
 const CACHE_HEADERS = {
-  "Content-Type": "image/webp",
+  "Content-Type": "image/jpeg",
   "Cache-Control": "public, max-age=86400, stale-while-revalidate=3600",
 };
+
+const LOGO_PATH = path.join(process.cwd(), "public", "Logo.jpeg");
+
+async function getFallbackLogo(): Promise<Buffer> {
+  return fs.readFile(LOGO_PATH);
+}
 
 export async function GET(
   request: NextRequest,
@@ -24,7 +27,6 @@ export async function GET(
     let targetFilename: string | null = versionFilename
       ? path.basename(versionFilename)
       : null;
-    let memberInitials = "AF";
 
     if (!targetFilename) {
       const member = await prisma.member.findUnique({
@@ -35,40 +37,48 @@ export async function GET(
       if (member?.photoFilename) {
         targetFilename = path.basename(member.photoFilename);
       }
-      if (member?.fullName) {
-        memberInitials = member.fullName
-          .split(" ")
-          .filter(Boolean)
-          .slice(0, 2)
-          .map((part) => part[0])
-          .join("");
-      }
     }
 
     if (targetFilename) {
-      const filePath = path.join(/*turbopackIgnore: true*/ getLocalPhotosDir(), targetFilename);
+      const filePath = path.join(
+        /*turbopackIgnore: true*/ getLocalPhotosDir(),
+        targetFilename
+      );
+
       try {
-        const buffer = await fs.readFile(/*turbopackIgnore: true*/ filePath);
+        const buffer = await fs.readFile(
+          /*turbopackIgnore: true*/ filePath
+        );
+
         return new NextResponse(new Uint8Array(buffer), {
           status: 200,
           headers: CACHE_HEADERS,
         });
       } catch {
-        // Si el archivo físico no existe en LOCAL_PHOTOS_PATH, se sirve avatar WebP de respaldo
+        // Si la foto no existe o no se puede leer,
+        // se utiliza el logo del sistema.
       }
     }
+  } catch (error) {
+    console.error(
+      "[GET /api/members/[dni]/photo] Error:",
+      error
+    );
+  }
 
-    const fallbackBuffer = await generateFallbackAvatarWebp(memberInitials);
+  try {
+    const fallbackBuffer = await getFallbackLogo();
+
     return new NextResponse(new Uint8Array(fallbackBuffer), {
       status: 200,
       headers: CACHE_HEADERS,
     });
   } catch (error) {
-    console.error("[GET /api/members/[dni]/photo] Error:", error);
-    const fallbackBuffer = await generateFallbackAvatarWebp("AF");
-    return new NextResponse(new Uint8Array(fallbackBuffer), {
-      status: 200,
-      headers: CACHE_HEADERS,
-    });
+    console.error(
+      "[GET /api/members/[dni]/photo] Error al leer el logo:",
+      error
+    );
+
+    return new NextResponse(null, { status: 500 });
   }
 }
