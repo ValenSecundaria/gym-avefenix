@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0B0B0C;
+  --foreground: #F4F5F7;
+  --fenix-dark: #0B0B0C;
+  --fenix-surface: #17171C;
+  --fenix-surface-hover: #23232A;
+  --fenix-border: #2C2D35;
+  --fenix-orange: #F95716;
+  --fenix-red: #D92614;
+  --fenix-gold: #FFB300;
+  --fenix-steel: #8A909A;
+  --fenix-light: #F4F5F7;
+  --fenix-success: #10B981;
+  --fenix-whatsapp: #25D366;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-fenix-dark: #0B0B0C;
+  --color-fenix-surface: #17171C;
+  --color-fenix-surfaceHover: #23232A;
+  --color-fenix-border: #2C2D35;
+  --color-fenix-orange: #F95716;
+  --color-fenix-red: #D92614;
+  --color-fenix-gold: #FFB300;
+  --color-fenix-steel: #8A909A;
+  --color-fenix-light: #F4F5F7;
+  --color-fenix-success: #10B981;
+  --color-fenix-whatsapp: #25D366;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background-color: #0B0B0C;
+  color: #F4F5F7;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
