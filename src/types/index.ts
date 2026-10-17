@@ -69,6 +69,67 @@ export interface AbsentMemberItem {
   daysAbsent: number;
 }
 
+// -------------------------------------------------------------
+// MÉTRICAS DE ASISTENCIA (panel de la dueña)
+// Una "visita" = primer ingreso HABILITADO de un socio en un día (hora local del gimnasio).
+// Días de la semana en formato ISO: 1 = lunes ... 7 = domingo.
+// -------------------------------------------------------------
+
+export type AnalyticsPeriodDays = 30 | 90 | 365;
+
+export interface HeatmapCell {
+  dow: number;
+  hour: number;
+  avgArrivals: number;
+}
+
+export interface WeekdayAttendance {
+  dow: number;
+  avgVisits: number | null; // null = el gimnasio no registró actividad ese día en el período
+  pctVsAverage: number | null;
+}
+
+export interface HourlyPoint {
+  hour: number;
+  today: number;
+  typical: number;
+}
+
+export interface WeeklyTrendPoint {
+  weekStart: string; // YYYY-MM-DD (lunes)
+  visits: number;
+}
+
+export interface FrequencyBucket {
+  label: string;
+  members: number;
+}
+
+export interface AttendanceAnalytics {
+  periodDays: AnalyticsPeriodDays;
+  totalVisits: number;
+  openDays: number;
+  avgDailyVisits: number;
+  heatmap: HeatmapCell[];
+  peakSlots: HeatmapCell[];
+  quietHours: { hour: number; avgArrivals: number }[];
+  weekdays: WeekdayAttendance[];
+  today: {
+    dow: number;
+    currentHour: number;
+    visitsSoFar: number;
+    typicalSoFar: number;
+    pctVsTypical: number | null;
+    estimatedInGymNow: number;
+    hourly: HourlyPoint[];
+  };
+  weeklyTrend: WeeklyTrendPoint[];
+  trendPct: number | null; // últimas 4 semanas vs las 4 anteriores
+  frequency: FrequencyBucket[];
+  avgVisitsPerWeek: number | null;
+  rejected: { cuotaVencida: number; limiteAlcanzado: number };
+}
+
 export interface PlanOption {
   id: string;
   name: string;

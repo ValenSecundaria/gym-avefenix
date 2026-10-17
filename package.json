@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "demo:seed": "node --env-file=.env scripts/demo-data/seed.mjs",
+    "demo:clear": "node --env-file=.env scripts/demo-data/clear.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -16,6 +18,7 @@
     "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "recharts": "^3.2.1",
     "sharp": "^0.35.5",
     "zod": "^4.6.7"
   },

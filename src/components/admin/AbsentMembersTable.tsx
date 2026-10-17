@@ -2,6 +2,7 @@ import React from "react";
 import { MessageCircle, CalendarClock, UserCheck, User } from "lucide-react";
 import type { AbsentMemberItem } from "@/types";
 import { buildWhatsAppLink, formatDateAR } from "@/lib/utils";
+import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 
 interface AbsentMembersTableProps {
   absentMembers: AbsentMemberItem[];
@@ -14,7 +15,7 @@ export function AbsentMembersTable({ absentMembers }: AbsentMembersTableProps) {
         <CalendarClock className="w-10 h-10 text-[#10B981] mx-auto mb-3" />
         <h3 className="text-lg font-bold text-[#F4F5F7]">Sin socios ausentes prolongados</h3>
         <p className="text-sm text-[#8A909A] mt-1">
-          No se registran socios activos con más de 15 días sin asistir al gimnasio.
+          No hay socios con más de {ABSENT_DAYS_THRESHOLD} días sin asistir al gimnasio.
         </p>
       </div>
     );
@@ -30,10 +31,10 @@ export function AbsentMembersTable({ absentMembers }: AbsentMembersTableProps) {
           </div>
           <div>
             <div className="font-bold text-base sm:text-lg text-[#F4F5F7]">
-              {absentMembers.length} Socios Ausentes (+15 días sin marcar ingreso)
+              {absentMembers.length} Socios Ausentes (+{ABSENT_DAYS_THRESHOLD} días sin marcar ingreso)
             </div>
             <div className="text-xs text-[#8A909A]">
-              Tienen cuota activa pero no registran accesos recientes. Campaña de reactivación Fénix recomendada.
+              Dejaron de venir al gimnasio. Campaña de reactivación Fénix recomendada.
             </div>
           </div>
         </div>

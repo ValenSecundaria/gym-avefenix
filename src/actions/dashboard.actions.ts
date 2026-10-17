@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getMemberPhotoUrl } from "@/lib/utils";
 import { ensureDefaultPlansExist } from "@/actions/members.actions";
+import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 import type {
   AbsentMemberItem,
   ActionResponse,
@@ -63,24 +64,24 @@ export async function getDashboardOverview(): Promise<ActionResponse<DashboardOv
       const photoUrl = getMemberPhotoUrl(member.dni, member.photoFilename);
       const isCurrent =
         latestMembership && latestMembership.status === "ACTIVA" && latestMembership.validUntil >= now;
+      if (isCurrent) activeMembersCount++;
 
-      if (isCurrent) {
-        activeMembersCount++;
-        const refDate = lastCheckIn ? lastCheckIn.createdAt : member.createdAt;
-        const daysAbsent = Math.floor((now.getTime() - refDate.getTime()) / MS_PER_DAY);
-        if (daysAbsent >= 15) {
-          absentMembers.push({
-            id: member.id,
-            dni: member.dni,
-            fullName: member.fullName,
-            phone: member.phone,
-            photoUrl,
-            planName: latestMembership.plan.name,
-            lastCheckInAt: lastCheckIn ? lastCheckIn.createdAt.toISOString() : null,
-            daysAbsent,
-          });
-        }
-      } else {
+      // Ausente = dejó de venir (sin ingresos en ABSENT_DAYS_THRESHOLD días), tenga o no la cuota al día.
+      // Un ausente no se lista como deudor: es para recuperar, no para cobrar en mostrador.
+      const refDate = lastCheckIn ? lastCheckIn.createdAt : member.createdAt;
+      const daysAbsent = Math.floor((now.getTime() - refDate.getTime()) / MS_PER_DAY);
+      if (daysAbsent >= ABSENT_DAYS_THRESHOLD) {
+        absentMembers.push({
+          id: member.id,
+          dni: member.dni,
+          fullName: member.fullName,
+          phone: member.phone,
+          photoUrl,
+          planName: latestMembership?.plan.name || "Sin plan",
+          lastCheckInAt: lastCheckIn ? lastCheckIn.createdAt.toISOString() : null,
+          daysAbsent,
+        });
+      } else if (!isCurrent) {
         const validUntilDate = latestMembership?.validUntil || null;
         const daysOverdue = validUntilDate
           ? Math.max(1, Math.floor((now.getTime() - validUntilDate.getTime()) / MS_PER_DAY))

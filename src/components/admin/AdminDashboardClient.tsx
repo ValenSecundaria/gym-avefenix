@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Activity, AlertOctagon, UserMinus, CheckCircle2, Search } from "lucide-react";
+import { Activity, AlertOctagon, UserMinus, CheckCircle2, Search, BarChart3 } from "lucide-react";
 import type {
   AbsentMemberItem,
   DashboardStats,
@@ -14,6 +14,7 @@ import { HeaderStats } from "./HeaderStats";
 import { LiveFeedTable } from "./LiveFeedTable";
 import { DebtorsTable } from "./DebtorsTable";
 import { AbsentMembersTable } from "./AbsentMembersTable";
+import { MetricsPanel } from "./MetricsPanel";
 import { NewMemberModal, type NewMemberFormValues } from "./NewMemberModal";
 import { PaymentModal } from "./PaymentModal";
 import { createMember } from "@/actions/members.actions";
@@ -21,7 +22,7 @@ import { registerPayment } from "@/actions/payments.actions";
 import { getDashboardOverview } from "@/actions/dashboard.actions";
 import { getTodayCheckIns } from "@/actions/checkin.actions";
 
-type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT";
+type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "METRICS";
 
 interface AdminDashboardClientProps {
   initialStats: DashboardStats;
@@ -135,9 +136,13 @@ export function AdminDashboardClient({
                 <span>Socios Ausentes / Recuperación</span>
                 <span className="px-2.5 py-0.5 text-xs font-mono rounded-full bg-[#FFB300]/20 border border-[#FFB300]/40 text-[#FFB300]">{absentMembers.length}</span>
               </button>
+              <button type="button" onClick={() => setActiveTab("METRICS")} className={tabCls("METRICS")}>
+                <BarChart3 className="w-4 h-4" />
+                <span>Métricas de Asistencia</span>
+              </button>
             </div>
 
-            <div className="relative w-full lg:w-72">
+            <div className={`relative w-full lg:w-72 ${activeTab === "METRICS" ? "hidden" : ""}`}>
               <Search className="w-4 h-4 text-[#8A909A] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar por DNI o apellido..." className="w-full min-h-[48px] pl-10 pr-4 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] focus:border-[#F95716] focus:outline-none text-sm text-[#F4F5F7]" />
             </div>
@@ -146,6 +151,7 @@ export function AdminDashboardClient({
           {activeTab === "LIVE_FEED" && <LiveFeedTable items={checkIns.filter((c) => match(c.fullName, c.dni))} />}
           {activeTab === "DEBTORS" && <DebtorsTable debtors={debtors.filter((d) => match(d.fullName, d.dni))} onRegisterPayment={setSelectedDebtor} />}
           {activeTab === "ABSENT" && <AbsentMembersTable absentMembers={absentMembers.filter((a) => match(a.fullName, a.dni))} />}
+          {activeTab === "METRICS" && <MetricsPanel />}
         </div>
       </div>
 

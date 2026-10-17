@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { DashboardStats } from "@/types";
 import { formatCurrencyARS } from "@/lib/utils";
+import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 
 interface HeaderStatsProps {
   stats: DashboardStats;
@@ -134,7 +135,7 @@ export function HeaderStats({
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-[#FFB300] font-bold uppercase tracking-wider flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#FFB300]" />
-              Socios Ausentes (+15 días)
+              Socios Ausentes (+{ABSENT_DAYS_THRESHOLD} días)
             </span>
             <div className="w-11 h-11 rounded-xl bg-[#FFB300]/15 border border-[#FFB300]/40 flex items-center justify-center text-[#FFB300]">
               <UserX className="w-5 h-5" />
