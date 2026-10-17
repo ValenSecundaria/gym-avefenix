@@ -19,26 +19,29 @@ export interface LoginCredentials {
   password?: string;
 }
 
-/**
- * Server action de inicio de sesión con soporte para:
- * 1. Hardcode de pruebas (admin / admin123)
- * 2. SuperAdmin y avefenix consultados en PostgreSQL con bcrypt.compare
- */
-export async function loginAction(
-  credentials: LoginCredentials
-): Promise<ActionResponse<AuthenticatedUser>> {
 async function ensureDefaultAdminExists(): Promise<void> {
-  const userCount = await prisma.user.count();
-  if (userCount === 0) {
-    const defaultPassword = process.env.ADMIN_INITIAL_PASSWORD || "admin123";
-    const passwordHash = await bcrypt.hash(defaultPassword, 10);
-    await prisma.user.create({
-      data: {
-        username: "admin",
-        passwordHash,
-        name: "Administrador AveFenix",
+  try {
+    const existingAdmin = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: "admin",
+          mode: "insensitive",
+        },
       },
     });
+    if (!existingAdmin) {
+      const defaultPassword = process.env.ADMIN_INITIAL_PASSWORD || "admin123";
+      const passwordHash = await bcrypt.hash(defaultPassword, 10);
+      await prisma.user.create({
+        data: {
+          username: "admin",
+          passwordHash,
+          name: "Administrador AveFenix",
+        },
+      });
+    }
+  } catch (error) {
+    console.warn("[ensureDefaultAdminExists] Advertencia al sincronizar admin:", error);
   }
 }
 
@@ -56,12 +59,18 @@ async function issueSessionCookies(user: AuthenticatedUser): Promise<AuthSession
   return { user, sessionToken, issuedAt };
 }
 
+/**
+ * Server action principal de autenticación:
+ * 1. Hardcode / acceso directo de pruebas con nick 'admin' y contraseña 'admin123'
+ * 2. Validación de usuarios en PostgreSQL (Superadmin, avefenix, etc.) con bcrypt
+ * 3. Emisión de cookies firmadas compatibles con proxy y SessionGuard
+ */
 export async function authenticateUser(
-  input: LoginInput
+  input: LoginInput | LoginCredentials
 ): Promise<ActionResponse<AuthSessionResult>> {
   try {
-    const username = (credentials?.username ?? "").trim();
-    const password = credentials?.password ?? "";
+    const username = (input?.username ?? "").trim();
+    const password = input?.password ?? "";
 
     if (!username || !password) {
       return {
@@ -70,29 +79,78 @@ export async function authenticateUser(
       };
     }
 
-    // Paso A (Hardcode de pruebas):
-    if (username === "admin" && password === "admin123") {
-      const mockUser: AuthenticatedUser = {
-        username: "admin",
-        name: "Administrador Pruebas",
-      };
+    // Paso A (Hardcode / Acceso rápido de pruebas: admin / admin123):
+    if (username.toLowerCase() === "admin" && password === "admin123") {
+      let adminUser: AuthenticatedUser | null = null;
+      try {
+        const dbAdmin = await prisma.user.findFirst({
+          where: {
+            username: {
+              equals: "admin",
+              mode: "insensitive",
+            },
+          },
+        });
 
-      await setSessionCookie(mockUser);
+        if (dbAdmin) {
+          adminUser = {
+            id: dbAdmin.id,
+            username: dbAdmin.username,
+            name: dbAdmin.name,
+          };
+        } else {
+          const passwordHash = await bcrypt.hash("admin123", 10);
+          const created = await prisma.user.create({
+            data: {
+              username: "admin",
+              passwordHash,
+              name: "Administrador AveFenix",
+            },
+          });
+          adminUser = {
+            id: created.id,
+            username: created.username,
+            name: created.name,
+          };
+        }
+      } catch (dbError) {
+        console.warn("[authenticateUser] Acceso admin fallback (DB no disponible):", dbError);
+        adminUser = {
+          id: "admin-master-id",
+          username: "admin",
+          name: "Administrador AveFenix",
+        };
+      }
+
+      const session = await issueSessionCookies(adminUser);
       return {
         success: true,
-        data: mockUser,
+        data: session,
       };
     }
 
+    // Sincronizar admin por defecto en base de datos si no existe
+    await ensureDefaultAdminExists();
+
     // Paso B (Validación contra DB remota):
-    const user = await prisma.user.findFirst({
-      where: {
-        username: {
-          equals: username,
-          mode: "insensitive",
+    let user = null;
+    try {
+      user = await prisma.user.findFirst({
+        where: {
+          username: {
+            equals: username,
+            mode: "insensitive",
+          },
         },
-      },
-    });
+      });
+    } catch (dbError) {
+      console.error("[authenticateUser] Error al consultar DB:", dbError);
+      return {
+        success: false,
+        code: AUTH_UNAVAILABLE_CODE,
+        error: "Error interno al iniciar sesión. Verifique la conexión a la base de datos.",
+      };
+    }
 
     if (!user) {
       return {
@@ -110,22 +168,20 @@ export async function authenticateUser(
       };
     }
 
-    // Paso D (Retorno exitoso):
+    // Paso D (Retorno exitoso con emisión de cookies de sesión firmadas):
     const authenticatedUser: AuthenticatedUser = {
+      id: user.id,
       username: user.username,
       name: user.name,
     };
 
-    await setSessionCookie(authenticatedUser);
-
+    const session = await issueSessionCookies(authenticatedUser);
     return {
       success: true,
-      data: authenticatedUser,
+      data: session,
     };
-    const session = await issueSessionCookies({ id: user.id, username: user.username, name: user.name });
-    return { success: true, data: session };
   } catch (error) {
-    console.error("[loginAction] Error:", error);
+    console.error("[authenticateUser] Error:", error);
     return {
       success: false,
       code: AUTH_UNAVAILABLE_CODE,
@@ -134,20 +190,31 @@ export async function authenticateUser(
   }
 }
 
-// Alias de compatibilidad hacia atrás
-export const authenticateUser = loginAction;
+/**
+ * Server action de inicio de sesión con soporte para:
+ * 1. Hardcode de pruebas (admin / admin123)
+ * 2. SuperAdmin y avefenix consultados en PostgreSQL con bcrypt.compare
+ * Retorna AuthenticatedUser directamente para compatibilidad entre ramas.
+ */
+export async function loginAction(
+  credentials: LoginCredentials
+): Promise<ActionResponse<AuthenticatedUser>> {
+  const res = await authenticateUser(credentials);
+  if (!res.success || !res.data) {
+    return {
+      success: false,
+      error: res.error,
+      code: res.code,
+    };
+  }
+  return {
+    success: true,
+    data: res.data.user,
+  };
+}
 
 async function setSessionCookie(user: AuthenticatedUser): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.set(
-    SESSION_COOKIE_NAME,
-    Buffer.from(JSON.stringify(user)).toString("base64"),
-    {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-    }
-  );
+  await issueSessionCookies(user);
 }
 
 /**

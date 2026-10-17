@@ -14,19 +14,19 @@ export function LoginForm() {
   const { login } = useAuthSession();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
-  const [isPending, setIsPending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsManualLaunch, setNeedsManualLaunch] = useState(false);
+
+  const isPending = isLoading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsPending(true);
+    setIsLoading(true);
 
     try {
-      const res = await loginAction({ username: username.trim(), password });
-      if (!res.success || !res.data) {
-        setError(res.error || "Credenciales inválidas");
+      // 1. Ejecución del flujo de login (online con cookie firmada / offline fallback)
       const outcome = await login(username.trim(), password);
       if (!outcome.ok) {
         setError(outcome.error || "Credenciales inválidas");
@@ -34,24 +34,17 @@ export function LoginForm() {
         return;
       }
 
-      warmCacheRoutes(["/admin", "/check-in"]);
+      const userData = outcome.session.user;
 
-      const dispatchRes = await dispatchScreens();
-      if (dispatchRes.popupBlocked) {
-        setNeedsManualLaunch(true);
-        setIsLoading(false);
-        return;
-      }
-
-      // Guardar el estado de sesión en sessionStorage para persistir ante recargas
+      // 2. Guardar el estado de sesión en sessionStorage para persistir ante recargas
       // pero destruirse al apagar o cerrar el equipo/navegador
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("avefenix_user", JSON.stringify(res.data));
+        sessionStorage.setItem("avefenix_user", JSON.stringify(userData));
         sessionStorage.setItem("avefenix_auth_time", Date.now().toString());
 
         // Disparar sincronización de terminales para coordinar pestañas y monitores
         try {
-          const syncPayload = { type: "TERMINAL_AUTH_SYNC", user: res.data, timestamp: Date.now() };
+          const syncPayload = { type: "TERMINAL_AUTH_SYNC", user: userData, timestamp: Date.now() };
           localStorage.setItem("avefenix_terminal_sync", JSON.stringify(syncPayload));
           window.dispatchEvent(new CustomEvent("avefenix:terminal-sync", { detail: syncPayload }));
         } catch {
@@ -59,12 +52,23 @@ export function LoginForm() {
         }
       }
 
+      // 3. Precalentamiento de rutas en el Service Worker PWA
+      warmCacheRoutes(["/admin", "/check-in"]);
+
+      // 4. Despliegue de pantallas (pantalla principal y monitor secundario de Check-in)
+      const dispatchRes = await dispatchScreens();
+      if (dispatchRes.popupBlocked) {
+        setNeedsManualLaunch(true);
+        setIsLoading(false);
+        return;
+      }
+
+      // 5. Redirección al panel
       router.push("/admin");
       router.refresh();
     } catch {
       setError("Error de conexión al intentar iniciar sesión.");
     } finally {
-      setIsPending(false);
       setIsLoading(false);
     }
   };
@@ -168,10 +172,10 @@ export function LoginForm() {
 
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isLoading || isPending}
           className="w-full min-h-[48px] mt-2 rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-[#F4F5F7] font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#F95716]/25 transition-all disabled:opacity-50 cursor-pointer"
         >
-          {isPending ? (
+          {isLoading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
               <span>Verificando...</span>
