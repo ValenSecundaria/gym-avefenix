@@ -70,3 +70,12 @@ export async function idbDelete(store: AuthStoreName, key: string): Promise<void
     // Si IndexedDB no está disponible no hay nada que borrar.
   }
 }
+
+export async function idbClear(store: AuthStoreName): Promise<void> {
+  try {
+    await runRequest(store, "readwrite", (s) => s.clear());
+  } catch {
+    // Si IndexedDB no está disponible no hay nada que borrar.
+  }
+}
+

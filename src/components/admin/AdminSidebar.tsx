@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { Activity, AlertOctagon, BarChart3, PanelLeftClose, PanelLeftOpen, UserMinus, X } from "lucide-react";
 import type { AdminTab } from "./AdminDashboardClient";
+import { LogoutButton } from "./logout-button";
 
 export const ADMIN_SECTIONS: {
   tab: AdminTab;
@@ -84,7 +85,6 @@ export function AdminSidebar({
   mobileOpen,
   onCloseMobile,
 }: AdminSidebarProps) {
-  // Cerrar el menú del celular con Escape.
   useEffect(() => {
     if (!mobileOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCloseMobile();
@@ -94,7 +94,7 @@ export function AdminSidebar({
 
   return (
     <>
-      {/* Escritorio: barra fija a la izquierda, se puede achicar a solo íconos */}
+      {/* Escritorio: barra fija a la izquierda */}
       <aside
         className={`hidden lg:flex sticky top-0 h-screen shrink-0 flex-col gap-4 border-r border-fx-border bg-fx-surface p-3 transition-[width] duration-200 ${
           collapsed ? "w-[76px]" : "w-64"
@@ -113,9 +113,12 @@ export function AdminSidebar({
           {!collapsed && <span>Menú</span>}
         </button>
         <NavList activeTab={activeTab} onSelect={onSelect} counts={counts} collapsed={collapsed} />
+        <div className="mt-auto pt-3 border-t border-fx-border">
+          <LogoutButton collapsed={collapsed} />
+        </div>
       </aside>
 
-      {/* Celular / tablet: menú desplegable por encima del contenido */}
+      {/* Celular / tablet: menú desplegable */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 flex">
           <button type="button" aria-label="Cerrar menú" onClick={onCloseMobile} className="absolute inset-0 bg-black/50 cursor-default" />
@@ -131,15 +134,10 @@ export function AdminSidebar({
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <NavList
-              activeTab={activeTab}
-              onSelect={(tab) => {
-                onSelect(tab);
-                onCloseMobile();
-              }}
-              counts={counts}
-              collapsed={false}
-            />
+            <NavList activeTab={activeTab} onSelect={(tab) => { onSelect(tab); onCloseMobile(); }} counts={counts} collapsed={false} />
+            <div className="mt-auto pt-3 border-t border-fx-border">
+              <LogoutButton onLogoutStart={onCloseMobile} />
+            </div>
           </aside>
         </div>
       )}

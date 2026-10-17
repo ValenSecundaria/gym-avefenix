@@ -2,7 +2,10 @@ import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
+import { redirect } from "next/navigation";
 import { ADMIN_THEME_COOKIE } from "@/lib/constants";
+import { SESSION_COOKIE_NAME } from "@/lib/auth/auth-constants";
+import { verifySessionToken } from "@/lib/auth/session-token";
 import { getDashboardOverview } from "@/actions/dashboard.actions";
 import { getTodayCheckIns } from "@/actions/checkin.actions";
 import { AdminDashboardClient } from "@/components/admin/AdminDashboardClient";
@@ -15,6 +18,12 @@ export const metadata: Metadata = {
 async function AdminDashboardLoader() {
   await connection();
   const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const session = await verifySessionToken(sessionToken);
+  if (!session) {
+    redirect("/login");
+  }
+
   const initialTheme = cookieStore.get(ADMIN_THEME_COOKIE)?.value === "light" ? "light" : "dark";
   const [overviewRes, checkInsRes] = await Promise.all([
     getDashboardOverview(),

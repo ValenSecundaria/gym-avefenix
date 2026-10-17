@@ -14,5 +14,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Debe coincidir con PROTECTED_ROUTE_PREFIXES (el matcher exige valores estáticos).
-  matcher: ["/admin/:path*", "/launch"],
+  matcher: ["/admin", "/admin/:path*", "/launch"],
 };

@@ -6,7 +6,7 @@
 //   la réplica en IndexedDB se considera de un arranque anterior y se descarta.
 import type { ClientSession } from "@/types/auth";
 import { SESSION_ALIVE_COOKIE, SESSION_STORAGE_KEY } from "./auth-constants";
-import { idbDelete, idbGet, idbPut } from "./idb-store";
+import { idbClear, idbDelete, idbGet, idbPut } from "./idb-store";
 
 const IDB_SESSION_KEY = "active";
 
@@ -44,6 +44,7 @@ export function readWindowSession(): ClientSession | null {
 export function clearWindowSession(): void {
   try {
     window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    window.sessionStorage.clear();
   } catch {
     // sessionStorage bloqueado: nada que limpiar.
   }
@@ -70,6 +71,7 @@ export async function clearClientSession(): Promise<void> {
   clearWindowSession();
   clearAliveCookie();
   await idbDelete("session", IDB_SESSION_KEY);
+  await idbClear("session");
 }
 
 /** Descarta sólo la réplica (cuando la cookie testigo ya no existe porque el equipo se reinició). */

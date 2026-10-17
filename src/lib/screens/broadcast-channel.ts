@@ -9,6 +9,7 @@ export type GymBroadcastMessage =
   | { type: "CHECKIN_EVENT"; payload: CheckInVerificationResult }
   | { type: "REFRESH_DASHBOARD" }
   | { type: "RESET_CHECKIN" }
+  | { type: "SESSION_LOGOUT" }
   | { type: "REQUEST_FULLSCREEN" };
 
 class GymChannelManager {

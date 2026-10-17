@@ -56,16 +56,26 @@ export function AdminDashboardClient({
   const [selectedDebtor, setSelectedDebtor] = useState<DebtorMemberItem | null>(null);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
   const { theme, toggleTheme } = useAdminTheme(initialTheme);
-  const { status: authStatus } = useAuthSession();
+  const { status: authStatus, refreshSession } = useAuthSession();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
   useEffect(() => {
     if (authStatus === "UNAUTHENTICATED") {
-      window.location.href = "/login";
+      window.location.replace("/login");
+      return;
     }
-  }, [authStatus]);
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        refreshSession().then((s) => {
+          if (!s) window.location.replace("/login");
+        });
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [authStatus, refreshSession]);
 
   const refreshAllData = useCallback(async () => {
     setIsRefreshing(true);
@@ -87,6 +97,8 @@ export function AdminDashboardClient({
     const unsubscribe = gymBroadcast.subscribe((msg) => {
       if (msg.type === "CHECKIN_EVENT" || msg.type === "REFRESH_DASHBOARD") {
         refreshAllData();
+      } else if (msg.type === "SESSION_LOGOUT") {
+        window.location.replace("/login");
       }
     });
     return () => {
@@ -109,13 +121,7 @@ export function AdminDashboardClient({
     return { success: res.success, error: res.error };
   };
 
-  const handleConfirmPayment = async (payload: {
-    memberId: string;
-    planId: string;
-    amount: number;
-    method: PaymentMethodType;
-    notes?: string;
-  }) => {
+  const handleConfirmPayment = async (payload: { memberId: string; planId: string; amount: number; method: PaymentMethodType; notes?: string; }) => {
     const res = await registerPayment(payload);
     if (res.success && res.data) {
       showToast(`Pago registrado (${res.data.planName}). Membresía renovada.`);

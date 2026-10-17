@@ -240,6 +240,8 @@ export async function logoutUser(): Promise<ActionResponse<null>> {
     const cookieStore = await cookies();
     cookieStore.delete(SESSION_COOKIE_NAME);
     cookieStore.delete(SESSION_ALIVE_COOKIE);
+    cookieStore.set(SESSION_COOKIE_NAME, "", { maxAge: 0, path: "/" });
+    cookieStore.set(SESSION_ALIVE_COOKIE, "", { maxAge: 0, path: "/" });
     return { success: true, data: null };
   } catch (error) {
     console.error("[logoutUser] Error:", error);
