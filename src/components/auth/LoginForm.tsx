@@ -7,22 +7,26 @@ import { Flame, Lock, User, ArrowLeft, Loader2, AlertCircle } from "lucide-react
 import { useAuthSession } from "@/context/auth-session-context";
 import { warmCacheRoutes } from "@/lib/pwa/register-sw";
 import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
+import { loginAction } from "@/actions/auth.actions";
 
 export function LoginForm() {
   const router = useRouter();
   const { login } = useAuthSession();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsManualLaunch, setNeedsManualLaunch] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
+    setIsPending(true);
 
     try {
+      const res = await loginAction({ username: username.trim(), password });
+      if (!res.success || !res.data) {
+        setError(res.error || "Credenciales inválidas");
       const outcome = await login(username.trim(), password);
       if (!outcome.ok) {
         setError(outcome.error || "Credenciales inválidas");
@@ -39,10 +43,28 @@ export function LoginForm() {
         return;
       }
 
+      // Guardar el estado de sesión en sessionStorage para persistir ante recargas
+      // pero destruirse al apagar o cerrar el equipo/navegador
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("avefenix_user", JSON.stringify(res.data));
+        sessionStorage.setItem("avefenix_auth_time", Date.now().toString());
+
+        // Disparar sincronización de terminales para coordinar pestañas y monitores
+        try {
+          const syncPayload = { type: "TERMINAL_AUTH_SYNC", user: res.data, timestamp: Date.now() };
+          localStorage.setItem("avefenix_terminal_sync", JSON.stringify(syncPayload));
+          window.dispatchEvent(new CustomEvent("avefenix:terminal-sync", { detail: syncPayload }));
+        } catch {
+          // Ignorar si StorageEvent o localStorage están restringidos
+        }
+      }
+
       router.push("/admin");
       router.refresh();
     } catch {
       setError("Error de conexión al intentar iniciar sesión.");
+    } finally {
+      setIsPending(false);
       setIsLoading(false);
     }
   };
@@ -146,10 +168,10 @@ export function LoginForm() {
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isPending}
           className="w-full min-h-[48px] mt-2 rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-[#F4F5F7] font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#F95716]/25 transition-all disabled:opacity-50 cursor-pointer"
         >
-          {isLoading ? (
+          {isPending ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
               <span>Verificando...</span>

@@ -14,6 +14,19 @@ import { signSessionToken, verifySessionToken } from "@/lib/auth/session-token";
 import type { ActionResponse } from "@/types";
 import type { AuthenticatedUser, AuthSessionResult } from "@/types/auth";
 
+export interface LoginCredentials {
+  username?: string;
+  password?: string;
+}
+
+/**
+ * Server action de inicio de sesión con soporte para:
+ * 1. Hardcode de pruebas (admin / admin123)
+ * 2. SuperAdmin y avefenix consultados en PostgreSQL con bcrypt.compare
+ */
+export async function loginAction(
+  credentials: LoginCredentials
+): Promise<ActionResponse<AuthenticatedUser>> {
 async function ensureDefaultAdminExists(): Promise<void> {
   const userCount = await prisma.user.count();
   if (userCount === 0) {
@@ -47,46 +60,94 @@ export async function authenticateUser(
   input: LoginInput
 ): Promise<ActionResponse<AuthSessionResult>> {
   try {
-    const parsed = loginSchema.safeParse(input);
-    if (!parsed.success) {
+    const username = (credentials?.username ?? "").trim();
+    const password = credentials?.password ?? "";
+
+    if (!username || !password) {
       return {
         success: false,
-        error: parsed.error.issues[0]?.message || "Credenciales inválidas",
+        error: "Credenciales inválidas",
       };
     }
 
-    await ensureDefaultAdminExists();
+    // Paso A (Hardcode de pruebas):
+    if (username === "admin" && password === "admin123") {
+      const mockUser: AuthenticatedUser = {
+        username: "admin",
+        name: "Administrador Pruebas",
+      };
 
-    const { username, password } = parsed.data;
-    const user = await prisma.user.findUnique({
-      where: { username },
+      await setSessionCookie(mockUser);
+      return {
+        success: true,
+        data: mockUser,
+      };
+    }
+
+    // Paso B (Validación contra DB remota):
+    const user = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: username,
+          mode: "insensitive",
+        },
+      },
     });
 
     if (!user) {
       return {
         success: false,
-        error: "Usuario o contraseña incorrectos",
+        error: "Credenciales inválidas",
       };
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
+    // Paso C (Verificación de hash):
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
       return {
         success: false,
-        error: "Usuario o contraseña incorrectos",
+        error: "Credenciales inválidas",
       };
     }
 
+    // Paso D (Retorno exitoso):
+    const authenticatedUser: AuthenticatedUser = {
+      username: user.username,
+      name: user.name,
+    };
+
+    await setSessionCookie(authenticatedUser);
+
+    return {
+      success: true,
+      data: authenticatedUser,
+    };
     const session = await issueSessionCookies({ id: user.id, username: user.username, name: user.name });
     return { success: true, data: session };
   } catch (error) {
-    console.error("[authenticateUser] Error:", error);
+    console.error("[loginAction] Error:", error);
     return {
       success: false,
       code: AUTH_UNAVAILABLE_CODE,
       error: "Error interno al iniciar sesión. Verifique la conexión a la base de datos.",
     };
   }
+}
+
+// Alias de compatibilidad hacia atrás
+export const authenticateUser = loginAction;
+
+async function setSessionCookie(user: AuthenticatedUser): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(
+    SESSION_COOKIE_NAME,
+    Buffer.from(JSON.stringify(user)).toString("base64"),
+    {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    }
+  );
 }
 
 /**
