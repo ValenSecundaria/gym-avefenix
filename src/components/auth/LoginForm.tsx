@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Flame, Lock, User, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { Flame, Lock, User, ArrowLeft, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useAuthSession } from "@/context/auth-session-context";
 import { warmCacheRoutes } from "@/lib/pwa/register-sw";
 import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
@@ -14,6 +14,7 @@ export function LoginForm() {
   const { login } = useAuthSession();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsManualLaunch, setNeedsManualLaunch] = useState(false);
@@ -23,6 +24,7 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setShowPassword(false); // no dejar la contraseña a la vista en la pantalla siguiente
     setIsLoading(true);
 
     try {
@@ -160,13 +162,24 @@ export function LoginForm() {
           <div className="relative">
             <Lock className="w-5 h-5 text-[#8A909A] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full min-h-[48px] pl-11 pr-4 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] focus:border-[#F95716] focus:outline-none text-sm text-[#F4F5F7]"
+              autoComplete="current-password"
+              className="w-full min-h-[48px] pl-11 pr-12 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] focus:border-[#F95716] focus:outline-none text-sm text-[#F4F5F7]"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              aria-pressed={showPassword}
+              title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg flex items-center justify-center text-[#8A909A] hover:text-[#F4F5F7] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F95716] cursor-pointer"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
           </div>
         </div>
 
