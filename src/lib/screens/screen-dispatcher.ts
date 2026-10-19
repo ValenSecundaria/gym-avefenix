@@ -26,6 +26,23 @@ interface ScreenDetailsLike {
   screens: ScreenDetailedLike[];
 }
 
+/**
+ * getScreenDetails() hace que el navegador muestre "Gestionar ventanas en todas tus pantallas".
+ * Solo vale la pena pedirlo si hay un segundo monitor conectado (screen.isExtended no requiere permiso)
+ * y si no fue rechazado antes (en ese caso no se vuelve a insistir).
+ */
+async function shouldQueryScreenDetails(): Promise<boolean> {
+  const screenInfo = window.screen as Screen & { isExtended?: boolean };
+  if (screenInfo.isExtended === false) return false;
+  try {
+    const status = await navigator.permissions.query({ name: "window-management" as PermissionName });
+    return status.state !== "denied";
+  } catch {
+    // Navegador sin soporte para consultar este permiso: se intenta igual.
+    return true;
+  }
+}
+
 /** Consulta los monitores físicos mediante la Window Management API si está soportada. */
 export async function getConnectedScreens(): Promise<{
   supported: boolean;
@@ -39,7 +56,7 @@ export async function getConnectedScreens(): Promise<{
     getScreenDetails?: () => Promise<ScreenDetailsLike>;
   };
 
-  if (typeof win.getScreenDetails === "function") {
+  if (typeof win.getScreenDetails === "function" && (await shouldQueryScreenDetails())) {
     try {
       const details = await win.getScreenDetails();
       if (details && Array.isArray(details.screens) && details.screens.length > 0) {
