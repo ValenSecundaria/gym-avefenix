@@ -153,9 +153,43 @@ export interface MemberListItem {
   validUntil: string | null;
 }
 
+export type MemberStatusFilter = "ALL" | "ACTIVA" | "VENCIDA" | "SIN_MEMBRESIA";
+
+export interface MemberRowItem extends MemberListItem {
+  lastCheckInAt: string | null;
+}
+
+export interface MembersPage {
+  items: MemberRowItem[];
+  total: number;
+  page: number; // 1 = primera
+  pageSize: number;
+}
+
+export interface MemberPaymentItem {
+  id: string;
+  paidAt: string;
+  amount: number;
+  method: PaymentMethodType;
+  planName: string | null;
+  notes: string | null;
+}
+
+export interface MemberCheckInItem {
+  id: string;
+  createdAt: string;
+  status: AccessStatusType;
+}
+
 export interface MemberDetail extends MemberListItem {
   notes: string | null;
   createdAt: string;
   paymentsCount: number;
   checkInsCount: number;
+  planPrice: number | null;
+  allowedDaysPerWeek: number | null;
+  daysUsedThisWeek: number;
+  lastCheckInAt: string | null;
+  recentPayments: MemberPaymentItem[];
+  recentCheckIns: MemberCheckInItem[];
 }

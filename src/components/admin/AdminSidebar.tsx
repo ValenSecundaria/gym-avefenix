@@ -14,7 +14,7 @@ export const ADMIN_SECTIONS: {
   { tab: "LIVE_FEED", label: "Ingresos de hoy", icon: Activity, badge: "default" },
   { tab: "DEBTORS", label: "Cuotas pendientes", icon: AlertOctagon, badge: "danger" },
   { tab: "ABSENT", label: "Socios ausentes", icon: UserMinus, badge: "warning" },
-  { tab: "MEMBERS", label: "Socios", icon: Users, badge: null },
+  { tab: "MEMBERS", label: "Clientes", icon: Users, badge: null },
   { tab: "METRICS", label: "Métricas", icon: BarChart3, badge: null },
 ];
 

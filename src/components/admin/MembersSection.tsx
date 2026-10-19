@@ -1,30 +1,77 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AlertCircle, Loader2, User, UserPen, Users } from "lucide-react";
-import type { MemberListItem } from "@/types";
+import { AlertCircle, ChevronLeft, ChevronRight, Loader2, User, UserPen, Users } from "lucide-react";
+import type { MemberRowItem, MembersPage, MemberStatusFilter } from "@/types";
 import { formatDateAR } from "@/lib/utils";
-import { getMembers } from "@/actions/members.actions";
+import { getMembersPage } from "@/actions/members.actions";
 
 interface MembersSectionProps {
   searchQuery: string;
-  /** Cambia cada vez que se edita un socio, para volver a pedir la lista. */
+  /** Cambia cada vez que se edita un socio, para volver a pedir la página. */
   reloadKey: number;
   onEditMember: (memberId: string) => void;
 }
 
-const STATUS_BADGE: Record<MemberListItem["membershipStatus"], { text: string; cls: string }> = {
+const STATUS_BADGE: Record<MemberRowItem["membershipStatus"], { text: string; cls: string }> = {
   ACTIVA: { text: "Al día", cls: "bg-fx-green/15 text-fx-green border-fx-green/40" },
   VENCIDA: { text: "Vencida", cls: "bg-fx-red/15 text-fx-red border-fx-red/40" },
   CANCELADA: { text: "Cancelada", cls: "bg-fx-red/15 text-fx-red border-fx-red/40" },
   SIN_MEMBRESIA: { text: "Sin plan", cls: "bg-fx-hover text-fx-muted border-fx-border" },
 };
 
+const STATUS_FILTERS: { value: MemberStatusFilter; label: string }[] = [
+  { value: "ALL", label: "Todos" },
+  { value: "ACTIVA", label: "Al día" },
+  { value: "VENCIDA", label: "Vencidos" },
+  { value: "SIN_MEMBRESIA", label: "Sin plan" },
+];
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+function lastVisitLabel(iso: string | null, now: number): string {
+  if (!iso) return "Sin ingresos";
+  const days = Math.floor((now - new Date(iso).getTime()) / MS_PER_DAY);
+  if (days <= 0) return "Vino hoy";
+  if (days === 1) return "Vino ayer";
+  return `Vino hace ${days} días`;
+}
+
+function FilterButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`min-h-[40px] px-4 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+        active ? "bg-fx-orange text-white" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function MembersSection({ searchQuery, reloadKey, onEditMember }: MembersSectionProps) {
   const [showInactive, setShowInactive] = useState(false);
-  const [members, setMembers] = useState<MemberListItem[] | null>(null);
+  const [statusFilter, setStatusFilter] = useState<MemberStatusFilter>("ALL");
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState<MembersPage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Referencia para "vino hace N días": se toma al recibir cada página, no durante el render.
+  const [loadedAt, setLoadedAt] = useState(0);
+
+  // Al cambiar búsqueda o filtros se vuelve a la primera página.
+  const [lastFilters, setLastFilters] = useState({ searchQuery, showInactive, statusFilter });
+  if (
+    lastFilters.searchQuery !== searchQuery ||
+    lastFilters.showInactive !== showInactive ||
+    lastFilters.statusFilter !== statusFilter
+  ) {
+    setLastFilters({ searchQuery, showInactive, statusFilter });
+    setPage(1);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -32,52 +79,57 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
     const timer = window.setTimeout(async () => {
       setIsLoading(true);
       try {
-        const res = await getMembers(searchQuery.trim() || undefined, { inactive: showInactive });
+        const res = await getMembersPage({
+          search: searchQuery.trim() || undefined,
+          inactive: showInactive,
+          status: statusFilter,
+          page,
+        });
         if (cancelled) return;
         if (res.success && res.data) {
-          setMembers(res.data);
+          setData(res.data);
+          setLoadedAt(Date.now());
           setError(null);
+          if (res.data.page !== page) setPage(res.data.page);
         } else {
-          setError(res.error || "No se pudo cargar el listado de socios.");
+          setError(res.error || "No se pudo cargar el listado de clientes.");
         }
       } catch {
-        if (!cancelled) setError("Sin conexión: no se pudo cargar el listado de socios.");
+        if (!cancelled) setError("Sin conexión: no se pudo cargar el listado de clientes.");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
-    }, 300);
+    }, 250);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [searchQuery, showInactive, reloadKey]);
+  }, [searchQuery, showInactive, statusFilter, page, reloadKey]);
+
+  const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
+  const from = data && data.total > 0 ? (data.page - 1) * data.pageSize + 1 : 0;
+  const to = data ? Math.min(data.page * data.pageSize, data.total) : 0;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-fx-base border border-fx-border">
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Estado del socio">
-          {[
-            { value: false, label: "Activos" },
-            { value: true, label: "Dados de baja" },
-          ].map((opt) => (
-            <button
-              key={opt.label}
-              type="button"
-              onClick={() => setShowInactive(opt.value)}
-              aria-pressed={showInactive === opt.value}
-              className={`min-h-[40px] px-4 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                showInactive === opt.value ? "bg-fx-orange text-white" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+      <div className="flex flex-col gap-3 p-4 rounded-xl bg-fx-base border border-fx-border">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Estado de la cuota">
+            {STATUS_FILTERS.map((f) => (
+              <FilterButton key={f.value} active={statusFilter === f.value} onClick={() => setStatusFilter(f.value)}>
+                {f.label}
+              </FilterButton>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Clientes activos o dados de baja">
+            <FilterButton active={!showInactive} onClick={() => setShowInactive(false)}>Activos</FilterButton>
+            <FilterButton active={showInactive} onClick={() => setShowInactive(true)}>Dados de baja</FilterButton>
+          </div>
         </div>
-        <span className="text-xs text-fx-muted inline-flex items-center gap-2">
+        <div className="text-xs text-fx-muted inline-flex items-center gap-2 min-h-[20px]" aria-live="polite">
           {isLoading && <Loader2 className="w-4 h-4 animate-spin text-fx-orange" />}
-          {members ? `${members.length === 100 ? "Primeros 100" : members.length} socios` : ""}
-          {members && members.length === 100 && " — buscá por DNI o apellido para encontrar el resto"}
-        </span>
+          {data && (data.total === 0 ? "Sin resultados" : `Mostrando ${from}–${to} de ${data.total} clientes`)}
+        </div>
       </div>
 
       {error && (
@@ -87,22 +139,27 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
         </div>
       )}
 
-      {members && members.length === 0 && !isLoading ? (
+      {data && data.total === 0 && !isLoading ? (
         <div className="bg-fx-surface border border-fx-border rounded-2xl p-10 text-center">
           <Users className="w-10 h-10 text-fx-muted mx-auto mb-3" />
           <h3 className="text-lg font-bold text-fx-text">
-            {searchQuery.trim() ? "Ningún socio coincide con la búsqueda" : showInactive ? "No hay socios dados de baja" : "Todavía no hay socios"}
+            {searchQuery.trim() || statusFilter !== "ALL" ? "Ningún cliente coincide con los filtros" : showInactive ? "No hay clientes dados de baja" : "Todavía no hay clientes"}
           </h3>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {(members ?? []).map((m) => {
+        <div className={`flex flex-col gap-2 transition-opacity ${isLoading ? "opacity-60" : ""}`}>
+          {(data?.items ?? []).map((m) => {
             const badge = STATUS_BADGE[m.membershipStatus];
             return (
-              <div key={m.id} className="p-4 rounded-xl bg-fx-base border border-fx-border hover:border-fx-orange/40 flex flex-wrap items-center justify-between gap-4 transition-colors">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-12 h-12 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center shrink-0">
-                    {m.photoUrl ? <img src={m.photoUrl} alt={m.fullName} className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-fx-muted" />}
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => onEditMember(m.id)}
+                className="w-full text-left p-3 sm:p-4 rounded-xl bg-fx-base border border-fx-border hover:border-fx-orange/60 flex flex-wrap items-center justify-between gap-3 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="w-11 h-11 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center shrink-0">
+                    {m.photoUrl ? <img src={m.photoUrl} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-fx-muted" />}
                   </div>
                   <div className="min-w-0">
                     <div className="font-bold text-base text-fx-text">{m.fullName}</div>
@@ -122,24 +179,48 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
                           <span>Tel: {m.phone}</span>
                         </>
                       )}
+                      <span>•</span>
+                      <span>{lastVisitLabel(m.lastCheckInAt, loadedAt)}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${badge.cls}`}>{badge.text}</span>
-                  <button
-                    type="button"
-                    onClick={() => onEditMember(m.id)}
-                    className="min-h-[44px] px-4 rounded-xl bg-fx-surface border border-fx-border hover:border-fx-orange text-fx-text text-sm font-bold inline-flex items-center gap-2 cursor-pointer"
-                  >
+                  <span className="min-h-[40px] px-3 rounded-xl bg-fx-surface border border-fx-border text-fx-text text-sm font-bold inline-flex items-center gap-2">
                     <UserPen className="w-4 h-4 text-fx-orange" />
-                    <span>Editar</span>
-                  </button>
+                    <span>Ver / editar</span>
+                  </span>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
+      )}
+
+      {data && totalPages > 1 && (
+        <nav aria-label="Páginas de clientes" className="flex items-center justify-between gap-3 pt-1">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1 || isLoading}
+            className="min-h-[44px] px-4 rounded-xl bg-fx-base border border-fx-border text-sm font-bold text-fx-text inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Anterior
+          </button>
+          <span className="text-sm text-fx-muted">
+            Página <b className="text-fx-text">{data.page}</b> de {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages || isLoading}
+            className="min-h-[44px] px-4 rounded-xl bg-fx-base border border-fx-border text-sm font-bold text-fx-text inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+          >
+            Siguiente
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </nav>
       )}
     </div>
   );

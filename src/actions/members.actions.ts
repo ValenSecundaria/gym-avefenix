@@ -6,7 +6,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { deleteMemberPhotoFromDisk, saveMemberPhotoToDisk } from "@/lib/photo-storage";
 import { hasActionSession } from "@/lib/auth/require-session";
-import { getMemberPhotoUrl } from "@/lib/utils";
+import { getMemberPhotoUrl, getStartOfWeekMonday } from "@/lib/utils";
 import { resolveSafePhotoPath } from "@/lib/security/safe-path";
 import {
   createMemberSchema,
@@ -14,7 +14,15 @@ import {
   type CreateMemberInput,
   type UpdateMemberInput,
 } from "@/lib/validations/member.schema";
-import type { ActionResponse, MemberDetail, MemberListItem, MembershipStatusType, PlanOption } from "@/types";
+import type {
+  ActionResponse,
+  MemberDetail,
+  MemberListItem,
+  MembersPage,
+  MembershipStatusType,
+  MemberStatusFilter,
+  PlanOption,
+} from "@/types";
 
 export async function ensureDefaultPlansExist(): Promise<void> {
   const count = await prisma.plan.count();
@@ -151,7 +159,7 @@ export async function createMember(
     if (result.kind === "inactive") {
       return {
         success: false,
-        error: `El DNI ${input.dni} es de ${result.existingFullName}, que está dado de baja. Reactivalo desde Socios → Dados de baja.`,
+        error: `El DNI ${input.dni} es de ${result.existingFullName}, que está dado de baja. Reactivalo desde Clientes → Dados de baja.`,
       };
     }
     revalidatePath("/admin");
@@ -240,7 +248,7 @@ export async function syncPendingMembers(
         results.push({
           clientId,
           status: "conflict",
-          message: `El DNI ${dni} es de ${result.existingFullName}, dado de baja: reactivalo desde Socios`,
+          message: `El DNI ${dni} es de ${result.existingFullName}, dado de baja: reactivalo desde Clientes`,
         });
       } else if (normalizeName(result.existingFullName) === normalizeName(item.input.fullName)) {
         results.push({ clientId, status: "already_synced" });
@@ -292,39 +300,6 @@ function toMemberListItem(m: MemberWithLatestMembership, now: Date): MemberListI
   };
 }
 
-export async function getMembers(
-  search?: string,
-  options: { inactive?: boolean } = {}
-): Promise<ActionResponse<MemberListItem[]>> {
-  try {
-    const parsedSearch = searchMemberSchema.safeParse(search);
-    if (!parsedSearch.success) {
-      return {
-        success: false,
-        error: parsedSearch.error.issues[0]?.message || "Término de búsqueda inválido",
-      };
-    }
-    const cleanSearch = parsedSearch.data || undefined;
-    const members = await prisma.member.findMany({
-      where: {
-        isActive: options.inactive !== true,
-        ...(cleanSearch
-          ? { OR: [{ fullName: { contains: cleanSearch, mode: "insensitive" } }, { dni: { contains: cleanSearch } }] }
-          : {}),
-      },
-      include: memberWithLatestMembership,
-      orderBy: { createdAt: "desc" },
-      take: 100,
-    });
-
-    const now = new Date();
-    return { success: true, data: members.map((m) => toMemberListItem(m, now)) };
-  } catch (error) {
-    console.error("[getMembers] Error:", error);
-    return { success: false, error: "No se pudo cargar el listado de socios" };
-  }
-}
-
 // -------------------------------------------------------------
 // EDICIÓN, BAJA Y ELIMINACIÓN DE SOCIOS
 // "Dar de baja" (isActive = false) conserva pagos e ingresos para las métricas y la caja;
@@ -333,6 +308,75 @@ export async function getMembers(
 
 const NO_SESSION_ERROR = "Tu sesión expiró. Volvé a iniciar sesión.";
 const memberIdSchema = z.string().trim().min(1).max(64);
+const RECENT_HISTORY_SIZE = 10;
+
+const MEMBERS_PAGE_SIZE = 20;
+
+const membersPageSchema = z.object({
+  search: searchMemberSchema,
+  inactive: z.boolean().default(false),
+  status: z.enum(["ALL", "ACTIVA", "VENCIDA", "SIN_MEMBRESIA"]).default("ALL"),
+  page: z.number().int().min(1).max(10000).default(1),
+});
+
+// Filtro de cuota hecho en la base para que el total y las páginas sean exactos.
+function statusWhere(status: MemberStatusFilter, now: Date): Prisma.MemberWhereInput {
+  const current: Prisma.MembershipWhereInput = { status: "ACTIVA", validUntil: { gte: now } };
+  if (status === "ACTIVA") return { memberships: { some: current } };
+  if (status === "VENCIDA") return { memberships: { some: {}, none: current } };
+  if (status === "SIN_MEMBRESIA") return { memberships: { none: {} } };
+  return {};
+}
+
+export async function getMembersPage(
+  input: { search?: string; inactive?: boolean; status?: MemberStatusFilter; page?: number } = {}
+): Promise<ActionResponse<MembersPage>> {
+  try {
+    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    const parsed = membersPageSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message || "Filtros inválidos" };
+    }
+    const { search, inactive, status, page } = parsed.data;
+    const now = new Date();
+    const where: Prisma.MemberWhereInput = {
+      isActive: !inactive,
+      ...statusWhere(status, now),
+      ...(search
+        ? { OR: [{ fullName: { contains: search, mode: "insensitive" } }, { dni: { contains: search } }] }
+        : {}),
+    };
+
+    const total = await prisma.member.count({ where });
+    // Si la página pedida quedó fuera de rango (por ejemplo, tras una baja), se muestra la última.
+    const lastPage = Math.max(1, Math.ceil(total / MEMBERS_PAGE_SIZE));
+    const safePage = Math.min(page, lastPage);
+
+    const members = await prisma.member.findMany({
+      where,
+      include: { ...memberWithLatestMembership, checkIns: { orderBy: { createdAt: "desc" }, take: 1 } },
+      orderBy: [{ fullName: "asc" }, { id: "asc" }],
+      skip: (safePage - 1) * MEMBERS_PAGE_SIZE,
+      take: MEMBERS_PAGE_SIZE,
+    });
+
+    return {
+      success: true,
+      data: {
+        items: members.map((m) => ({
+          ...toMemberListItem(m, now),
+          lastCheckInAt: m.checkIns[0] ? m.checkIns[0].createdAt.toISOString() : null,
+        })),
+        total,
+        page: safePage,
+        pageSize: MEMBERS_PAGE_SIZE,
+      },
+    };
+  } catch (error) {
+    console.error("[getMembersPage] Error:", error);
+    return { success: false, error: "No se pudo cargar el listado de clientes" };
+  }
+}
 
 export async function getMemberDetail(memberId: string): Promise<ActionResponse<MemberDetail>> {
   try {
@@ -340,20 +384,53 @@ export async function getMemberDetail(memberId: string): Promise<ActionResponse<
     const id = memberIdSchema.safeParse(memberId);
     if (!id.success) return { success: false, error: "Socio inválido" };
 
-    const member = await prisma.member.findUnique({
-      where: { id: id.data },
-      include: { ...memberWithLatestMembership, _count: { select: { payments: true, checkIns: true } } },
-    });
+    const now = new Date();
+    const [member, daysUsedThisWeek] = await Promise.all([
+      prisma.member.findUnique({
+        where: { id: id.data },
+        include: {
+          ...memberWithLatestMembership,
+          payments: {
+            orderBy: { paidAt: "desc" },
+            take: RECENT_HISTORY_SIZE,
+            include: { membership: { select: { plan: { select: { name: true } } } } },
+          },
+          checkIns: { orderBy: { createdAt: "desc" }, take: RECENT_HISTORY_SIZE },
+          _count: { select: { payments: true, checkIns: true } },
+        },
+      }),
+      prisma.checkIn.count({
+        where: { memberId: id.data, status: "HABILITADO", createdAt: { gte: getStartOfWeekMonday(now) } },
+      }),
+    ]);
     if (!member) return { success: false, error: "El socio ya no existe" };
 
+    const plan = member.memberships[0]?.plan;
     return {
       success: true,
       data: {
-        ...toMemberListItem(member, new Date()),
+        ...toMemberListItem(member, now),
         notes: member.notes,
         createdAt: member.createdAt.toISOString(),
         paymentsCount: member._count.payments,
         checkInsCount: member._count.checkIns,
+        planPrice: plan ? Number(plan.price) : null,
+        allowedDaysPerWeek: plan?.allowedDaysPerWeek ?? null,
+        daysUsedThisWeek,
+        lastCheckInAt: member.checkIns[0] ? member.checkIns[0].createdAt.toISOString() : null,
+        recentPayments: member.payments.map((p) => ({
+          id: p.id,
+          paidAt: p.paidAt.toISOString(),
+          amount: Number(p.amount),
+          method: p.method,
+          planName: p.membership?.plan.name ?? null,
+          notes: p.notes,
+        })),
+        recentCheckIns: member.checkIns.map((c) => ({
+          id: c.id,
+          createdAt: c.createdAt.toISOString(),
+          status: c.status,
+        })),
       },
     };
   } catch (error) {

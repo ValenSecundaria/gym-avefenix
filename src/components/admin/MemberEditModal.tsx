@@ -11,6 +11,7 @@ import {
   updateMember,
 } from "@/actions/members.actions";
 import { WebcamCapture } from "./WebcamCapture";
+import { MemberHistory, MemberSummary } from "./MemberHistory";
 
 interface MemberEditModalProps {
   memberId: string | null;
@@ -153,7 +154,6 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
                   {status && <span className={`px-2 py-0.5 rounded-md border font-bold ${status.cls}`}>{status.text}</span>}
                   {!member.isActive && <span className="px-2 py-0.5 rounded-md border font-bold bg-fx-amber/15 text-fx-amber border-fx-amber/40">Dado de baja</span>}
                   <span>Plan: {member.planName}</span>
-                  {member.validUntil && <span>• Vence: {formatDateAR(member.validUntil)}</span>}
                   <span>• Socio desde {formatDateAR(member.createdAt)}</span>
                 </p>
               )}
@@ -179,6 +179,8 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
             )}
           </div>
         ) : (
+          <>
+          <MemberSummary member={member} />
           <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-5 flex flex-col gap-3">
               {changingPhoto ? (
@@ -311,6 +313,8 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
               </div>
             </div>
           </form>
+          <MemberHistory member={member} />
+          </>
         )}
       </div>
     </div>
