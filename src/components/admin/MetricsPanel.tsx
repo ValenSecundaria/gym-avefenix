@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   Cell,
   ComposedChart,
+  LabelList,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -200,71 +201,116 @@ function ChartTooltip({ active, payload, label, labelFormatter }: { active?: boo
   );
 }
 
-function Heatmap({ cells, peaks }: { cells: HeatmapCell[]; peaks: HeatmapCell[] }) {
-  const [hover, setHover] = useState<HeatmapCell | null>(null);
+// "Horarios populares" (como Google Maps): se elige un día y se ven las llegadas por hora.
+// Eje de horas y escala fijos para todos los días, así al cambiar de día las barras se comparan a ojo.
+function HoursByDay({ cells, todayDow }: { cells: HeatmapCell[]; todayDow: number }) {
+  const daysWithData = new Set(cells.filter((c) => c.avgArrivals > 0).map((c) => c.dow));
+  const busiestDow = [...cells].sort((a, b) => b.avgArrivals - a.avgArrivals)[0]?.dow ?? 1;
+  const [pickedDow, setPickedDow] = useState<number | null>(null);
+  const dow = pickedDow ?? (daysWithData.has(todayDow) ? todayDow : busiestDow);
+
   const hours = cells.map((c) => c.hour);
-  const minH = Math.min(...hours);
-  const maxH = Math.max(...hours);
-  const max = Math.max(...cells.map((c) => c.avgArrivals), 0.1);
-  const byKey = new Map(cells.map((c) => [`${c.dow}-${c.hour}`, c]));
-  const isPeak = (dow: number, hour: number) => peaks.some((p) => p.dow === dow && p.hour === hour);
-  const cols = maxH - minH + 1;
+  const minH = hours.length ? Math.min(...hours) : 7;
+  const maxH = hours.length ? Math.max(...hours) : 22;
+  const yMax = Math.max(...cells.map((c) => c.avgArrivals), 1);
+  const byHour = new Map(cells.filter((c) => c.dow === dow).map((c) => [c.hour, c.avgArrivals]));
+  const series = Array.from({ length: maxH - minH + 1 }, (_, i) => ({ hour: minH + i, value: byHour.get(minH + i) || 0 }));
+
+  const active = series.filter((s) => s.value > 0);
+  const peak = active.length ? active.reduce((a, b) => (b.value > a.value ? b : a)) : null;
+  const quiet = active.length > 2 ? active.reduce((a, b) => (b.value < a.value ? b : a)) : null;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto">
-        <div className="grid gap-[2px] min-w-[560px]" style={{ gridTemplateColumns: `40px repeat(${cols}, minmax(22px, 1fr))` }}>
-          <div />
-          {Array.from({ length: cols }, (_, i) => (
-            <div key={i} className="text-[10px] font-mono text-fx-muted text-center">
-              {minH + i}
-            </div>
-          ))}
-          {[1, 2, 3, 4, 5, 6, 7].map((dow) => (
-            <React.Fragment key={dow}>
-              <div className="text-xs font-semibold text-fx-muted flex items-center">{DAY_SHORT[dow]}</div>
-              {Array.from({ length: cols }, (_, i) => {
-                const hour = minH + i;
-                const cell = byKey.get(`${dow}-${hour}`);
-                const v = cell?.avgArrivals || 0;
-                const alpha = v > 0 ? 0.12 + 0.88 * (v / max) : 0;
-                const show = () => setHover({ dow, hour, avgArrivals: v });
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Día de la semana">
+        {[1, 2, 3, 4, 5, 6, 7].map((d) => {
+          const has = daysWithData.has(d);
+          const selected = d === dow;
+          return (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setPickedDow(d)}
+              disabled={!has}
+              aria-pressed={selected}
+              title={has ? DAY_NAMES[d] : `${DAY_NAMES[d]}: sin actividad en el período`}
+              className={`min-h-[40px] min-w-[52px] px-3 rounded-xl text-xs font-bold transition-all ${
+                selected
+                  ? "bg-fx-text text-fx-base"
+                  : has
+                    ? "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text cursor-pointer"
+                    : "bg-fx-surface border border-fx-border text-fx-muted opacity-40 cursor-not-allowed"
+              }`}
+            >
+              {DAY_SHORT[d]}
+              {d === todayDow && <span className="sr-only"> (hoy)</span>}
+              {d === todayDow && <span aria-hidden className="ml-1 text-fx-orange">•</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="text-sm text-fx-muted min-h-[20px]" aria-live="polite">
+        {peak ? (
+          <>
+            {DAY_NAMES[dow]}: el momento de más gente es de <b className="text-fx-text">{slotLabel(peak.hour)}</b> ({people(peak.value)}
+            {" "}llegan en esa hora).
+            {quiet && quiet.hour !== peak.hour && (
+              <>
+                {" "}El más tranquilo, de <b className="text-fx-text">{slotLabel(quiet.hour)}</b>.
+              </>
+            )}
+          </>
+        ) : (
+          <>{DAY_NAMES[dow]}: sin actividad en el período.</>
+        )}
+      </p>
+
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={series} margin={{ top: 22, right: 8, left: -20, bottom: 0 }} barCategoryGap={2}>
+            <CartesianGrid stroke={C.grid} vertical={false} />
+            <XAxis dataKey="hour" tickFormatter={(h) => `${h}`} tick={{ fill: C.muted, fontSize: 11 }} axisLine={{ stroke: C.border }} tickLine={false} />
+            <YAxis allowDecimals={false} domain={[0, Math.ceil(yMax)]} tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <Tooltip
+              cursor={{ fill: "rgba(128,128,128,0.08)" }}
+              content={({ active: isActive, payload }) => {
+                const p = payload?.[0]?.payload as { hour: number; value: number } | undefined;
+                if (!isActive || !p) return null;
                 return (
-                  // Botón para que el detalle también funcione con teclado (Tab) y lectores de pantalla.
-                  <button
-                    type="button"
-                    key={hour}
-                    onMouseEnter={show}
-                    onFocus={show}
-                    onMouseLeave={() => setHover(null)}
-                    onBlur={() => setHover(null)}
-                    className={`h-8 rounded-[4px] cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-fx-orange ${isPeak(dow, hour) ? "ring-2 ring-fx-text" : ""}`}
-                    style={{ background: v > 0 ? `rgba(249, 87, 22, ${alpha})` : C.surface }}
-                    aria-label={`${DAY_NAMES[dow]} de ${slotLabel(hour)}: llegan ${people(v)}${isPeak(dow, hour) ? " (pico)" : ""}`}
-                  />
+                  <div className="rounded-lg bg-fx-surface border border-fx-border px-3 py-2 text-xs shadow-lg">
+                    <div className="font-bold text-fx-text">{DAY_NAMES[dow]} de {slotLabel(p.hour)}</div>
+                    <div className="text-fx-muted">
+                      {p.value > 0 ? <>Llegan <b className="text-fx-text">{people(p.value)}</b></> : "Sin llegadas"}
+                    </div>
+                  </div>
                 );
-              })}
-            </React.Fragment>
-          ))}
-        </div>
+              }}
+            />
+            <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={36} isAnimationActive={false}>
+              {series.map((s) => (
+                <Cell key={s.hour} fill={peak && s.hour === peak.hour ? C.orange : "rgba(249,87,22,0.35)"} />
+              ))}
+              <LabelList
+                dataKey="value"
+                position="top"
+                content={({ x, y, width, index }) => {
+                  const s = typeof index === "number" ? series[index] : undefined;
+                  if (!s || !peak || s.hour !== peak.hour) return null;
+                  return (
+                    <text x={Number(x) + Number(width) / 2} y={Number(y) - 6} textAnchor="middle" fill={C.text} fontSize={12} fontWeight={700}>
+                      {s.value < 1 ? "<1" : Math.round(s.value)}
+                    </text>
+                  );
+                }}
+              />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-fx-muted">
-        <div className="min-h-[18px]" aria-live="polite">
-          {hover ? (
-            <span>
-              <b className="text-fx-text">{DAY_NAMES[hover.dow]} de {slotLabel(hover.hour)}</b>: llegan{" "}
-              <b className="text-fx-text">{people(hover.avgArrivals)}</b>
-            </span>
-          ) : (
-            <span>Pasá el mouse (o usá Tab) por un casillero para ver el detalle. Recuadro marcado = los 3 picos.</span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <span>Menos</span>
-          <div className="w-28 h-2.5 rounded-full" style={{ background: "linear-gradient(90deg, rgba(249,87,22,0.12), rgba(249,87,22,1))" }} />
-          <span>Más gente</span>
-        </div>
-      </div>
+      <p className="text-xs text-fx-muted">
+        Promedio de socios que llegan en cada hora ese día de la semana. Pasá el mouse por una barra para ver el detalle.
+      </p>
     </div>
   );
 }
@@ -415,8 +461,8 @@ export function MetricsPanel({ stats, onGoToTab }: MetricsPanelProps) {
           <div className="p-10 text-center text-sm text-fx-muted">Todavía no hay ingresos registrados en este período.</div>
         ) : (
           <div className={`flex flex-col gap-5 transition-opacity ${loading || staleData ? "opacity-60" : ""}`}>
-            <Card title="¿Cuándo viene la gente?" subtitle="Socios que llegan en cada hora, promedio por día de la semana">
-              <Heatmap cells={data.heatmap} peaks={data.peakSlots} />
+            <Card title="¿A qué hora viene la gente?" subtitle="Elegí un día para ver cuántos socios llegan en cada hora">
+              <HoursByDay cells={data.heatmap} todayDow={data.today.dow} />
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
