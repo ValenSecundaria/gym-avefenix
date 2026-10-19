@@ -38,9 +38,11 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
     getCheckInDisplaySnapshot,
     getCheckInDisplayServerSnapshot,
   );
-  const [now, setNow] = useState(() => Date.now());
+  // Hora de referencia para la alerta. 0 = todavía no medida: Date.now() no puede leerse durante el render
+  // (Next la congelaría en el prerender), se toma en el temporizador o al registrar un ingreso.
+  const [now, setNow] = useState(0);
 
-  const alertActive = Boolean(display.alert && display.alertUntil && display.alertUntil > now);
+  const alertActive = Boolean(now > 0 && display.alert && display.alertUntil && display.alertUntil > now);
   const currentResult = alertActive ? display.alert : display.lastEnabled;
   const remainingSeconds =
     alertActive && display.alertUntil
