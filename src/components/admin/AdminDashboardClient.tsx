@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { CheckCircle2, Menu, Search } from "lucide-react";
 import type {
   AbsentMemberItem,
@@ -18,6 +18,10 @@ import { MetricsPanel } from "./MetricsPanel";
 import { ADMIN_SECTIONS, AdminSidebar } from "./AdminSidebar";
 import { NewMemberModal, type NewMemberFormValues } from "./NewMemberModal";
 import { PaymentModal } from "./PaymentModal";
+import { PendingMembersBanner } from "./PendingMembersBanner";
+import { enqueuePendingMember, PendingDniError } from "@/lib/offline/pending-members-store";
+import { usePendingMembers } from "@/lib/offline/use-pending-members";
+import type { MemberSyncSummary } from "@/lib/offline/member-sync";
 import { createMember } from "@/actions/members.actions";
 import { registerPayment } from "@/actions/payments.actions";
 import { getDashboardOverview } from "@/actions/dashboard.actions";
@@ -87,6 +91,8 @@ export function AdminDashboardClient({
         setAbsentMembers(overviewRes.data.absentMembers);
       }
       if (checkInsRes.success && checkInsRes.data) setCheckIns(checkInsRes.data);
+    } catch {
+      // Sin conexión: se mantienen los últimos datos y se reintenta en el próximo ciclo.
     } finally {
       setIsRefreshing(false);
     }
@@ -107,13 +113,54 @@ export function AdminDashboardClient({
     };
   }, [refreshAllData]);
 
-  const showToast = (msg: string) => {
+  const toastTimerRef = useRef<number | null>(null);
+  const showToast = useCallback((msg: string) => {
     setFeedbackBanner(msg);
-    window.setTimeout(() => setFeedbackBanner(null), 5000);
-  };
+    // Un aviso nuevo reinicia el contador: el temporizador del anterior no debe borrarlo antes de tiempo.
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => setFeedbackBanner(null), 5000);
+  }, []);
+
+  const handleMembersSynced = useCallback(
+    (summary: MemberSyncSummary) => {
+      const total = summary.created + summary.alreadySynced;
+      showToast(
+        total === 1
+          ? "Volvió la conexión: se subió 1 socio guardado en esta PC."
+          : `Volvió la conexión: se subieron ${total} socios guardados en esta PC.`
+      );
+      void refreshAllData();
+    },
+    [refreshAllData, showToast]
+  );
+  const pendingMembers = usePendingMembers(handleMembersSynced);
 
   const handleCreateMember = async (v: NewMemberFormValues) => {
-    const res = await createMember({ ...v, photoBase64: v.photoBase64 || undefined });
+    const input = { ...v, photoBase64: v.photoBase64 || undefined };
+
+    // Sin internet: el alta se guarda en esta PC y se sube sola cuando vuelve la conexión.
+    const saveOffline = async () => {
+      try {
+        await enqueuePendingMember(input);
+        showToast(`Sin conexión: ${v.fullName} quedó guardado en esta PC y se subirá solo al volver internet.`);
+        return { success: true };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof PendingDniError ? error.message : "No se pudo guardar el alta en esta PC.",
+        };
+      }
+    };
+
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return saveOffline();
+
+    let res;
+    try {
+      res = await createMember(input);
+    } catch {
+      // La red se cortó durante el envío. Si el alta llegó igual, la sincronización la detecta por DNI y no la duplica.
+      return saveOffline();
+    }
     if (res.success) {
       showToast(`Socio ${v.fullName} registrado y habilitado con éxito.`);
       await refreshAllData();
@@ -150,6 +197,13 @@ export function AdminDashboardClient({
       <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         <HeaderStats stats={stats} onOpenNewMember={() => setIsNewMemberOpen(true)} onRefresh={refreshAllData} isRefreshing={isRefreshing} theme={theme} onToggleTheme={toggleTheme} />
+
+        <PendingMembersBanner
+          pending={pendingMembers.pending}
+          isSyncing={pendingMembers.isSyncing}
+          onSyncNow={() => void pendingMembers.syncNow()}
+          onDiscard={(clientId) => void pendingMembers.discard(clientId)}
+        />
 
         {feedbackBanner && (
           <div className="flex items-center gap-2.5 p-4 rounded-2xl bg-fx-green/15 border border-fx-green text-sm font-bold text-fx-green">

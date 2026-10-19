@@ -45,36 +45,45 @@ export async function getPlans(): Promise<ActionResponse<PlanOption[]>> {
   }
 }
 
-export async function createMember(
-  input: CreateMemberInput
-): Promise<ActionResponse<MemberListItem>> {
+type CreateMemberRecordResult =
+  | { kind: "created"; data: MemberListItem }
+  | { kind: "duplicate"; existingFullName: string }
+  | { kind: "invalid"; error: string };
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && (error as { code?: unknown }).code === "P2002";
+}
+
+// Alta completa (socio + membresía + pago inicial). La unicidad del DNI en la base es la garantía
+// final contra duplicados: si dos altas del mismo DNI llegan a la vez, la segunda termina en "duplicate".
+async function createMemberRecord(input: CreateMemberInput, startDate: Date): Promise<CreateMemberRecordResult> {
+  const parsed = createMemberSchema.safeParse(input);
+  if (!parsed.success) {
+    return { kind: "invalid", error: parsed.error.issues[0]?.message || "Datos del socio inválidos" };
+  }
+
+  const { fullName, dni, phone, planId, paymentMethod, photoBase64, notes } = parsed.data;
+
+  if (!resolveSafePhotoPath(dni)) {
+    return { kind: "invalid", error: "Identificador inválido" };
+  }
+
+  const existing = await prisma.member.findUnique({ where: { dni } });
+  if (existing) return { kind: "duplicate", existingFullName: existing.fullName };
+
+  const plan = await prisma.plan.findUnique({ where: { id: planId } });
+  if (!plan) return { kind: "invalid", error: "El plan seleccionado no existe" };
+
+  let photoFilename: string | null = null;
+  if (photoBase64 && photoBase64.trim().length > 0) {
+    photoFilename = await saveMemberPhotoToDisk(dni, photoBase64);
+  }
+
+  const validUntil = new Date(startDate.getTime() + plan.durationDays * 24 * 60 * 60 * 1000);
+
+  let created;
   try {
-    const parsed = createMemberSchema.safeParse(input);
-    if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message || "Datos del socio inválidos" };
-    }
-
-    const { fullName, dni, phone, planId, paymentMethod, photoBase64, notes } = parsed.data;
-
-    if (!resolveSafePhotoPath(dni)) {
-      return { success: false, error: "Identificador inválido" };
-    }
-
-    const existing = await prisma.member.findUnique({ where: { dni } });
-    if (existing) return { success: false, error: `Ya existe un socio registrado con el DNI ${dni}` };
-
-    const plan = await prisma.plan.findUnique({ where: { id: planId } });
-    if (!plan) return { success: false, error: "El plan seleccionado no existe" };
-
-    let photoFilename: string | null = null;
-    if (photoBase64 && photoBase64.trim().length > 0) {
-      photoFilename = await saveMemberPhotoToDisk(dni, photoBase64);
-    }
-
-    const startDate = new Date();
-    const validUntil = new Date(startDate.getTime() + plan.durationDays * 24 * 60 * 60 * 1000);
-
-    const created = await prisma.$transaction(async (tx) => {
+    created = await prisma.$transaction(async (tx) => {
       const member = await tx.member.create({
         data: { dni, fullName, phone: phone || null, photoFilename, notes: notes || null, isActive: true },
       });
@@ -88,31 +97,144 @@ export async function createMember(
           amount: plan.price,
           method: paymentMethod,
           notes: notes || `Alta inicial - ${plan.name}`,
+          paidAt: startDate,
         },
       });
       return { member, membership };
     });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      const winner = await prisma.member.findUnique({ where: { dni } });
+      return { kind: "duplicate", existingFullName: winner?.fullName ?? fullName };
+    }
+    throw error;
+  }
 
+  return {
+    kind: "created",
+    data: {
+      id: created.member.id,
+      dni: created.member.dni,
+      fullName: created.member.fullName,
+      phone: created.member.phone,
+      photoFilename: created.member.photoFilename,
+      photoUrl: getMemberPhotoUrl(created.member.dni, created.member.photoFilename),
+      isActive: created.member.isActive,
+      planName: plan.name,
+      membershipStatus: "ACTIVA",
+      validUntil: created.membership.validUntil.toISOString(),
+    },
+  };
+}
+
+export async function createMember(
+  input: CreateMemberInput
+): Promise<ActionResponse<MemberListItem>> {
+  try {
+    const result = await createMemberRecord(input, new Date());
+    if (result.kind === "invalid") return { success: false, error: result.error };
+    if (result.kind === "duplicate") {
+      return { success: false, error: `Ya existe un socio registrado con el DNI ${input.dni}` };
+    }
     revalidatePath("/admin");
-    return {
-      success: true,
-      data: {
-        id: created.member.id,
-        dni: created.member.dni,
-        fullName: created.member.fullName,
-        phone: created.member.phone,
-        photoFilename: created.member.photoFilename,
-        photoUrl: getMemberPhotoUrl(created.member.dni, created.member.photoFilename),
-        isActive: created.member.isActive,
-        planName: plan.name,
-        membershipStatus: "ACTIVA",
-        validUntil: created.membership.validUntil.toISOString(),
-      },
-    };
+    return { success: true, data: result.data };
   } catch (error) {
     console.error("[createMember] Error:", error);
     return { success: false, error: "No se pudo registrar el socio. Verifique los datos e intente nuevamente." };
   }
+}
+
+// -------------------------------------------------------------
+// SINCRONIZACIÓN EN LOTE DE ALTAS HECHAS SIN INTERNET
+// -------------------------------------------------------------
+
+const MAX_SYNC_BATCH = 25;
+const MAX_OFFLINE_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+export interface PendingMemberPayload {
+  clientId: string;
+  createdAt: number; // epoch ms en que se cargó el alta en la PC (sin conexión)
+  input: CreateMemberInput;
+}
+
+export type PendingMemberSyncStatus =
+  | "created" // se dio de alta ahora
+  | "already_synced" // ya estaba en la base con el mismo nombre (un envío anterior llegó aunque no hubo respuesta)
+  | "conflict" // el DNI ya pertenece a otra persona
+  | "invalid" // datos rechazados: no tiene sentido reintentar
+  | "retry"; // error transitorio del servidor: se reintenta en la próxima sincronización
+
+export interface PendingMemberSyncResult {
+  clientId: string;
+  status: PendingMemberSyncStatus;
+  message?: string;
+}
+
+function normalizeName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+export async function syncPendingMembers(
+  items: PendingMemberPayload[]
+): Promise<ActionResponse<PendingMemberSyncResult[]>> {
+  if (!Array.isArray(items) || items.length > MAX_SYNC_BATCH) {
+    return { success: false, error: "Lote de sincronización inválido" };
+  }
+
+  const results: PendingMemberSyncResult[] = [];
+  const seenDnis = new Set<string>();
+  let anyCreated = false;
+
+  // Secuencial a propósito: cada alta es una transacción y el orden de carga se respeta.
+  for (const item of items) {
+    const clientId = typeof item?.clientId === "string" ? item.clientId.slice(0, 64) : "";
+    if (!clientId || !item.input) {
+      results.push({ clientId, status: "invalid", message: "Registro pendiente corrupto" });
+      continue;
+    }
+
+    const dni = String(item.input.dni ?? "").trim();
+    if (seenDnis.has(dni)) {
+      results.push({ clientId, status: "conflict", message: `DNI ${dni} repetido dentro del mismo lote` });
+      continue;
+    }
+    seenDnis.add(dni);
+
+    // La fecha de alta es la de la carga offline (no la de la sincronización), acotada a valores razonables.
+    const now = Date.now();
+    const createdAt = Number(item.createdAt);
+    const startMs =
+      Number.isFinite(createdAt) && createdAt <= now && createdAt >= now - MAX_OFFLINE_AGE_MS ? createdAt : now;
+
+    try {
+      const result = await createMemberRecord(item.input, new Date(startMs));
+      if (result.kind === "created") {
+        anyCreated = true;
+        results.push({ clientId, status: "created" });
+      } else if (result.kind === "invalid") {
+        results.push({ clientId, status: "invalid", message: result.error });
+      } else if (normalizeName(result.existingFullName) === normalizeName(item.input.fullName)) {
+        results.push({ clientId, status: "already_synced" });
+      } else {
+        results.push({
+          clientId,
+          status: "conflict",
+          message: `El DNI ${dni} ya está registrado a nombre de ${result.existingFullName}`,
+        });
+      }
+    } catch (error) {
+      console.error("[syncPendingMembers] Error:", error);
+      results.push({ clientId, status: "retry", message: "Error temporal del servidor" });
+    }
+  }
+
+  if (anyCreated) revalidatePath("/admin");
+  return { success: true, data: results };
 }
 
 const searchMemberSchema = z
