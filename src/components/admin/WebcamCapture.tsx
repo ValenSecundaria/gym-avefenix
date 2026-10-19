@@ -48,9 +48,40 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
   }, [stopCamera]);
 
   useEffect(() => {
-    if (!photoDataUrl) startCamera();
-    return () => stopCamera();
-  }, [photoDataUrl, startCamera, stopCamera]);
+    let active = true;
+    if (!photoDataUrl) {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        Promise.resolve().then(() => {
+          if (active) setCameraError("El navegador no soporta cámara web.");
+        });
+        return;
+      }
+      navigator.mediaDevices
+        .getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+          audio: false,
+        })
+        .then((stream) => {
+          if (!active) {
+            stream.getTracks().forEach((t) => t.stop());
+            return;
+          }
+          streamRef.current = stream;
+          if (videoRef.current) videoRef.current.srcObject = stream;
+          setCameraActive(true);
+          setCameraError(null);
+        })
+        .catch(() => {
+          if (!active) return;
+          setCameraError("Sin acceso a cámara. Podés subir una foto desde tu PC.");
+          setCameraActive(false);
+        });
+    }
+    return () => {
+      active = false;
+      stopCamera();
+    };
+  }, [photoDataUrl, stopCamera]);
 
   const handleCapture = () => {
     const video = videoRef.current;

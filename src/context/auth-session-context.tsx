@@ -44,8 +44,27 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
-    syncSession();
-  }, [syncSession]);
+    let ignore = false;
+    restoreClientSession()
+      .then((restored) => {
+        if (ignore) return;
+        if (restored) {
+          setSession(restored);
+          setStatus("AUTHENTICATED");
+        } else {
+          setSession(null);
+          setStatus("UNAUTHENTICATED");
+        }
+      })
+      .catch(() => {
+        if (ignore) return;
+        setSession(null);
+        setStatus("UNAUTHENTICATED");
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const login = async (username: string, password: string): Promise<LoginOutcome> => {
     const outcome = await loginWithOfflineFallback(username, password);

@@ -7,7 +7,6 @@ import { Flame, Lock, User, ArrowLeft, Loader2, AlertCircle } from "lucide-react
 import { useAuthSession } from "@/context/auth-session-context";
 import { warmCacheRoutes } from "@/lib/pwa/register-sw";
 import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
-import { loginAction } from "@/actions/auth.actions";
 
 export function LoginForm() {
   const router = useRouter();

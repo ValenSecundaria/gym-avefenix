@@ -12,7 +12,9 @@ const SAFE_PHOTO_IDENTIFIER_REGEX =
  */
 export function getBasePhotosDir(): string {
   const customPath = process.env.LOCAL_PHOTOS_PATH?.trim();
-  return path.resolve(customPath || "C:/GymData/photos");
+  const defaultDir =
+    process.platform === "win32" ? "C:/GymData/photos" : "/tmp/GymData/photos";
+  return path.resolve(/*turbopackIgnore: true*/ customPath || defaultDir);
 }
 
 /**
@@ -39,9 +41,9 @@ export function resolveSafePhotoPath(dniOrFilename: string): string | null {
     return null;
   }
 
-  // Resolver la ruta contra process.env.LOCAL_PHOTOS_PATH || "C:/GymData/photos"
+  // Resolver la ruta contra process.env.LOCAL_PHOTOS_PATH || defaultDir
   const resolvedBaseDir = getBasePhotosDir();
-  const resolvedFilePath = path.resolve(resolvedBaseDir, cleanInput);
+  const resolvedFilePath = path.resolve(/*turbopackIgnore: true*/ resolvedBaseDir, cleanInput);
 
   // Normalizar la ruta base y verificar estrictamente que resolvedFilePath.startsWith(resolvedBaseDir + path.sep)
   const baseDirWithSep = resolvedBaseDir.endsWith(path.sep)
