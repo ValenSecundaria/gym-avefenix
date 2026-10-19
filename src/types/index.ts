@@ -152,3 +152,10 @@ export interface MemberListItem {
   membershipStatus: MembershipStatusType | "SIN_MEMBRESIA";
   validUntil: string | null;
 }
+
+export interface MemberDetail extends MemberListItem {
+  notes: string | null;
+  createdAt: string;
+  paymentsCount: number;
+  checkInsCount: number;
+}

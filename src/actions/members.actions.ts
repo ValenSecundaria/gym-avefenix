@@ -2,12 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { saveMemberPhotoToDisk } from "@/lib/photo-storage";
+import { deleteMemberPhotoFromDisk, saveMemberPhotoToDisk } from "@/lib/photo-storage";
+import { hasActionSession } from "@/lib/auth/require-session";
 import { getMemberPhotoUrl } from "@/lib/utils";
 import { resolveSafePhotoPath } from "@/lib/security/safe-path";
-import { createMemberSchema, type CreateMemberInput } from "@/lib/validations/member.schema";
-import type { ActionResponse, MemberListItem, MembershipStatusType, PlanOption } from "@/types";
+import {
+  createMemberSchema,
+  updateMemberSchema,
+  type CreateMemberInput,
+  type UpdateMemberInput,
+} from "@/lib/validations/member.schema";
+import type { ActionResponse, MemberDetail, MemberListItem, MembershipStatusType, PlanOption } from "@/types";
 
 export async function ensureDefaultPlansExist(): Promise<void> {
   const count = await prisma.plan.count();
@@ -48,6 +55,7 @@ export async function getPlans(): Promise<ActionResponse<PlanOption[]>> {
 type CreateMemberRecordResult =
   | { kind: "created"; data: MemberListItem }
   | { kind: "duplicate"; existingFullName: string }
+  | { kind: "inactive"; existingFullName: string }
   | { kind: "invalid"; error: string };
 
 function isUniqueConstraintError(error: unknown): boolean {
@@ -69,7 +77,11 @@ async function createMemberRecord(input: CreateMemberInput, startDate: Date): Pr
   }
 
   const existing = await prisma.member.findUnique({ where: { dni } });
-  if (existing) return { kind: "duplicate", existingFullName: existing.fullName };
+  if (existing) {
+    return existing.isActive
+      ? { kind: "duplicate", existingFullName: existing.fullName }
+      : { kind: "inactive", existingFullName: existing.fullName };
+  }
 
   const plan = await prisma.plan.findUnique({ where: { id: planId } });
   if (!plan) return { kind: "invalid", error: "El plan seleccionado no existe" };
@@ -135,6 +147,12 @@ export async function createMember(
     if (result.kind === "invalid") return { success: false, error: result.error };
     if (result.kind === "duplicate") {
       return { success: false, error: `Ya existe un socio registrado con el DNI ${input.dni}` };
+    }
+    if (result.kind === "inactive") {
+      return {
+        success: false,
+        error: `El DNI ${input.dni} es de ${result.existingFullName}, que está dado de baja. Reactivalo desde Socios → Dados de baja.`,
+      };
     }
     revalidatePath("/admin");
     return { success: true, data: result.data };
@@ -218,6 +236,12 @@ export async function syncPendingMembers(
         results.push({ clientId, status: "created" });
       } else if (result.kind === "invalid") {
         results.push({ clientId, status: "invalid", message: result.error });
+      } else if (result.kind === "inactive") {
+        results.push({
+          clientId,
+          status: "conflict",
+          message: `El DNI ${dni} es de ${result.existingFullName}, dado de baja: reactivalo desde Socios`,
+        });
       } else if (normalizeName(result.existingFullName) === normalizeName(item.input.fullName)) {
         results.push({ clientId, status: "already_synced" });
       } else {
@@ -243,7 +267,35 @@ const searchMemberSchema = z
   .max(100, "El término de búsqueda no puede superar los 100 caracteres")
   .optional();
 
-export async function getMembers(search?: string): Promise<ActionResponse<MemberListItem[]>> {
+const memberWithLatestMembership = {
+  memberships: { orderBy: { validUntil: "desc" as const }, take: 1, include: { plan: true } },
+};
+
+type MemberWithLatestMembership = Prisma.MemberGetPayload<{ include: typeof memberWithLatestMembership }>;
+
+function toMemberListItem(m: MemberWithLatestMembership, now: Date): MemberListItem {
+  const latest = m.memberships[0];
+  const status: MembershipStatusType | "SIN_MEMBRESIA" = latest
+    ? latest.status === "ACTIVA" && latest.validUntil >= now ? "ACTIVA" : "VENCIDA"
+    : "SIN_MEMBRESIA";
+  return {
+    id: m.id,
+    dni: m.dni,
+    fullName: m.fullName,
+    phone: m.phone,
+    photoFilename: m.photoFilename,
+    photoUrl: getMemberPhotoUrl(m.dni, m.photoFilename),
+    isActive: m.isActive,
+    planName: latest?.plan.name || "Sin plan",
+    membershipStatus: status,
+    validUntil: latest ? latest.validUntil.toISOString() : null,
+  };
+}
+
+export async function getMembers(
+  search?: string,
+  options: { inactive?: boolean } = {}
+): Promise<ActionResponse<MemberListItem[]>> {
   try {
     const parsedSearch = searchMemberSchema.safeParse(search);
     if (!parsedSearch.success) {
@@ -254,36 +306,160 @@ export async function getMembers(search?: string): Promise<ActionResponse<Member
     }
     const cleanSearch = parsedSearch.data || undefined;
     const members = await prisma.member.findMany({
-      where: cleanSearch
-        ? { OR: [{ fullName: { contains: cleanSearch, mode: "insensitive" } }, { dni: { contains: cleanSearch } }] }
-        : undefined,
-      include: { memberships: { orderBy: { validUntil: "desc" }, take: 1, include: { plan: true } } },
+      where: {
+        isActive: options.inactive !== true,
+        ...(cleanSearch
+          ? { OR: [{ fullName: { contains: cleanSearch, mode: "insensitive" } }, { dni: { contains: cleanSearch } }] }
+          : {}),
+      },
+      include: memberWithLatestMembership,
       orderBy: { createdAt: "desc" },
       take: 100,
     });
 
     const now = new Date();
-    const data: MemberListItem[] = members.map((m) => {
-      const latest = m.memberships[0];
-      const status: MembershipStatusType | "SIN_MEMBRESIA" = latest
-        ? latest.status === "ACTIVA" && latest.validUntil >= now ? "ACTIVA" : "VENCIDA"
-        : "SIN_MEMBRESIA";
-      return {
-        id: m.id,
-        dni: m.dni,
-        fullName: m.fullName,
-        phone: m.phone,
-        photoFilename: m.photoFilename,
-        photoUrl: getMemberPhotoUrl(m.dni, m.photoFilename),
-        isActive: m.isActive,
-        planName: latest?.plan.name || "Sin plan",
-        membershipStatus: status,
-        validUntil: latest ? latest.validUntil.toISOString() : null,
-      };
-    });
-    return { success: true, data };
+    return { success: true, data: members.map((m) => toMemberListItem(m, now)) };
   } catch (error) {
     console.error("[getMembers] Error:", error);
     return { success: false, error: "No se pudo cargar el listado de socios" };
+  }
+}
+
+// -------------------------------------------------------------
+// EDICIÓN, BAJA Y ELIMINACIÓN DE SOCIOS
+// "Dar de baja" (isActive = false) conserva pagos e ingresos para las métricas y la caja;
+// "Eliminar definitivamente" borra el socio con todo su historial (para altas cargadas por error).
+// -------------------------------------------------------------
+
+const NO_SESSION_ERROR = "Tu sesión expiró. Volvé a iniciar sesión.";
+const memberIdSchema = z.string().trim().min(1).max(64);
+
+export async function getMemberDetail(memberId: string): Promise<ActionResponse<MemberDetail>> {
+  try {
+    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    const id = memberIdSchema.safeParse(memberId);
+    if (!id.success) return { success: false, error: "Socio inválido" };
+
+    const member = await prisma.member.findUnique({
+      where: { id: id.data },
+      include: { ...memberWithLatestMembership, _count: { select: { payments: true, checkIns: true } } },
+    });
+    if (!member) return { success: false, error: "El socio ya no existe" };
+
+    return {
+      success: true,
+      data: {
+        ...toMemberListItem(member, new Date()),
+        notes: member.notes,
+        createdAt: member.createdAt.toISOString(),
+        paymentsCount: member._count.payments,
+        checkInsCount: member._count.checkIns,
+      },
+    };
+  } catch (error) {
+    console.error("[getMemberDetail] Error:", error);
+    return { success: false, error: "No se pudieron cargar los datos del socio" };
+  }
+}
+
+export async function updateMember(input: UpdateMemberInput): Promise<ActionResponse<MemberListItem>> {
+  try {
+    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    const parsed = updateMemberSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message || "Datos del socio inválidos" };
+    }
+    const { id, fullName, dni, phone, notes, photoBase64 } = parsed.data;
+
+    if (!resolveSafePhotoPath(dni)) return { success: false, error: "Identificador inválido" };
+
+    const current = await prisma.member.findUnique({ where: { id } });
+    if (!current) return { success: false, error: "El socio ya no existe" };
+
+    if (dni !== current.dni) {
+      const owner = await prisma.member.findUnique({ where: { dni }, select: { fullName: true } });
+      if (owner) return { success: false, error: `El DNI ${dni} ya pertenece a ${owner.fullName}` };
+    }
+
+    const newPhotoFilename =
+      photoBase64 && photoBase64.trim().length > 0 ? await saveMemberPhotoToDisk(dni, photoBase64) : null;
+
+    let updated;
+    try {
+      updated = await prisma.member.update({
+        where: { id },
+        data: {
+          fullName,
+          dni,
+          phone: phone || null,
+          notes: notes || null,
+          ...(newPhotoFilename ? { photoFilename: newPhotoFilename } : {}),
+        },
+        include: memberWithLatestMembership,
+      });
+    } catch (error) {
+      await deleteMemberPhotoFromDisk(newPhotoFilename);
+      if (isUniqueConstraintError(error)) {
+        return { success: false, error: `El DNI ${dni} ya pertenece a otro socio` };
+      }
+      throw error;
+    }
+
+    if (newPhotoFilename) await deleteMemberPhotoFromDisk(current.photoFilename);
+
+    revalidatePath("/admin");
+    return { success: true, data: toMemberListItem(updated, new Date()) };
+  } catch (error) {
+    console.error("[updateMember] Error:", error);
+    return { success: false, error: "No se pudieron guardar los cambios del socio" };
+  }
+}
+
+export async function setMemberActive(
+  memberId: string,
+  isActive: boolean
+): Promise<ActionResponse<{ fullName: string }>> {
+  try {
+    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    const id = memberIdSchema.safeParse(memberId);
+    if (!id.success || typeof isActive !== "boolean") return { success: false, error: "Socio inválido" };
+
+    const member = await prisma.member.update({
+      where: { id: id.data },
+      data: { isActive },
+      select: { fullName: true },
+    });
+    revalidatePath("/admin");
+    return { success: true, data: member };
+  } catch (error) {
+    console.error("[setMemberActive] Error:", error);
+    return { success: false, error: "No se pudo actualizar el estado del socio" };
+  }
+}
+
+export async function deleteMemberPermanently(
+  memberId: string,
+  confirmDni: string
+): Promise<ActionResponse<{ fullName: string }>> {
+  try {
+    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    const id = memberIdSchema.safeParse(memberId);
+    if (!id.success) return { success: false, error: "Socio inválido" };
+
+    const member = await prisma.member.findUnique({ where: { id: id.data } });
+    if (!member) return { success: false, error: "El socio ya no existe" };
+    if (String(confirmDni ?? "").trim() !== member.dni) {
+      return { success: false, error: "El DNI escrito no coincide con el del socio" };
+    }
+
+    // Membresías, pagos e ingresos se borran en cascada (onDelete: Cascade en el schema).
+    await prisma.member.delete({ where: { id: member.id } });
+    await deleteMemberPhotoFromDisk(member.photoFilename);
+
+    revalidatePath("/admin");
+    return { success: true, data: { fullName: member.fullName } };
+  } catch (error) {
+    console.error("[deleteMemberPermanently] Error:", error);
+    return { success: false, error: "No se pudo eliminar el socio" };
   }
 }

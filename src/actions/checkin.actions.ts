@@ -47,6 +47,9 @@ export async function verifyAndCheckIn(
     if (!member) {
       return { success: false, error: `No se encontró ningún socio registrado con el DNI ${dni}` };
     }
+    if (!member.isActive) {
+      return { success: false, error: `El DNI ${dni} está dado de baja. Consultá en recepción.` };
+    }
 
     const now = new Date();
     const latestMembership = member.memberships[0];

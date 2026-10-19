@@ -34,3 +34,10 @@ export const createMemberSchema = z.object({
 });
 
 export type CreateMemberInput = z.infer<typeof createMemberSchema>;
+
+// Edición de datos personales. La foto es opcional: null/ausente = se conserva la actual.
+export const updateMemberSchema = createMemberSchema
+  .pick({ fullName: true, dni: true, phone: true, notes: true, photoBase64: true })
+  .extend({ id: z.string().trim().min(1, "Socio inválido").max(64) });
+
+export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;

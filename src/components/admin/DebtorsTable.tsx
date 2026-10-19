@@ -2,13 +2,15 @@ import React from "react";
 import { MessageCircle, CreditCard, CheckCircle2, Wallet, User } from "lucide-react";
 import type { DebtorMemberItem } from "@/types";
 import { buildWhatsAppLink, formatCurrencyARS, formatDateAR } from "@/lib/utils";
+import { EditMemberButton } from "./EditMemberButton";
 
 interface DebtorsTableProps {
   debtors: DebtorMemberItem[];
   onRegisterPayment: (debtor: DebtorMemberItem) => void;
+  onEditMember: (memberId: string) => void;
 }
 
-export function DebtorsTable({ debtors, onRegisterPayment }: DebtorsTableProps) {
+export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: DebtorsTableProps) {
   if (debtors.length === 0) {
     return (
       <div className="bg-fx-surface border border-fx-border rounded-2xl p-10 text-center">
@@ -102,6 +104,7 @@ export function DebtorsTable({ debtors, onRegisterPayment }: DebtorsTableProps) 
                     <CreditCard className="w-4 h-4" />
                     <span>Cobrar Cuota</span>
                   </button>
+                  <EditMemberButton fullName={debtor.fullName} onClick={() => onEditMember(debtor.id)} />
                 </div>
               </div>
             </div>

@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import { CheckCircle2, AlertTriangle, Clock, User } from "lucide-react";
 import type { AccessStatusType, LiveCheckInItem } from "@/types";
 import { formatTimeAR } from "@/lib/utils";
+import { EditMemberButton } from "./EditMemberButton";
 
 interface LiveFeedTableProps {
   items: LiveCheckInItem[];
+  onEditMember: (memberId: string) => void;
 }
 
 function StatusBadge({ status }: { status: AccessStatusType }) {
@@ -34,7 +36,7 @@ function StatusBadge({ status }: { status: AccessStatusType }) {
   );
 }
 
-export function LiveFeedTable({ items }: LiveFeedTableProps) {
+export function LiveFeedTable({ items, onEditMember }: LiveFeedTableProps) {
   const [filter, setFilter] = useState<"ALL" | "DUE" | "LIMIT">("ALL");
 
   const dueCount = items.filter((i) => i.status === "CUOTA_VENCIDA").length;
@@ -84,6 +86,7 @@ export function LiveFeedTable({ items }: LiveFeedTableProps) {
                 <th className="py-4 px-5">Socio / Documento</th>
                 <th className="py-4 px-5">Plan Contratado</th>
                 <th className="py-4 px-5 text-right">Estado Acceso / Cuota</th>
+                <th className="py-4 px-4"><span className="sr-only">Acciones</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-fx-border">
@@ -110,6 +113,9 @@ export function LiveFeedTable({ items }: LiveFeedTableProps) {
                   </td>
                   <td className="py-4 px-5 text-right">
                     <StatusBadge status={item.status} />
+                  </td>
+                  <td className="py-4 px-4 text-right">
+                    <EditMemberButton fullName={item.fullName} onClick={() => onEditMember(item.memberId)} />
                   </td>
                 </tr>
               ))}

@@ -19,6 +19,8 @@ import { ADMIN_SECTIONS, AdminSidebar } from "./AdminSidebar";
 import { NewMemberModal, type NewMemberFormValues } from "./NewMemberModal";
 import { PaymentModal } from "./PaymentModal";
 import { PendingMembersBanner } from "./PendingMembersBanner";
+import { MembersSection } from "./MembersSection";
+import { MemberEditModal } from "./MemberEditModal";
 import { enqueuePendingMember, PendingDniError } from "@/lib/offline/pending-members-store";
 import { usePendingMembers } from "@/lib/offline/use-pending-members";
 import type { MemberSyncSummary } from "@/lib/offline/member-sync";
@@ -30,7 +32,7 @@ import { useAdminTheme, type AdminTheme } from "@/lib/use-admin-theme";
 import { gymBroadcast } from "@/lib/screens/broadcast-channel";
 import { useAuthSession } from "@/context/auth-session-context";
 
-export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "METRICS";
+export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "METRICS";
 
 interface AdminDashboardClientProps {
   initialStats: DashboardStats;
@@ -59,6 +61,8 @@ export function AdminDashboardClient({
   const [isNewMemberOpen, setIsNewMemberOpen] = useState(false);
   const [selectedDebtor, setSelectedDebtor] = useState<DebtorMemberItem | null>(null);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [membersReloadKey, setMembersReloadKey] = useState(0);
   const { theme, toggleTheme } = useAdminTheme(initialTheme);
   const { status: authStatus, refreshSession } = useAuthSession();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -168,6 +172,12 @@ export function AdminDashboardClient({
     return { success: res.success, error: res.error };
   };
 
+  const handleMemberChanged = (message: string) => {
+    showToast(message);
+    setMembersReloadKey((k) => k + 1);
+    void refreshAllData();
+  };
+
   const handleConfirmPayment = async (payload: { memberId: string; planId: string; amount: number; method: PaymentMethodType; notes?: string; }) => {
     const res = await registerPayment(payload);
     if (res.success && res.data) {
@@ -233,15 +243,17 @@ export function AdminDashboardClient({
             </div>
           </div>
 
-          {activeTab === "LIVE_FEED" && <LiveFeedTable items={checkIns.filter((c) => match(c.fullName, c.dni))} />}
-          {activeTab === "DEBTORS" && <DebtorsTable debtors={debtors.filter((d) => match(d.fullName, d.dni))} onRegisterPayment={setSelectedDebtor} />}
-          {activeTab === "ABSENT" && <AbsentMembersTable absentMembers={absentMembers.filter((a) => match(a.fullName, a.dni))} />}
+          {activeTab === "LIVE_FEED" && <LiveFeedTable items={checkIns.filter((c) => match(c.fullName, c.dni))} onEditMember={setEditingMemberId} />}
+          {activeTab === "DEBTORS" && <DebtorsTable debtors={debtors.filter((d) => match(d.fullName, d.dni))} onRegisterPayment={setSelectedDebtor} onEditMember={setEditingMemberId} />}
+          {activeTab === "ABSENT" && <AbsentMembersTable absentMembers={absentMembers.filter((a) => match(a.fullName, a.dni))} onEditMember={setEditingMemberId} />}
+          {activeTab === "MEMBERS" && <MembersSection searchQuery={searchQuery} reloadKey={membersReloadKey} onEditMember={setEditingMemberId} />}
           {activeTab === "METRICS" && <MetricsPanel stats={stats} onGoToTab={setActiveTab} />}
         </div>
       </div>
       </div>
 
       <NewMemberModal isOpen={isNewMemberOpen} onClose={() => setIsNewMemberOpen(false)} plans={plans} onSubmitMember={handleCreateMember} />
+      <MemberEditModal memberId={editingMemberId} onClose={() => setEditingMemberId(null)} onChanged={handleMemberChanged} />
       <PaymentModal debtor={selectedDebtor} plans={plans} onClose={() => setSelectedDebtor(null)} onConfirmPayment={handleConfirmPayment} />
     </div>
   );

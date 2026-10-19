@@ -46,6 +46,18 @@ export async function readMemberPhotoFromDisk(
   }
 }
 
+// Best-effort: si el archivo ya no existe o la ruta es inválida, no hay nada que borrar.
+export async function deleteMemberPhotoFromDisk(photoFilename: string | null | undefined): Promise<void> {
+  if (!photoFilename) return;
+  const safeFilePath = resolveSafePhotoPath(photoFilename);
+  if (!safeFilePath) return;
+  try {
+    await fs.unlink(safeFilePath);
+  } catch {
+    // ENOENT u otro error de disco: la foto vieja queda huérfana, no afecta al socio.
+  }
+}
+
 export async function generateFallbackAvatarWebp(label = "AF"): Promise<Buffer> {
   const safeText = label.slice(0, 2).toUpperCase();
   const svg = `<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">

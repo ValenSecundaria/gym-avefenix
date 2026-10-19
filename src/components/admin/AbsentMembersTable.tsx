@@ -3,12 +3,14 @@ import { MessageCircle, CalendarClock, UserCheck, User } from "lucide-react";
 import type { AbsentMemberItem } from "@/types";
 import { buildWhatsAppLink, formatDateAR } from "@/lib/utils";
 import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
+import { EditMemberButton } from "./EditMemberButton";
 
 interface AbsentMembersTableProps {
   absentMembers: AbsentMemberItem[];
+  onEditMember: (memberId: string) => void;
 }
 
-export function AbsentMembersTable({ absentMembers }: AbsentMembersTableProps) {
+export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMembersTableProps) {
   if (absentMembers.length === 0) {
     return (
       <div className="bg-fx-surface border border-fx-border rounded-2xl p-10 text-center">
@@ -77,15 +79,18 @@ export function AbsentMembersTable({ absentMembers }: AbsentMembersTableProps) {
                 </div>
               </div>
 
-              <a
-                href={waUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="min-h-[48px] px-5 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Recontactar por WhatsApp</span>
-              </a>
+              <div className="flex items-center gap-2.5">
+                <a
+                  href={waUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-h-[48px] px-5 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Recontactar por WhatsApp</span>
+                </a>
+                <EditMemberButton fullName={member.fullName} onClick={() => onEditMember(member.id)} />
+              </div>
             </div>
           );
         })}
