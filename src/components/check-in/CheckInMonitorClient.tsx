@@ -1,10 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Flame, LayoutDashboard } from "lucide-react";
 import type { CheckInVerificationResult } from "@/types";
 import { gymBroadcast } from "@/lib/screens/broadcast-channel";
+import {
+  getCheckInDisplaySnapshot,
+  getCheckInDisplayServerSnapshot,
+  subscribeCheckInDisplay,
+  writeCheckInDisplayCache,
+  clearCheckInDisplayCache,
+} from "@/lib/screens/checkin-display-cache";
 import { KeypadInput } from "./KeypadInput";
 import { MemberResultCard } from "./MemberResultCard";
 import { IdleDisplay } from "./IdleDisplay";
@@ -23,15 +30,28 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
   const [dniInput, setDniInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [currentResult, setCurrentResult] = useState<CheckInVerificationResult | null>(null);
-  const [lastEnabledResult, setLastEnabledResult] = useState<CheckInVerificationResult | null>(null);
-  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  // Lo que se muestra vive en caché local (sobrevive a recargas / reinicios de la PC del molinete):
+  // - lastEnabled: último socio HABILITADO, queda en pantalla indefinidamente hasta el próximo ingreso.
+  // - alert + alertUntil: CUOTA_VENCIDA / LIMITE_ALCANZADO con su hora límite absoluta.
+  const display = useSyncExternalStore(
+    subscribeCheckInDisplay,
+    getCheckInDisplaySnapshot,
+    getCheckInDisplayServerSnapshot,
+  );
+  const [now, setNow] = useState(() => Date.now());
+
+  const alertActive = Boolean(display.alert && display.alertUntil && display.alertUntil > now);
+  const currentResult = alertActive ? display.alert : display.lastEnabled;
+  const remainingSeconds =
+    alertActive && display.alertUntil
+      ? Math.min(ALERT_DURATION_SECONDS, Math.ceil((display.alertUntil - now) / 1000))
+      : null;
 
   // Sincronización inter-pantallas mediante BroadcastChannel
   useEffect(() => {
     const unsubscribe = gymBroadcast.subscribe((msg) => {
       if (msg.type === "RESET_CHECKIN") {
-        setCurrentResult(null);
+        clearCheckInDisplayCache();
         setDniInput("");
       } else if (msg.type === "REQUEST_FULLSCREEN") {
         if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
@@ -42,19 +62,20 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
     return unsubscribe;
   }, []);
 
-  // Regla 03: CUOTA_VENCIDA o LIMITE_ALCANZADO se borra a los 60s y vuelve a reposo o último HABILITADO
+  // Regla 03: CUOTA_VENCIDA o LIMITE_ALCANZADO se borra a los 60s y vuelve al último HABILITADO.
+  // Se calcula contra la hora límite (no restando de a 1) para no atrasarse si la pestaña queda en segundo plano.
   useEffect(() => {
-    if (remainingSeconds === null) return;
-    if (remainingSeconds <= 0) {
-      setCurrentResult(lastEnabledResult);
-      setRemainingSeconds(null);
-      return;
-    }
-    const timerId = window.setTimeout(() => {
-      setRemainingSeconds((prev) => (prev !== null ? prev - 1 : null));
-    }, 1000);
-    return () => window.clearTimeout(timerId);
-  }, [remainingSeconds, lastEnabledResult]);
+    const { alert, alertUntil, lastEnabled } = display;
+    if (!alert || !alertUntil) return;
+    const intervalId = window.setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (current >= alertUntil) {
+        writeCheckInDisplayCache({ lastEnabled, alert: null, alertUntil: null });
+      }
+    }, 250);
+    return () => window.clearInterval(intervalId);
+  }, [display]);
 
   const handleDniChange = (val: string) => {
     setDniInput(val);
@@ -76,17 +97,21 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
         return;
       }
       const verified = response.data;
-      setCurrentResult(verified);
       setDniInput("");
 
       // Notificar al Dashboard de recepción en vivo
       gymBroadcast.postMessage({ type: "CHECKIN_EVENT", payload: verified });
 
       if (verified.status === "HABILITADO") {
-        setLastEnabledResult(verified);
-        setRemainingSeconds(null);
+        writeCheckInDisplayCache({ lastEnabled: verified, alert: null, alertUntil: null });
       } else {
-        setRemainingSeconds(ALERT_DURATION_SECONDS);
+        const current = Date.now();
+        setNow(current);
+        writeCheckInDisplayCache({
+          lastEnabled: display.lastEnabled,
+          alert: verified,
+          alertUntil: current + ALERT_DURATION_SECONDS * 1000,
+        });
       }
     } catch {
       setErrorMsg("Error de conexión al verificar el ingreso. Intentá nuevamente.");
