@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getMemberPhotoUrl, getStartOfWeekMonday } from "@/lib/utils";
+import { resolveSafePhotoPath } from "@/lib/security/safe-path";
 import { checkInDniSchema } from "@/lib/validations/checkin.schema";
 import type {
   AccessStatusType,
@@ -11,18 +13,30 @@ import type {
   LiveCheckInItem,
 } from "@/types";
 
+const checkInInputSchema = z.union([
+  z.string().trim(),
+  z.object({ dni: z.string().trim() }).transform((v) => v.dni),
+]);
+
 export async function verifyAndCheckIn(
   dniInput: string | { dni: string }
 ): Promise<ActionResponse<CheckInVerificationResult>> {
   try {
-    const rawDni = typeof dniInput === "string" ? dniInput : dniInput?.dni || "";
-    const parsed = checkInDniSchema.safeParse({ dni: rawDni });
+    const rawParsed = checkInInputSchema.safeParse(dniInput);
+    if (!rawParsed.success) {
+      return { success: false, error: "Formato de DNI inválido" };
+    }
 
+    const parsed = checkInDniSchema.safeParse({ dni: rawParsed.data });
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message || "Formato de DNI inválido" };
     }
 
     const { dni } = parsed.data;
+
+    if (!resolveSafePhotoPath(dni)) {
+      return { success: false, error: "Identificador inválido" };
+    }
     const member = await prisma.member.findUnique({
       where: { dni },
       include: {

@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { saveMemberPhotoToDisk } from "@/lib/photo-storage";
 import { getMemberPhotoUrl } from "@/lib/utils";
+import { resolveSafePhotoPath } from "@/lib/security/safe-path";
 import { createMemberSchema, type CreateMemberInput } from "@/lib/validations/member.schema";
 import type { ActionResponse, MemberListItem, MembershipStatusType, PlanOption } from "@/types";
 
@@ -53,6 +55,11 @@ export async function createMember(
     }
 
     const { fullName, dni, phone, planId, paymentMethod, photoBase64, notes } = parsed.data;
+
+    if (!resolveSafePhotoPath(dni)) {
+      return { success: false, error: "Identificador inválido" };
+    }
+
     const existing = await prisma.member.findUnique({ where: { dni } });
     if (existing) return { success: false, error: `Ya existe un socio registrado con el DNI ${dni}` };
 
@@ -108,9 +115,22 @@ export async function createMember(
   }
 }
 
+const searchMemberSchema = z
+  .string()
+  .trim()
+  .max(100, "El término de búsqueda no puede superar los 100 caracteres")
+  .optional();
+
 export async function getMembers(search?: string): Promise<ActionResponse<MemberListItem[]>> {
   try {
-    const cleanSearch = search?.trim();
+    const parsedSearch = searchMemberSchema.safeParse(search);
+    if (!parsedSearch.success) {
+      return {
+        success: false,
+        error: parsedSearch.error.issues[0]?.message || "Término de búsqueda inválido",
+      };
+    }
+    const cleanSearch = parsedSearch.data || undefined;
     const members = await prisma.member.findMany({
       where: cleanSearch
         ? { OR: [{ fullName: { contains: cleanSearch, mode: "insensitive" } }, { dni: { contains: cleanSearch } }] }

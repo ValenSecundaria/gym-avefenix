@@ -1,9 +1,10 @@
 import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
+import { getBasePhotosDir, resolveSafePhotoPath } from "@/lib/security/safe-path";
 
 export function getLocalPhotosDir(): string {
-  return process.env.LOCAL_PHOTOS_PATH || "C:/GymData/photos";
+  return getBasePhotosDir();
 }
 
 export async function saveMemberPhotoToDisk(
@@ -19,13 +20,16 @@ export async function saveMemberPhotoToDisk(
     .webp({ quality: 82 })
     .toBuffer();
 
-  const dir = getLocalPhotosDir();
+  const photoFilename = `member-${cleanDni}-${Date.now()}.webp`;
+  const safeFilePath = resolveSafePhotoPath(photoFilename);
+  if (!safeFilePath) {
+    throw new Error("Ruta de archivo de foto inválida o insegura");
+  }
+
+  const dir = path.dirname(safeFilePath);
   await fs.mkdir(/*turbopackIgnore: true*/ dir, { recursive: true });
 
-  const photoFilename = `member-${cleanDni}-${Date.now()}.webp`;
-  const filePath = path.join(/*turbopackIgnore: true*/ dir, photoFilename);
-
-  await fs.writeFile(/*turbopackIgnore: true*/ filePath, webpBuffer);
+  await fs.writeFile(/*turbopackIgnore: true*/ safeFilePath, webpBuffer);
   return photoFilename;
 }
 
@@ -34,9 +38,9 @@ export async function readMemberPhotoFromDisk(
 ): Promise<Buffer | null> {
   if (!photoFilename) return null;
   try {
-    const safeFilename = path.basename(photoFilename);
-    const filePath = path.join(/*turbopackIgnore: true*/ getLocalPhotosDir(), safeFilename);
-    return await fs.readFile(/*turbopackIgnore: true*/ filePath);
+    const safeFilePath = resolveSafePhotoPath(photoFilename);
+    if (!safeFilePath) return null;
+    return await fs.readFile(/*turbopackIgnore: true*/ safeFilePath);
   } catch {
     return null;
   }
