@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getMemberPhotoUrl } from "@/lib/utils";
 import { ensureDefaultPlansExist } from "@/actions/members.actions";
+import { planWithDiscipline, sellablePlanOrder, sellablePlanWhere, toPlanOption } from "@/lib/plans";
 import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 import type {
   AbsentMemberItem,
@@ -31,7 +32,7 @@ export async function getDashboardOverview(): Promise<ActionResponse<DashboardOv
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const [plansRaw, members, todayCheckIns, monthlyPaymentAgg] = await Promise.all([
-      prisma.plan.findMany({ where: { isActive: true }, orderBy: { price: "desc" } }),
+      prisma.plan.findMany({ where: sellablePlanWhere, include: planWithDiscipline, orderBy: sellablePlanOrder }),
       prisma.member.findMany({
         where: { isActive: true },
         include: {
@@ -44,14 +45,7 @@ export async function getDashboardOverview(): Promise<ActionResponse<DashboardOv
       prisma.payment.aggregate({ _sum: { amount: true }, where: { paidAt: { gte: startOfMonth } } }),
     ]);
 
-    const plans: PlanOption[] = plansRaw.map((p) => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      allowedDaysPerWeek: p.allowedDaysPerWeek,
-      durationDays: p.durationDays,
-      price: Number(p.price),
-    }));
+    const plans: PlanOption[] = plansRaw.map(toPlanOption);
 
     const defaultPlan = plans[0];
     const debtors: DebtorMemberItem[] = [];

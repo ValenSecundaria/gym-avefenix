@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { sellablePlanWhere } from "@/lib/plans";
 import {
   createPaymentSchema,
   type CreatePaymentInput,
@@ -45,8 +46,8 @@ export async function registerPayment(
           },
         },
       }),
-      prisma.plan.findUnique({
-        where: { id: planId },
+      prisma.plan.findFirst({
+        where: { id: planId, ...sellablePlanWhere },
       }),
     ]);
 
@@ -60,7 +61,7 @@ export async function registerPayment(
     if (!plan) {
       return {
         success: false,
-        error: "El plan seleccionado no existe",
+        error: "El plan seleccionado no existe o ya no está disponible",
       };
     }
 

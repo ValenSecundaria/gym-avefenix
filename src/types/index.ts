@@ -138,6 +138,26 @@ export interface PlanOption {
   allowedDaysPerWeek: number | null;
   durationDays: number;
   price: number;
+  disciplineId: string | null;
+  disciplineName: string | null;
+}
+
+export interface DisciplineItem {
+  id: string;
+  name: string;
+  isActive: boolean;
+  plansCount: number;
+}
+
+export interface PlanAdminItem extends PlanOption {
+  isActive: boolean;
+  membershipsCount: number; // membresías históricas: si hay, el plan no se puede borrar
+  currentMembersCount: number; // socios con la cuota al día en este plan
+}
+
+export interface PlanCatalog {
+  disciplines: DisciplineItem[];
+  plans: PlanAdminItem[];
 }
 
 export interface MemberListItem {

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X, CreditCard, Check, Loader2, AlertCircle } from "lucide-react";
 import type { DebtorMemberItem, PaymentMethodType, PlanOption } from "@/types";
 import { formatCurrencyARS } from "@/lib/utils";
+import { groupPlansByDiscipline } from "./PlanPicker";
 
 interface PaymentModalProps {
   debtor: DebtorMemberItem | null;
@@ -85,8 +86,12 @@ export function PaymentModal({ debtor, plans, onClose, onConfirmPayment }: Payme
           <div>
             <label className="block text-xs font-bold uppercase text-fx-muted mb-1.5">Plan a Renovar</label>
             <select value={activePlan?.id || ""} onChange={(e) => setSelectedPlanId(e.target.value)} className={INPUT_CLS}>
-              {plans.map((p) => (
-                <option key={p.id} value={p.id}>{p.name} — {formatCurrencyARS(p.price)} ({p.durationDays} días)</option>
+              {groupPlansByDiscipline(plans).map((g) => (
+                <optgroup key={g.key} label={g.label}>
+                  {g.plans.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name} — {formatCurrencyARS(p.price)} ({p.durationDays} días)</option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>

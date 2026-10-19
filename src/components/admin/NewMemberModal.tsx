@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X, Check, Loader2, AlertCircle, Flame } from "lucide-react";
 import type { PaymentMethodType, PlanOption } from "@/types";
 import { formatCurrencyARS } from "@/lib/utils";
+import { PlanPicker } from "./PlanPicker";
 import { WebcamCapture } from "./WebcamCapture";
 
 export interface NewMemberFormValues {
@@ -117,17 +118,8 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
             </div>
 
             <div>
-              <label className={LABEL_CLS}>Plan Seleccionado *</label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {plans.map((p) => {
-                  const active = selectedPlan?.id === p.id;
-                  return (
-                    <button key={p.id} type="button" onClick={() => setPlanId(p.id)} className={`min-h-[48px] px-2 rounded-xl text-xs font-bold text-center transition-all cursor-pointer border ${active ? "bg-fx-orange text-white border-fx-orange" : "bg-fx-base border-fx-border text-fx-muted hover:text-fx-text"}`}>
-                      {p.name}
-                    </button>
-                  );
-                })}
-              </div>
+              <span className={LABEL_CLS}>Plan Seleccionado *</span>
+              <PlanPicker plans={plans} selectedPlanId={selectedPlan?.id ?? ""} onSelect={setPlanId} />
             </div>
 
             <div className="p-4 rounded-xl bg-fx-base border border-fx-border flex flex-col gap-3">

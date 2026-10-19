@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Activity, AlertOctagon, BarChart3, PanelLeftClose, PanelLeftOpen, UserMinus, Users, X } from "lucide-react";
+import { Activity, AlertOctagon, BarChart3, PanelLeftClose, PanelLeftOpen, Tags, UserMinus, Users, X } from "lucide-react";
 import type { AdminTab } from "./AdminDashboardClient";
 import { LogoutButton } from "./logout-button";
 
@@ -15,6 +15,7 @@ export const ADMIN_SECTIONS: {
   { tab: "DEBTORS", label: "Cuotas pendientes", icon: AlertOctagon, badge: "danger" },
   { tab: "ABSENT", label: "Socios ausentes", icon: UserMinus, badge: "warning" },
   { tab: "MEMBERS", label: "Clientes", icon: Users, badge: null },
+  { tab: "PLANS", label: "Planes", icon: Tags, badge: null },
   { tab: "METRICS", label: "Métricas", icon: BarChart3, badge: null },
 ];
 

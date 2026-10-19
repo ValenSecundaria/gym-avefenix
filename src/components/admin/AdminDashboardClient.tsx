@@ -21,6 +21,7 @@ import { PaymentModal } from "./PaymentModal";
 import { PendingMembersBanner } from "./PendingMembersBanner";
 import { MembersSection } from "./MembersSection";
 import { MemberEditModal } from "./MemberEditModal";
+import { PlansAdminSection } from "./PlansAdminSection";
 import { enqueuePendingMember, PendingDniError } from "@/lib/offline/pending-members-store";
 import { usePendingMembers } from "@/lib/offline/use-pending-members";
 import type { MemberSyncSummary } from "@/lib/offline/member-sync";
@@ -32,7 +33,7 @@ import { useAdminTheme, type AdminTheme } from "@/lib/use-admin-theme";
 import { gymBroadcast } from "@/lib/screens/broadcast-channel";
 import { useAuthSession } from "@/context/auth-session-context";
 
-export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "METRICS";
+export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "METRICS";
 
 interface AdminDashboardClientProps {
   initialStats: DashboardStats;
@@ -48,9 +49,10 @@ export function AdminDashboardClient({
   initialCheckIns,
   initialDebtors,
   initialAbsent,
-  plans,
+  plans: initialPlans,
   initialTheme,
 }: AdminDashboardClientProps) {
+  const [plans, setPlans] = useState<PlanOption[]>(initialPlans);
   const [activeTab, setActiveTab] = useState<AdminTab>("LIVE_FEED");
   const [stats, setStats] = useState<DashboardStats>(initialStats);
   const [checkIns, setCheckIns] = useState<LiveCheckInItem[]>(initialCheckIns);
@@ -59,6 +61,8 @@ export function AdminDashboardClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isNewMemberOpen, setIsNewMemberOpen] = useState(false);
+  // Cambia en cada apertura: el formulario de alta arranca vacío y no con los datos del socio anterior.
+  const [newMemberFormKey, setNewMemberFormKey] = useState(0);
   const [selectedDebtor, setSelectedDebtor] = useState<DebtorMemberItem | null>(null);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
@@ -93,6 +97,7 @@ export function AdminDashboardClient({
         setStats(overviewRes.data.stats);
         setDebtors(overviewRes.data.debtors);
         setAbsentMembers(overviewRes.data.absentMembers);
+        setPlans(overviewRes.data.plans);
       }
       if (checkInsRes.success && checkInsRes.data) setCheckIns(checkInsRes.data);
     } catch {
@@ -178,6 +183,11 @@ export function AdminDashboardClient({
     void refreshAllData();
   };
 
+  const handlePlansChanged = (message: string) => {
+    showToast(message);
+    void refreshAllData();
+  };
+
   const handleConfirmPayment = async (payload: { memberId: string; planId: string; amount: number; method: PaymentMethodType; notes?: string; }) => {
     const res = await registerPayment(payload);
     if (res.success && res.data) {
@@ -206,7 +216,7 @@ export function AdminDashboardClient({
 
       <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <HeaderStats stats={stats} onOpenNewMember={() => setIsNewMemberOpen(true)} onRefresh={refreshAllData} isRefreshing={isRefreshing} theme={theme} onToggleTheme={toggleTheme} />
+        <HeaderStats stats={stats} onOpenNewMember={() => { setNewMemberFormKey((k) => k + 1); setIsNewMemberOpen(true); }} onRefresh={refreshAllData} isRefreshing={isRefreshing} theme={theme} onToggleTheme={toggleTheme} />
 
         <PendingMembersBanner
           pending={pendingMembers.pending}
@@ -237,7 +247,7 @@ export function AdminDashboardClient({
               <h2 className="text-lg font-extrabold text-fx-text">{section.label}</h2>
             </div>
 
-            <div className={`relative w-full lg:w-72 ${activeTab === "METRICS" ? "hidden" : ""}`}>
+            <div className={`relative w-full lg:w-72 ${activeTab === "METRICS" || activeTab === "PLANS" ? "hidden" : ""}`}>
               <Search className="w-4 h-4 text-fx-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar por DNI o apellido..." className="w-full min-h-[48px] pl-10 pr-4 rounded-xl bg-fx-base border border-fx-border focus:border-fx-orange focus:outline-none text-sm text-fx-text" />
             </div>
@@ -247,14 +257,15 @@ export function AdminDashboardClient({
           {activeTab === "DEBTORS" && <DebtorsTable debtors={debtors.filter((d) => match(d.fullName, d.dni))} onRegisterPayment={setSelectedDebtor} onEditMember={setEditingMemberId} />}
           {activeTab === "ABSENT" && <AbsentMembersTable absentMembers={absentMembers.filter((a) => match(a.fullName, a.dni))} onEditMember={setEditingMemberId} />}
           {activeTab === "MEMBERS" && <MembersSection searchQuery={searchQuery} reloadKey={membersReloadKey} onEditMember={setEditingMemberId} />}
+          {activeTab === "PLANS" && <PlansAdminSection onChanged={handlePlansChanged} />}
           {activeTab === "METRICS" && <MetricsPanel stats={stats} onGoToTab={setActiveTab} />}
         </div>
       </div>
       </div>
 
-      <NewMemberModal isOpen={isNewMemberOpen} onClose={() => setIsNewMemberOpen(false)} plans={plans} onSubmitMember={handleCreateMember} />
+      <NewMemberModal key={newMemberFormKey} isOpen={isNewMemberOpen} onClose={() => setIsNewMemberOpen(false)} plans={plans} onSubmitMember={handleCreateMember} />
       <MemberEditModal memberId={editingMemberId} onClose={() => setEditingMemberId(null)} onChanged={handleMemberChanged} />
-      <PaymentModal debtor={selectedDebtor} plans={plans} onClose={() => setSelectedDebtor(null)} onConfirmPayment={handleConfirmPayment} />
+      <PaymentModal key={selectedDebtor?.id ?? "none"} debtor={selectedDebtor} plans={plans} onClose={() => setSelectedDebtor(null)} onConfirmPayment={handleConfirmPayment} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { deleteMemberPhotoFromDisk, saveMemberPhotoToDisk } from "@/lib/photo-storage";
 import { hasActionSession } from "@/lib/auth/require-session";
+import { planWithDiscipline, sellablePlanOrder, sellablePlanWhere, toPlanOption } from "@/lib/plans";
 import { getMemberPhotoUrl, getStartOfWeekMonday } from "@/lib/utils";
 import { resolveSafePhotoPath } from "@/lib/security/safe-path";
 import {
@@ -24,14 +25,29 @@ import type {
   PlanOption,
 } from "@/types";
 
+const DEFAULT_DISCIPLINES = ["Musculación", "Funcional"];
+
+// La primera vez crea las disciplinas iniciales y pasa a Musculación los planes que ya existían.
+async function ensureDefaultDisciplines(): Promise<string> {
+  let disciplines = await prisma.discipline.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, name: true } });
+  if (disciplines.length === 0) {
+    await prisma.discipline.createMany({ data: DEFAULT_DISCIPLINES.map((name) => ({ name })), skipDuplicates: true });
+    disciplines = await prisma.discipline.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, name: true } });
+    const musculacion = disciplines.find((d) => d.name === DEFAULT_DISCIPLINES[0]) ?? disciplines[0];
+    await prisma.plan.updateMany({ where: { disciplineId: null }, data: { disciplineId: musculacion.id } });
+  }
+  return (disciplines.find((d) => d.name === DEFAULT_DISCIPLINES[0]) ?? disciplines[0]).id;
+}
+
 export async function ensureDefaultPlansExist(): Promise<void> {
+  const musculacionId = await ensureDefaultDisciplines();
   const count = await prisma.plan.count();
   if (count > 0) return;
   await prisma.plan.createMany({
     data: [
-      { name: "Pase Libre Mensual", category: "MENSUAL_LIBRE", allowedDaysPerWeek: null, durationDays: 30, price: 18500, isActive: true },
-      { name: "Plan 3 Días por Semana", category: "MENSUAL_DIAS", allowedDaysPerWeek: 3, durationDays: 30, price: 14500, isActive: true },
-      { name: "Pase Diario", category: "DIARIO", allowedDaysPerWeek: 1, durationDays: 1, price: 3500, isActive: true },
+      { name: "Pase Libre Mensual", category: "MENSUAL_LIBRE", allowedDaysPerWeek: null, durationDays: 30, price: 18500, isActive: true, disciplineId: musculacionId },
+      { name: "Plan 3 Días por Semana", category: "MENSUAL_DIAS", allowedDaysPerWeek: 3, durationDays: 30, price: 14500, isActive: true, disciplineId: musculacionId },
+      { name: "Pase Diario", category: "DIARIO", allowedDaysPerWeek: 1, durationDays: 1, price: 3500, isActive: true, disciplineId: musculacionId },
     ],
   });
 }
@@ -40,20 +56,11 @@ export async function getPlans(): Promise<ActionResponse<PlanOption[]>> {
   try {
     await ensureDefaultPlansExist();
     const plans = await prisma.plan.findMany({
-      where: { isActive: true },
-      orderBy: { price: "desc" },
+      where: sellablePlanWhere,
+      include: planWithDiscipline,
+      orderBy: sellablePlanOrder,
     });
-    return {
-      success: true,
-      data: plans.map((p) => ({
-        id: p.id,
-        name: p.name,
-        category: p.category,
-        allowedDaysPerWeek: p.allowedDaysPerWeek,
-        durationDays: p.durationDays,
-        price: Number(p.price),
-      })),
-    };
+    return { success: true, data: plans.map(toPlanOption) };
   } catch (error) {
     console.error("[getPlans] Error:", error);
     return { success: false, error: "No se pudieron obtener los planes del gimnasio" };
@@ -91,8 +98,8 @@ async function createMemberRecord(input: CreateMemberInput, startDate: Date): Pr
       : { kind: "inactive", existingFullName: existing.fullName };
   }
 
-  const plan = await prisma.plan.findUnique({ where: { id: planId } });
-  if (!plan) return { kind: "invalid", error: "El plan seleccionado no existe" };
+  const plan = await prisma.plan.findFirst({ where: { id: planId, ...sellablePlanWhere } });
+  if (!plan) return { kind: "invalid", error: "El plan seleccionado no existe o ya no está disponible" };
 
   let photoFilename: string | null = null;
   if (photoBase64 && photoBase64.trim().length > 0) {
