@@ -26,13 +26,22 @@ interface CheckInMonitorClientProps {
   }>;
 }
 
+// La hora se guarda y solo cambia en el temporizador: si getSnapshot devolviera Date.now() en cada
+// llamada, React vería un valor distinto en cada lectura y entraría en un bucle de renders.
+let nowSnapshot = 0;
+
 function subscribeNow(callback: () => void) {
-  const intervalId = window.setInterval(callback, 250);
+  const tick = () => {
+    nowSnapshot = Date.now();
+    callback();
+  };
+  tick();
+  const intervalId = window.setInterval(tick, 250);
   return () => window.clearInterval(intervalId);
 }
 
 function getNowClientSnapshot(): number {
-  return Date.now();
+  return nowSnapshot;
 }
 
 function getNowServerSnapshot(): number {
