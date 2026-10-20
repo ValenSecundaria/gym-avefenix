@@ -34,7 +34,7 @@ export async function GET(
     }
 
     try {
-      const fileBuffer = await fs.readFile(safeFilePath);
+      const fileBuffer = await fs.readFile(/*turbopackIgnore: true*/ safeFilePath);
       const ext = path.extname(member.photoFilename).toLowerCase();
       const contentType =
         ext === ".webp" ? "image/webp" : ext === ".png" ? "image/png" : "image/jpeg";

@@ -26,6 +26,19 @@ interface CheckInMonitorClientProps {
   }>;
 }
 
+function subscribeNow(callback: () => void) {
+  const intervalId = window.setInterval(callback, 250);
+  return () => window.clearInterval(intervalId);
+}
+
+function getNowClientSnapshot(): number {
+  return Date.now();
+}
+
+function getNowServerSnapshot(): number {
+  return 0;
+}
+
 export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps) {
   const [dniInput, setDniInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -38,14 +51,16 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
     getCheckInDisplaySnapshot,
     getCheckInDisplayServerSnapshot,
   );
-  // Hora de referencia para la alerta. 0 = todavía no medida: Date.now() no puede leerse durante el render
-  // (Next la congelaría en el prerender), se toma en el temporizador o al registrar un ingreso.
-  const [now, setNow] = useState(0);
+  const now = useSyncExternalStore(
+    subscribeNow,
+    getNowClientSnapshot,
+    getNowServerSnapshot,
+  );
 
-  const alertActive = Boolean(now > 0 && display.alert && display.alertUntil && display.alertUntil > now);
+  const alertActive = Boolean(display.alert && display.alertUntil && now > 0 && display.alertUntil > now);
   const currentResult = alertActive ? display.alert : display.lastEnabled;
   const remainingSeconds =
-    alertActive && display.alertUntil
+    alertActive && display.alertUntil && now > 0
       ? Math.min(ALERT_DURATION_SECONDS, Math.ceil((display.alertUntil - now) / 1000))
       : null;
 
@@ -69,15 +84,10 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
   useEffect(() => {
     const { alert, alertUntil, lastEnabled } = display;
     if (!alert || !alertUntil) return;
-    const intervalId = window.setInterval(() => {
-      const current = Date.now();
-      setNow(current);
-      if (current >= alertUntil) {
-        writeCheckInDisplayCache({ lastEnabled, alert: null, alertUntil: null });
-      }
-    }, 250);
-    return () => window.clearInterval(intervalId);
-  }, [display]);
+    if (now > 0 && now >= alertUntil) {
+      writeCheckInDisplayCache({ lastEnabled, alert: null, alertUntil: null });
+    }
+  }, [display, now]);
 
   const handleDniChange = (val: string) => {
     setDniInput(val);
@@ -108,7 +118,6 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
         writeCheckInDisplayCache({ lastEnabled: verified, alert: null, alertUntil: null });
       } else {
         const current = Date.now();
-        setNow(current);
         writeCheckInDisplayCache({
           lastEnabled: display.lastEnabled,
           alert: verified,

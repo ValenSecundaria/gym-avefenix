@@ -52,7 +52,7 @@ export async function deleteMemberPhotoFromDisk(photoFilename: string | null | u
   const safeFilePath = resolveSafePhotoPath(photoFilename);
   if (!safeFilePath) return;
   try {
-    await fs.unlink(safeFilePath);
+    await fs.unlink(/*turbopackIgnore: true*/ safeFilePath);
   } catch {
     // ENOENT u otro error de disco: la foto vieja queda huérfana, no afecta al socio.
   }
