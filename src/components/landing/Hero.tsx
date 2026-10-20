@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { buildWhatsAppLink } from "@/lib/utils";
 
-const GYM_WHATSAPP = "5491154923810";
+const GYM_WHATSAPP = "5492915768403";
 
 const METRICS = [
   { value: "+850", label: "Socios Activos", sub: "Comunidad en crecimiento", icon: Users, accent: "text-[#F95716]" },
@@ -67,7 +67,7 @@ export function Hero() {
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#17171C] border border-[#2C2D35] shadow-md mb-7">
           <Flame className="w-4 h-4 text-[#F95716]" aria-hidden="true" />
           <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#FFB300]">
-            Entrenamiento de Fuerza y Rendimiento • Sede Central
+            Entrenamiento de Fuerza y Rendimiento • Ingeniero White
           </span>
         </div>
 
