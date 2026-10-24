@@ -11,6 +11,7 @@ import {
   updateMember,
 } from "@/actions/members.actions";
 import { WebcamCapture } from "./WebcamCapture";
+import { sanitizeNameInput, sanitizePhoneInput } from "@/lib/validations/member.schema";
 import { MemberHistory, MemberSummary } from "./MemberHistory";
 
 interface MemberEditModalProps {
@@ -62,7 +63,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
         setMember(res.data);
         setFullName(res.data.fullName);
         setDni(res.data.dni);
-        setPhone(res.data.phone ?? "");
+        setPhone(sanitizePhoneInput(res.data.phone ?? ""));
         setNotes(res.data.notes ?? "");
       })
       .catch(() => !cancelled && setLoadError("Sin conexión: no se pudo cargar el socio."));
@@ -223,7 +224,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
               )}
               <div>
                 <label htmlFor="edit-fullName" className={LABEL_CLS}>Nombre y Apellido *</label>
-                <input id="edit-fullName" type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} className={INPUT_CLS} />
+                <input id="edit-fullName" type="text" required value={fullName} onChange={(e) => setFullName(sanitizeNameInput(e.target.value))} className={INPUT_CLS} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -232,7 +233,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
                 </div>
                 <div>
                   <label htmlFor="edit-phone" className={LABEL_CLS}>Teléfono / WhatsApp</label>
-                  <input id="edit-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={INPUT_CLS} />
+                  <input id="edit-phone" type="tel" inputMode="numeric" maxLength={24} value={phone} onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))} placeholder="Solo números" className={INPUT_CLS} />
                 </div>
               </div>
               <div>

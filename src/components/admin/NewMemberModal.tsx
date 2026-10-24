@@ -5,6 +5,7 @@ import { X, Check, Loader2, AlertCircle, Flame } from "lucide-react";
 import type { PaymentMethodType, PlanOption } from "@/types";
 import { formatCurrencyARS } from "@/lib/utils";
 import { PlanPicker } from "./PlanPicker";
+import { sanitizeNameInput, sanitizePhoneInput } from "@/lib/validations/member.schema";
 import { WebcamCapture } from "./WebcamCapture";
 
 export interface NewMemberFormValues {
@@ -104,7 +105,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
             )}
             <div>
               <label className={LABEL_CLS}>Nombre y Apellido *</label>
-              <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Ej: Mariano Alejandro Castro" className={INPUT_CLS} />
+              <input type="text" required value={fullName} onChange={(e) => setFullName(sanitizeNameInput(e.target.value))} placeholder="Ej: Mariano Alejandro Castro" className={INPUT_CLS} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -113,7 +114,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
               </div>
               <div>
                 <label className={LABEL_CLS}>Teléfono / WhatsApp</label>
-                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Ej: 11-5492-3810" className={INPUT_CLS} />
+                <input type="tel" inputMode="numeric" maxLength={24} value={phone} onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))} placeholder="Solo números, ej: 1154923810" className={INPUT_CLS} />
               </div>
             </div>
 
