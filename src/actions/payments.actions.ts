@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { sellablePlanWhere } from "@/lib/plans";
+import { computeRenewal } from "@/lib/membership-renewal";
 import {
   createPaymentSchema,
   type CreatePaymentInput,
@@ -20,7 +21,6 @@ export interface PaymentRegistrationResult {
   paidAt: string;
 }
 
-const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 export async function registerPayment(
   input: CreatePaymentInput
@@ -67,12 +67,10 @@ export async function registerPayment(
 
     const now = new Date();
     const currentMembership = member.memberships[0];
-    const baseDate =
-      currentMembership && currentMembership.validUntil > now
-        ? currentMembership.validUntil
-        : now;
-    const nextValidUntil = new Date(
-      baseDate.getTime() + plan.durationDays * MS_PER_DAY
+    const { validUntil: nextValidUntil } = computeRenewal(
+      currentMembership?.validUntil ?? null,
+      now,
+      plan.durationDays
     );
 
     const result = await prisma.$transaction(async (tx) => {

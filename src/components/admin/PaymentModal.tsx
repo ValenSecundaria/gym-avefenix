@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { X, CreditCard, Check, Loader2, AlertCircle } from "lucide-react";
 import type { DebtorMemberItem, PaymentMethodType, PlanOption } from "@/types";
-import { formatCurrencyARS } from "@/lib/utils";
+import { formatCurrencyARS, formatDateAR } from "@/lib/utils";
+import { computeRenewal, RENEWAL_GRACE_DAYS } from "@/lib/membership-renewal";
 import { groupPlansByDiscipline } from "./PlanPicker";
 
 interface PaymentModalProps {
@@ -28,11 +29,16 @@ export function PaymentModal({ debtor, plans, onClose, onConfirmPayment }: Payme
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Momento en que se abrió el cobro (el modal se monta de nuevo para cada socio).
+  const [openedAt] = useState(() => Date.now());
 
   if (!debtor) return null;
 
   const activePlan = plans.find((p) => p.id === (selectedPlanId || debtor.planId)) || plans[0];
   const amount = activePlan ? activePlan.price : debtor.planPrice;
+  const renewal = activePlan
+    ? computeRenewal(debtor.validUntil ? new Date(debtor.validUntil) : null, new Date(openedAt), activePlan.durationDays)
+    : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +124,21 @@ export function PaymentModal({ debtor, plans, onClose, onConfirmPayment }: Payme
             <label className="block text-xs font-bold uppercase text-fx-muted mb-1.5">Notas (Opcional)</label>
             <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej: Comprobante transferencia..." className={INPUT_CLS} />
           </div>
+
+          {renewal && (
+            <div className="p-3 rounded-xl bg-fx-base border border-fx-border text-sm">
+              <div className="text-fx-text">
+                Nuevo vencimiento: <b className="font-mono">{formatDateAR(renewal.validUntil)}</b>
+              </div>
+              {renewal.daysLate > 0 && (
+                <p className="text-xs text-fx-muted mt-0.5">
+                  {renewal.from === "VENCIMIENTO"
+                    ? `${renewal.daysLate} ${renewal.daysLate === 1 ? "día" : "días"} de atraso (hasta ${RENEWAL_GRACE_DAYS}): se renueva desde la fecha de vencimiento.`
+                    : `${renewal.daysLate} días de atraso (más de ${RENEWAL_GRACE_DAYS}): se cuenta el período completo desde hoy.`}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="pt-4 border-t border-fx-border flex items-center justify-between">
             <div>
