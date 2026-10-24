@@ -114,7 +114,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
               </div>
               <div>
                 <label className={LABEL_CLS}>Teléfono / WhatsApp</label>
-                <input type="tel" inputMode="numeric" maxLength={24} value={phone} onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))} placeholder="Solo números, ej: 1154923810" className={INPUT_CLS} />
+                <input type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))} placeholder="Solo números, ej: 1154923810" className={INPUT_CLS} />
               </div>
             </div>
 

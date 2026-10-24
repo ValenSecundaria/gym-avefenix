@@ -233,7 +233,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
                 </div>
                 <div>
                   <label htmlFor="edit-phone" className={LABEL_CLS}>Teléfono / WhatsApp</label>
-                  <input id="edit-phone" type="tel" inputMode="numeric" maxLength={24} value={phone} onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))} placeholder="Solo números" className={INPUT_CLS} />
+                  <input id="edit-phone" type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))} placeholder="Solo números" className={INPUT_CLS} />
                 </div>
               </div>
               <div>
