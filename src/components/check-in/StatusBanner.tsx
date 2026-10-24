@@ -25,7 +25,7 @@ const STATUS_CONFIG: Record<
     Icon: Check,
   },
   CUOTA_VENCIDA: {
-    title: "CUOTA VENCIDA - PASAR POR RECEPCIÓN",
+    title: "CUOTA VENCIDA",
     subtitle: "Regularizá tu membresía en mostrador para habilitar el acceso.",
     bannerClass: "bg-[#D92614] text-[#F4F5F7] shadow-xl shadow-[#D92614]/30",
     Icon: AlertTriangle,

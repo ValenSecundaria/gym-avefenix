@@ -68,10 +68,6 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
 
   const alertActive = Boolean(display.alert && display.alertUntil && now > 0 && display.alertUntil > now);
   const currentResult = alertActive ? display.alert : display.lastEnabled;
-  const remainingSeconds =
-    alertActive && display.alertUntil && now > 0
-      ? Math.min(ALERT_DURATION_SECONDS, Math.ceil((display.alertUntil - now) / 1000))
-      : null;
 
   // Sincronización inter-pantallas mediante BroadcastChannel
   useEffect(() => {
@@ -183,11 +179,7 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
 
         <div className="lg:col-span-7 flex items-center justify-center">
           {currentResult ? (
-            <MemberResultCard
-              result={currentResult}
-              remainingSeconds={remainingSeconds}
-              totalAlertSeconds={ALERT_DURATION_SECONDS}
-            />
+            <MemberResultCard result={currentResult} />
           ) : (
             <IdleDisplay />
           )}
