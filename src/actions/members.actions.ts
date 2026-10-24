@@ -8,6 +8,7 @@ import { deleteMemberPhotoFromDisk, saveMemberPhotoToDisk } from "@/lib/photo-st
 import { hasActionSession } from "@/lib/auth/require-session";
 import { planWithDiscipline, sellablePlanOrder, sellablePlanWhere, toPlanOption } from "@/lib/plans";
 import { getMemberPhotoUrl, getStartOfWeekMonday } from "@/lib/utils";
+import { normalizeSearchText } from "@/lib/text";
 import { resolveSafePhotoPath } from "@/lib/security/safe-path";
 import {
   createMemberSchema,
@@ -203,15 +204,6 @@ export interface PendingMemberSyncResult {
   message?: string;
 }
 
-function normalizeName(name: string): string {
-  return name
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLowerCase();
-}
-
 export async function syncPendingMembers(
   items: PendingMemberPayload[]
 ): Promise<ActionResponse<PendingMemberSyncResult[]>> {
@@ -257,7 +249,7 @@ export async function syncPendingMembers(
           status: "conflict",
           message: `El DNI ${dni} es de ${result.existingFullName}, dado de baja: reactivalo desde Clientes`,
         });
-      } else if (normalizeName(result.existingFullName) === normalizeName(item.input.fullName)) {
+      } else if (normalizeSearchText(result.existingFullName) === normalizeSearchText(item.input.fullName)) {
         results.push({ clientId, status: "already_synced" });
       } else {
         results.push({
@@ -335,6 +327,25 @@ function statusWhere(status: MemberStatusFilter, now: Date): Prisma.MemberWhereI
   return {};
 }
 
+// Búsqueda por nombre sin distinguir acentos ni mayúsculas ("martin" encuentra "Martín"), o por DNI.
+// Se compara contra el nombre pasado a minúsculas y sin acentos en la misma consulta: no requiere columnas nuevas.
+const ACCENTED = "áàäâãåéèëêíìïîóòöôõúùüûñç";
+const UNACCENTED = "aaaaaaeeeeiiiiooooouuuunc";
+
+function likePattern(value: string): string {
+  return `%${value.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+}
+
+async function findMemberIdsBySearch(search: string): Promise<string[]> {
+  const namePattern = likePattern(normalizeSearchText(search));
+  const dniPattern = likePattern(search.trim());
+  const rows = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT id FROM "Member"
+    WHERE translate(lower("fullName"), ${ACCENTED}, ${UNACCENTED}) LIKE ${namePattern}
+       OR dni LIKE ${dniPattern}`;
+  return rows.map((r) => r.id);
+}
+
 export async function getMembersPage(
   input: { search?: string; inactive?: boolean; status?: MemberStatusFilter; page?: number } = {}
 ): Promise<ActionResponse<MembersPage>> {
@@ -349,9 +360,7 @@ export async function getMembersPage(
     const where: Prisma.MemberWhereInput = {
       isActive: !inactive,
       ...statusWhere(status, now),
-      ...(search
-        ? { OR: [{ fullName: { contains: search, mode: "insensitive" } }, { dni: { contains: search } }] }
-        : {}),
+      ...(search ? { id: { in: await findMemberIdsBySearch(search) } } : {}),
     };
 
     const total = await prisma.member.count({ where });
