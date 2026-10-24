@@ -1,49 +1,67 @@
 import React from "react";
 import Link from "next/link";
-import { Clock, Dumbbell, Flame, Swords, HeartPulse, QrCode, Info } from "lucide-react";
+import {
+  Clock,
+  Dumbbell,
+  Flame,
+  HeartPulse,
+  Zap,
+  QrCode,
+  Info,
+  Sparkles,
+  ArrowRight,
+} from "lucide-react";
+import { buildWhatsAppLink } from "@/lib/utils";
+
+const GYM_WHATSAPP = "5492915768403";
 
 const MODALITIES = [
   {
-    name: "Musculación & Fuerza",
+    name: "Sala de Musculación",
     schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
-    level: "Todos los niveles",
-    description: "Sala completa de peso libre, racks olímpicos y máquinas biomecánicas con profesor en sala.",
+    level: "Fuerza e Hipertrofia",
+    description: "Zona completa de peso libre, mancuernas, racks y maquinaria biomecánica guiada para sobrecarga progresiva con profesor en sala.",
     icon: Dumbbell,
     accent: "text-[#F95716]",
   },
   {
     name: "Entrenamiento Funcional",
-    schedule: "Lun, Mié y Vie • 09:00 / 18:00 / 20:00 hs",
-    level: "Alta intensidad",
-    description: "Circuitos metabólicos dinámicos para mejorar potencia, agilidad, coordinación y resistencia.",
+    schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
+    level: "Acondicionamiento Físico",
+    description: "Circuitos metabólicos y ejercicios multiarticulares orientados a potencia, agilidad, coordinación, core y resistencia cardiovascular.",
     icon: Flame,
     accent: "text-[#FFB300]",
   },
   {
-    name: "Boxeo Recreativo",
-    schedule: "Mar y Jue • 19:00 y 20:30 hs",
-    level: "Técnico & Físico",
-    description: "Preparación física de boxeo, trabajo de bolsa, coordinación y descarga cardiovascular sin contacto.",
-    icon: Swords,
-    accent: "text-[#D92614]",
-  },
-  {
-    name: "Sector Cardio & HIIT",
+    name: "Cardio",
     schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
-    level: "Libre acceso",
-    description: "Cintas profesionales, bicicletas de spinning y remos de aire para capacidad aeróbica.",
+    level: "Salud y Resistencia",
+    description: "Cintas de alto rendimiento, bicicletas y sector aeróbico para maximizar la resistencia pulmonar y el gasto calórico.",
     icon: HeartPulse,
     accent: "text-[#10B981]",
+  },
+  {
+    name: "Entrenamiento Híbrido",
+    schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
+    level: "Alto Rendimiento",
+    description: "La sinergia ideal entre la fuerza y sobrecarga de la musculación con la intensidad metabólica del funcional para atletas integrales.",
+    icon: Zap,
+    accent: "text-[#F95716]",
   },
 ];
 
 const HOURS = [
   { day: "Lunes a Viernes", time: "08:00 a 22:00 hs", note: "Horario corrido", color: "text-[#F95716]" },
-  { day: "Sábados y Feriados", time: "10:00 a 14:00 hs", note: "Turno intensivo", color: "text-[#FFB300]" },
+  { day: "Sábados", time: "10:00 a 14:00 hs", note: "Turno matutino", color: "text-[#FFB300]" },
   { day: "Domingos", time: "Cerrado", note: "Descanso muscular", color: "text-[#D92614]" },
 ];
 
 export function ScheduleSection() {
+  const waNovedadesLink = buildWhatsAppLink(
+    GYM_WHATSAPP,
+    "Hola Gimnasio Ave Fénix! Quiero consultar por las nuevas disciplinas y horarios."
+  );
+
   return (
     <section id="horarios" className="w-full bg-[#0B0B0C] px-4 sm:px-6 lg:px-10 py-20 border-t border-[#2C2D35]/60">
       <div className="max-w-7xl mx-auto flex flex-col gap-12">
@@ -57,21 +75,22 @@ export function ScheduleSection() {
             </h2>
           </div>
           <p className="text-sm sm:text-base text-[#8A909A] max-w-md">
-            Entrená a tu ritmo en horario corrido con seguimiento permanente de nuestro staff.
+            Entrená a tu ritmo en horario corrido de 08:00 a 22:00 hs en la semana y sábados de 10:00 a 14:00 hs.
           </p>
         </div>
 
+        {/* Grilla de Disciplinas Oficiales */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {MODALITIES.map((mod) => {
             const Icon = mod.icon;
             return (
               <div
                 key={mod.name}
-                className="p-6 rounded-2xl bg-[#17171C] hover:bg-[#23232A] border border-[#2C2D35] flex flex-col justify-between transition-colors"
+                className="p-6 rounded-2xl bg-[#17171C] hover:bg-[#23232A] border border-[#2C2D35] flex flex-col justify-between transition-colors group"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] flex items-center justify-center group-hover:border-[#F95716]/50 transition-colors">
                       <Icon className={`w-5 h-5 ${mod.accent}`} aria-hidden="true" />
                     </div>
                     <span className="px-2.5 py-1 rounded-full bg-[#0B0B0C] border border-[#2C2D35] text-[11px] font-semibold text-[#8A909A]">
@@ -89,6 +108,36 @@ export function ScheduleSection() {
           })}
         </div>
 
+        {/* Notificación: Próximamente más disciplinas */}
+        <div className="w-full flex items-center justify-between flex-wrap gap-4 p-4 sm:p-5 rounded-2xl bg-[#17171C] border border-[#2C2D35] border-dashed">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] flex items-center justify-center text-[#FFB300] shrink-0">
+              <Sparkles className="w-5 h-5" aria-hidden="true" />
+            </div>
+            <div>
+              <span className="text-sm font-bold text-[#F4F5F7] flex items-center gap-2">
+                Próximamente más disciplinas...
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-[#FFB300]/15 text-[#FFB300] text-[10px] font-bold uppercase tracking-wider">
+                  En expansión
+                </span>
+              </span>
+              <p className="text-xs text-[#8A909A] mt-0.5">
+                Seguimos incorporando nuevas actividades y espacios para brindarte el entrenamiento más completo.
+              </p>
+            </div>
+          </div>
+          <a
+            href={waNovedadesLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FFB300] hover:text-[#F95716] transition-colors"
+          >
+            <span>Consultar novedades</span>
+            <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+          </a>
+        </div>
+
+        {/* Tarjeta de Horarios de Apertura y Terminal */}
         <div className="rounded-2xl bg-[#17171C] border border-[#2C2D35] p-6 sm:p-8 lg:p-10 shadow-2xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-7 flex flex-col gap-5">
             <div className="flex items-center gap-3">
@@ -96,8 +145,12 @@ export function ScheduleSection() {
                 <Clock className="w-5 h-5" aria-hidden="true" />
               </div>
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#F95716]">Atención en Sede Central</span>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-[#F4F5F7]">Horarios de Apertura</h3>
+                <span className="text-xs font-bold uppercase tracking-wider text-[#F95716]">
+                  Sede Ingeniero White • Lautaro 3322
+                </span>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-[#F4F5F7]">
+                  Horarios de Apertura
+                </h3>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
