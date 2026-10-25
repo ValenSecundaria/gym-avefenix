@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   Flame,
@@ -11,13 +13,12 @@ import {
   ClipboardCheck,
   Shield,
 } from "lucide-react";
+import { useAuth } from "@/context/auth-session-context";
 import { buildWhatsAppLink } from "@/lib/utils";
 
 interface HeroProps {
   activeMembers?: number;
 }
-
-const GYM_WHATSAPP = "5492915768403";
 
 const STATIC_METRICS = [
   { value: "100% Pro", label: "Equipamiento Biomecánico", sub: "Línea Importada Calibrada", icon: Dumbbell, accent: "text-[#FFB300]" },
@@ -53,8 +54,10 @@ const PILLARS = [
 ];
 
 export function Hero({ activeMembers }: HeroProps) {
+  const { user } = useAuth();
+  const gymPhone = user?.gymPhone || "5492915768403";
   const whatsappUrl = buildWhatsAppLink(
-    GYM_WHATSAPP,
+    gymPhone,
     "Hola Gimnasio Ave Fénix! Quiero consultar para empezar a entrenar."
   );
 

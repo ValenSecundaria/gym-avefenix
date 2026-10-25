@@ -11,9 +11,8 @@ import {
   Users,
 } from "lucide-react";
 import { buildWhatsAppLink, formatCurrencyARS, cn } from "@/lib/utils";
+import { useAuth } from "@/context/auth-session-context";
 import type { PlanOption } from "@/types";
-
-const GYM_WHATSAPP = "5492915768403";
 
 type PaymentMethod = "efectivo" | "transferencia";
 
@@ -21,8 +20,10 @@ export interface PlansSectionProps {
   plans?: PlanOption[];
 }
 
-export function PlansSection({ plans }: PlansSectionProps) {
+export function PlansSection({}: PlansSectionProps = {}) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("efectivo");
+  const { user } = useAuth();
+  const gymPhone = user?.gymPhone || "5492915768403";
 
   // Precios oficiales definidos por el gimnasio:
   // 3 veces por semana: $50.000 efectivo / $55.000 transferencia
@@ -38,17 +39,17 @@ export function PlansSection({ plans }: PlansSectionProps) {
   const discountedPriceAllDays = Math.round(priceAllDays * 0.8);
 
   const waLink3Days = buildWhatsAppLink(
-    GYM_WHATSAPP,
+    gymPhone,
     `Hola Gimnasio Ave Fénix! Quiero consultar por el Plan 3 veces por semana (${formatCurrencyARS(price3Days)} abonando por ${paymentMethod === "efectivo" ? "Efectivo" : "Transferencia"}).`
   );
 
   const waLinkAllDays = buildWhatsAppLink(
-    GYM_WHATSAPP,
+    gymPhone,
     `Hola Gimnasio Ave Fénix! Quiero inscribirme al Pase Libre Todos los Días (${formatCurrencyARS(priceAllDays)} abonando por ${paymentMethod === "efectivo" ? "Efectivo" : "Transferencia"}).`
   );
 
   const waLinkDiscount = buildWhatsAppLink(
-    GYM_WHATSAPP,
+    gymPhone,
     `Hola Gimnasio Ave Fénix! Quiero consultar por el descuento del 20% (Jubilados / Club / Grupo Familiar).`
   );
 

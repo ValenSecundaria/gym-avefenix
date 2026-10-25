@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import {
@@ -12,8 +14,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { buildWhatsAppLink } from "@/lib/utils";
-
-const GYM_WHATSAPP = "5492915768403";
+import { useAuth } from "@/context/auth-session-context";
 
 const MODALITIES = [
   {
@@ -57,8 +58,10 @@ const HOURS = [
 ];
 
 export function ScheduleSection() {
+  const { user } = useAuth();
+  const gymPhone = user?.gymPhone || "5492915768403";
   const waNovedadesLink = buildWhatsAppLink(
-    GYM_WHATSAPP,
+    gymPhone,
     "Hola Gimnasio Ave Fénix! Quiero consultar por las nuevas disciplinas y horarios."
   );
 

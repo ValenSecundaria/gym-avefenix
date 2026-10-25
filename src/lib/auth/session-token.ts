@@ -40,14 +40,21 @@ function isPayload(value: unknown): value is SessionTokenPayload {
     typeof v.id === "string" &&
     typeof v.username === "string" &&
     typeof v.name === "string" &&
-    typeof v.iat === "number"
+    typeof v.iat === "number" &&
+    (v.gymPhone === undefined || typeof v.gymPhone === "string")
   );
 }
 
 export async function signSessionToken(user: AuthenticatedUser, issuedAt = Date.now()): Promise<string> {
   const secret = getSecret();
   if (!secret) throw new Error("AUTH_SECRET no configurado");
-  const payload: SessionTokenPayload = { id: user.id, username: user.username, name: user.name, iat: issuedAt };
+  const payload: SessionTokenPayload = {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    gymPhone: user.gymPhone ?? "5492915768403",
+    iat: issuedAt,
+  };
   const body = toBase64Url(encoder.encode(JSON.stringify(payload)));
   const signature = await crypto.subtle.sign("HMAC", await importKey(secret), encoder.encode(body));
   return `${body}.${toBase64Url(new Uint8Array(signature))}`;
