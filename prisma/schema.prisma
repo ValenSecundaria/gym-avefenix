@@ -1,0 +1,158 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// TABLA DE USUARIOS / ACCESO AL SISTEMA
+// -------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  gymPhone     String?  @default("5492915768403")
+  createdAt    DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// ENUMS DEL GIMNASIO
+// -------------------------------------------------------------
+
+enum AccessStatus {
+  HABILITADO
+  CUOTA_VENCIDA
+  LIMITE_ALCANZADO
+}
+
+enum PlanCategory {
+  MENSUAL_LIBRE
+  MENSUAL_DIAS
+  DIARIO
+}
+
+enum MembershipStatus {
+  ACTIVA
+  VENCIDA
+  CANCELADA
+}
+
+enum PaymentMethod {
+  EFECTIVO
+  TRANSFERENCIA
+}
+
+// -------------------------------------------------------------
+// TABLAS DEL GIMNASIO
+// -------------------------------------------------------------
+
+model Member {
+  id             String        @id @default(cuid())
+  dni            String        @unique
+  fullName       String
+  phone          String?
+  photoFilename  String?
+  isActive       Boolean       @default(true)
+  notes          String?
+  lastNotifiedAt DateTime?
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  memberships    Membership[]
+  payments       Payment[]
+  checkIns       CheckIn[]
+
+  @@index([dni])
+  @@index([isActive])
+}
+
+// Actividades del gimnasio (Musculación, Funcional, ...). Se administran desde el panel.
+model Discipline {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  plans     Plan[]
+}
+
+model Plan {
+  id                 String        @id @default(cuid())
+  name               String
+  disciplineId       String?
+  category           PlanCategory  @default(MENSUAL_LIBRE)
+  allowedDaysPerWeek Int?
+  durationDays       Int           @default(30)
+  price              Decimal       @db.Decimal(10, 2)
+  isActive           Boolean       @default(true)
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  discipline         Discipline?   @relation(fields: [disciplineId], references: [id])
+  memberships        Membership[]
+
+  @@index([disciplineId])
+}
+
+model Membership {
+  id          String           @id @default(cuid())
+  memberId    String
+  planId      String
+  
+  startDate   DateTime         @default(now())
+  validUntil  DateTime
+  status      MembershipStatus @default(ACTIVA)
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  member      Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  plan        Plan             @relation(fields: [planId], references: [id])
+  payments    Payment[]
+
+  @@index([memberId])
+  @@index([status, validUntil])
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  memberId     String
+  membershipId String?
+  
+  amount       Decimal       @db.Decimal(10, 2)
+  method       PaymentMethod @default(EFECTIVO)
+  notes        String?
+  paidAt       DateTime      @default(now())
+
+  member       Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  membership   Membership?   @relation(fields: [membershipId], references: [id], onDelete: SetNull)
+
+  @@index([memberId])
+  @@index([paidAt])
+}
+
+model CheckIn {
+  id        String       @id @default(cuid())
+  memberId  String
+  
+  status    AccessStatus
+  isSynced  Boolean      @default(true)
+  
+  createdAt DateTime     @default(now())
+
+  member    Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+  @@index([createdAt])
+}

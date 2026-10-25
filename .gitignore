@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Antigravity & Agent configs/skills
+.antigravity/
+.antigravity/**
+.agents/
+.agents/**
+# Configuración local de Claude Code
+.claude/
