@@ -1,20 +1,21 @@
 import React from "react";
-import Link from "next/link";
 import {
   Flame,
   UserPlus,
   RefreshCw,
   MonitorCheck,
+  MonitorX,
   Users,
   DoorOpen,
   AlertTriangle,
   UserX,
-  TrendingUp,
   Sun,
   Moon,
+  ChevronRight,
 } from "lucide-react";
 import type { AdminTheme } from "@/lib/use-admin-theme";
 import type { DashboardStats } from "@/types";
+import type { AdminTab } from "./AdminDashboardClient";
 import { formatCurrencyARS } from "@/lib/utils";
 import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 
@@ -25,7 +26,61 @@ interface HeaderStatsProps {
   isRefreshing?: boolean;
   theme: AdminTheme;
   onToggleTheme: () => void;
-  batchSyncSlot?: React.ReactNode;
+  onGoToTab: (tab: AdminTab) => void;
+  /** La ventana de Check-In (pantalla 2) está abierta y recibiendo el teclado numérico. */
+  checkInScreenOnline: boolean;
+  onOpenCheckInScreen: () => void;
+}
+
+const ICON_BTN =
+  "min-h-[48px] min-w-[48px] px-3 rounded-xl bg-fx-base hover:bg-fx-hover border border-fx-border text-sm font-bold text-fx-muted hover:text-fx-text inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50";
+
+function KpiCard({
+  label,
+  value,
+  unit,
+  hint,
+  icon: Icon,
+  tone,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  unit: string;
+  hint: string;
+  icon: React.ComponentType<{ className?: string }>;
+  tone: "orange" | "neutral" | "red" | "amber";
+  onClick: () => void;
+}) {
+  const toneCls = {
+    orange: { card: "hover:border-fx-orange/60", icon: "bg-fx-orange/10 text-fx-orange", value: "text-fx-text" },
+    neutral: { card: "hover:border-fx-text/30", icon: "bg-fx-base text-fx-text", value: "text-fx-text" },
+    red: { card: "border-fx-red/40 hover:border-fx-red", icon: "bg-fx-red/15 text-fx-red", value: "text-fx-red" },
+    amber: { card: "border-fx-amber/40 hover:border-fx-amber", icon: "bg-fx-amber/15 text-fx-amber", value: "text-fx-amber" },
+  }[tone];
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group text-left p-4 sm:p-5 rounded-2xl bg-fx-surface border border-fx-border shadow-md flex flex-col gap-2 transition-colors cursor-pointer ${toneCls.card}`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm sm:text-base font-bold text-fx-muted leading-tight">{label}</span>
+        <span className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 ${toneCls.icon}`}>
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+        </span>
+      </div>
+      <div className={`flex flex-wrap items-baseline gap-x-1.5 font-extrabold tracking-tight ${toneCls.value}`}>
+        <span className="text-4xl sm:text-5xl">{value}</span>
+        <span className="text-base sm:text-lg font-bold opacity-80">{unit}</span>
+      </div>
+      <div className="hidden sm:flex items-center justify-between text-sm text-fx-muted">
+        <span>{hint}</span>
+        <ChevronRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+    </button>
+  );
 }
 
 export function HeaderStats({
@@ -35,137 +90,134 @@ export function HeaderStats({
   isRefreshing = false,
   theme,
   onToggleTheme,
-  batchSyncSlot,
+  onGoToTab,
+  checkInScreenOnline,
+  onOpenCheckInScreen,
 }: HeaderStatsProps) {
+  const themeLabel = theme === "light" ? "Modo oscuro" : "Modo claro";
+  const ThemeIcon = theme === "light" ? Moon : Sun;
+
   return (
-    <header className="w-full flex flex-col gap-6">
-      {/* Barra Operativa Superior (Stitch Screen 2) */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-fx-surface border border-fx-border shadow-lg">
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-fx-orange to-fx-red flex items-center justify-center shadow-[0_0_18px_rgba(249,87,22,0.45)] shrink-0">
+    <header className="w-full flex flex-col gap-4 sm:gap-6">
+      {/* Celular: barra superior simple */}
+      <div className="lg:hidden sticky top-0 z-20 -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 px-4 sm:px-6 py-3 bg-fx-surface/95 backdrop-blur border-b border-fx-border flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-fx-orange to-fx-red flex items-center justify-center shrink-0">
             <Flame className="w-6 h-6 text-white" />
           </div>
-          <div>
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-lg sm:text-xl font-extrabold text-fx-text tracking-tight uppercase">
-                Ave Fénix • <span className="text-fx-orange">Control Recepción</span>
-              </h1>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-fx-base border border-fx-border text-xs font-semibold text-fx-green">
-                <span className="w-2 h-2 rounded-full bg-fx-green animate-pulse" />
-                Molinete Operativo
-              </span>
-            </div>
-            <p className="text-xs text-fx-muted mt-0.5">
-              Enlace local sincronizado con base central • Estación Recepción #01
-            </p>
+          <div className="min-w-0">
+            <div className="text-lg font-extrabold text-fx-text leading-tight truncate">Ave Fénix</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-fx-orange">Recepción</div>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-          {batchSyncSlot}
-
-          <div className="font-mono text-xs sm:text-sm bg-fx-base border border-fx-border px-3.5 py-2.5 rounded-xl text-fx-text font-semibold flex items-center gap-2">
-            <span className="text-fx-muted uppercase text-xs">Caja Mes:</span>
-            <span className="text-fx-orange font-bold">{formatCurrencyARS(stats.monthlyRevenue)}</span>
-          </div>
-
+        <div className="flex items-center gap-2">
           {onRefresh && (
-            <button
-              type="button"
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              aria-label="Actualizar datos del panel"
-              className="min-h-[48px] px-3.5 rounded-xl bg-fx-base hover:bg-fx-hover border border-fx-border text-xs sm:text-sm font-semibold text-fx-muted hover:text-fx-text inline-flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-fx-orange" : ""}`} />
-              <span className="hidden sm:inline">Actualizar</span>
+            <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Actualizar datos" className={ICON_BTN}>
+              <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orange" : ""}`} />
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={onToggleTheme}
-            aria-label={theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
-            title={theme === "light" ? "Modo oscuro" : "Modo claro"}
-            className="min-h-[48px] px-3.5 rounded-xl bg-fx-base hover:bg-fx-hover border border-fx-border text-xs sm:text-sm font-semibold text-fx-muted hover:text-fx-text inline-flex items-center gap-2 transition-colors cursor-pointer"
-          >
-            {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            <span className="hidden sm:inline">{theme === "light" ? "Modo oscuro" : "Modo claro"}</span>
-          </button>
-
-          <Link
-            href="/check-in"
-            className="min-h-[48px] px-4 rounded-xl bg-fx-base hover:bg-fx-hover border border-fx-border text-xs sm:text-sm font-semibold text-fx-text inline-flex items-center gap-2 transition-colors"
-          >
-            <MonitorCheck className="w-4 h-4 text-fx-green" />
-            <span>Monitor Público</span>
-          </Link>
-
-          <button
-            type="button"
-            onClick={onOpenNewMember}
-            className="min-h-[48px] px-5 rounded-xl bg-fx-orange hover:bg-fx-orange/90 active:scale-[0.98] text-white font-bold text-xs sm:text-sm inline-flex items-center gap-2 shadow-[0_4px_16px_rgba(249,87,22,0.35)] transition-all cursor-pointer"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>+ Registrar Nuevo Socio</span>
+          <button type="button" onClick={onToggleTheme} aria-label={themeLabel} title={themeLabel} className={ICON_BTN}>
+            <ThemeIcon className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* 4 Tarjetas KPI (Stitch Screen 2) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="p-6 rounded-xl bg-fx-surface border border-fx-border hover:border-fx-orange/40 transition-all shadow-md flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-fx-muted font-bold uppercase tracking-wider">Ingresos hoy</span>
-            <div className="w-11 h-11 rounded-xl bg-fx-orange/10 border border-fx-orange/30 flex items-center justify-center text-fx-orange">
-              <DoorOpen className="w-5 h-5" />
-            </div>
+      {/* Escritorio: barra operativa */}
+      <div className="hidden lg:flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-fx-surface border border-fx-border shadow-lg">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fx-orange to-fx-red flex items-center justify-center shadow-[0_0_18px_rgba(249,87,22,0.45)] shrink-0">
+            <Flame className="w-7 h-7 text-white" />
           </div>
-          <div className="text-3xl font-extrabold text-fx-text tracking-tight">{stats.todayCheckIns} socios</div>
-          <div className="flex items-center gap-1.5 mt-2 text-fx-green text-xs font-bold">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Registrados hoy en terminal</span>
+          <div>
+            <h1 className="text-xl font-extrabold text-fx-text tracking-tight">
+              Ave Fénix <span className="text-fx-orange">• Recepción</span>
+            </h1>
+            <p className="text-sm text-fx-muted">
+              Caja del mes: <b className="font-mono text-fx-text">{formatCurrencyARS(stats.monthlyRevenue)}</b>
+            </p>
           </div>
         </div>
 
-        <div className="p-6 rounded-xl bg-fx-surface border border-fx-border transition-all shadow-md flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-fx-muted font-bold uppercase tracking-wider">Socios Activos</span>
-            <div className="w-11 h-11 rounded-xl bg-fx-base border border-fx-border flex items-center justify-center text-fx-text">
-              <Users className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="text-3xl font-extrabold text-fx-text tracking-tight">{stats.activeMembers} socios</div>
-          <p className="mt-2 text-fx-muted text-xs">Comunidad activa con cuota al día</p>
-        </div>
-
-        <div className="p-6 rounded-xl bg-fx-surface border border-fx-red/40 hover:border-fx-red transition-all shadow-md flex flex-col justify-between bg-gradient-to-b from-fx-surface to-fx-red/5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-fx-red font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-fx-red" />
-              Cuotas Vencidas
+        <div className="flex flex-wrap items-center gap-2.5">
+          {checkInScreenOnline ? (
+            <span
+              title="El teclado numérico escribe en la pantalla de ingreso"
+              className="min-h-[48px] px-4 rounded-xl bg-fx-green/10 border border-fx-green/40 text-sm font-bold text-fx-green inline-flex items-center gap-2"
+            >
+              <MonitorCheck className="w-5 h-5" />
+              Pantalla de ingreso conectada
             </span>
-            <div className="w-11 h-11 rounded-xl bg-fx-red/15 border border-fx-red/40 flex items-center justify-center text-fx-red">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="text-3xl font-extrabold text-fx-red tracking-tight">{stats.debtorsCount} personas</div>
-          <p className="mt-2 text-fx-red text-xs font-bold">Requieren regularizar en mostrador</p>
-        </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenCheckInScreen}
+              className="min-h-[48px] px-4 rounded-xl bg-fx-amber/10 border border-fx-amber/50 hover:bg-fx-amber/20 text-sm font-bold text-fx-amber inline-flex items-center gap-2 transition-colors cursor-pointer"
+            >
+              <MonitorX className="w-5 h-5" />
+              Abrir pantalla de ingreso
+            </button>
+          )}
 
-        <div className="p-6 rounded-xl bg-fx-surface border border-fx-amber/40 hover:border-fx-amber transition-all shadow-md flex flex-col justify-between bg-gradient-to-b from-fx-surface to-fx-amber/5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-fx-amber font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-fx-amber" />
-              Socios Ausentes (+{ABSENT_DAYS_THRESHOLD} días)
-            </span>
-            <div className="w-11 h-11 rounded-xl bg-fx-amber/15 border border-fx-amber/40 flex items-center justify-center text-fx-amber">
-              <UserX className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="text-3xl font-extrabold text-fx-amber tracking-tight">{stats.absentCount} personas</div>
-          <p className="mt-2 text-fx-muted text-xs">Sugerido recontacto por WhatsApp</p>
+          {onRefresh && (
+            <button type="button" onClick={onRefresh} disabled={isRefreshing} className={ICON_BTN}>
+              <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orange" : ""}`} />
+              <span>Actualizar</span>
+            </button>
+          )}
+
+          <button type="button" onClick={onToggleTheme} aria-label={themeLabel} title={themeLabel} className={ICON_BTN}>
+            <ThemeIcon className="w-5 h-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenNewMember}
+            className="min-h-[52px] px-6 rounded-xl bg-fx-orange hover:bg-fx-orange/90 active:scale-[0.98] text-white font-extrabold text-base inline-flex items-center gap-2.5 shadow-[0_4px_16px_rgba(249,87,22,0.35)] transition-all cursor-pointer"
+          >
+            <UserPlus className="w-5 h-5" />
+            <span>Nuevo socio</span>
+          </button>
         </div>
+      </div>
+
+      {/* Tarjetas: se tocan para ir directo a la sección */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-5">
+        <KpiCard
+          label="Entraron hoy"
+          value={stats.todayCheckIns}
+          unit="socios"
+          hint="Ver ingresos de hoy"
+          icon={DoorOpen}
+          tone="orange"
+          onClick={() => onGoToTab("LIVE_FEED")}
+        />
+        <KpiCard
+          label="Al día"
+          value={stats.activeMembers}
+          unit="socios"
+          hint="Ver clientes"
+          icon={Users}
+          tone="neutral"
+          onClick={() => onGoToTab("MEMBERS")}
+        />
+        <KpiCard
+          label="Deben la cuota"
+          value={stats.debtorsCount}
+          unit="personas"
+          hint="Cobrar cuotas"
+          icon={AlertTriangle}
+          tone="red"
+          onClick={() => onGoToTab("DEBTORS")}
+        />
+        <KpiCard
+          label={`No vienen (+${ABSENT_DAYS_THRESHOLD} días)`}
+          value={stats.absentCount}
+          unit="personas"
+          hint="Escribirles por WhatsApp"
+          icon={UserX}
+          tone="amber"
+          onClick={() => onGoToTab("ABSENT")}
+        />
       </div>
     </header>
   );

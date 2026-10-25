@@ -1,85 +1,71 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import { Delete, CornerDownLeft, Loader2, AlertCircle, RotateCcw } from "lucide-react";
+import type { CheckInKey } from "@/lib/screens/broadcast-channel";
 
 interface KeypadInputProps {
   value: string;
-  onChange: (newValue: string) => void;
-  onSubmit: (dni: string) => void;
+  onKey: (key: CheckInKey) => void;
   isLoading?: boolean;
   error?: string | null;
 }
 
-const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+const KEYS: CheckInKey[] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+export const DNI_MIN_LENGTH = 6;
+export const DNI_MAX_LENGTH = 8;
 
-export function KeypadInput({
-  value,
-  onChange,
-  onSubmit,
-  isLoading = false,
-  error = null,
-}: KeypadInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const isValidLength = value.length >= 6 && value.length <= 8;
+// Los botones no toman foco: así el Enter del teclado nunca "aprieta" el último botón tocado.
+const noFocus = {
+  tabIndex: -1,
+  onMouseDown: (e: React.MouseEvent) => e.preventDefault(),
+};
 
-  const handleDigit = (digit: string) => {
-    if (!isLoading && value.length < 8) onChange(value + digit);
-  };
-
-  const handleBackspace = () => {
-    if (!isLoading && value.length > 0) onChange(value.slice(0, -1));
-  };
-
-  const handleClear = () => {
-    if (isLoading) return;
-    onChange("");
-    inputRef.current?.focus();
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isLoading && isValidLength) onSubmit(value);
-  };
+/**
+ * Visor del DNI + teclado en pantalla. No es un <input>: las teclas se escuchan a nivel ventana
+ * (y llegan reenviadas desde el panel), por eso nunca "pierde el foco".
+ */
+export function KeypadInput({ value, onKey, isLoading = false, error = null }: KeypadInputProps) {
+  const isValidLength = value.length >= DNI_MIN_LENGTH && value.length <= DNI_MAX_LENGTH;
 
   return (
-    <form
-      onSubmit={handleFormSubmit}
-      className="w-full bg-[#17171C] border border-[#2C2D35] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-5"
-    >
+    <div className="w-full bg-[#17171C] border border-[#2C2D35] rounded-3xl p-5 sm:p-7 shadow-2xl flex flex-col gap-4">
       <div className="text-center">
-        <label
-          htmlFor="checkin-dni-input"
-          className="block text-sm font-bold uppercase tracking-wider text-[#F95716] mb-1"
-        >
-          Puesto de Ingreso • DNI
-        </label>
-        <p className="text-xs sm:text-sm text-[#8A909A]">
-          Ingresá tu número de documento sin puntos (6 a 8 dígitos)
+        <p className="text-2xl sm:text-3xl font-extrabold uppercase tracking-wide text-[#F4F5F7]">
+          Escribí tu <span className="text-[#F95716]">DNI</span>
         </p>
+        <p className="text-base sm:text-lg text-[#8A909A] mt-1">Solo números, sin puntos</p>
       </div>
 
-      <input
-        ref={inputRef}
-        id="checkin-dni-input"
-        type="text"
-        inputMode="numeric"
-        autoComplete="off"
-        autoFocus
-        disabled={isLoading}
-        value={value}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 8))}
-        placeholder="Ingresá tu DNI"
+      <div
+        role="textbox"
+        aria-readonly="true"
         aria-label="Número de DNI"
-        className="w-full h-16 sm:h-20 bg-[#0B0B0C] border-2 border-[#2C2D35] focus:border-[#F95716] focus:ring-4 focus:ring-[#F95716]/20 rounded-2xl text-center text-3xl sm:text-4xl font-mono font-extrabold tracking-widest text-[#F4F5F7] placeholder:text-[#2C2D35] placeholder:text-2xl outline-none transition-all disabled:opacity-60"
-      />
+        aria-live="polite"
+        className={`relative w-full h-24 sm:h-28 overflow-hidden rounded-2xl border-4 flex items-center justify-center bg-[#0B0B0C] transition-colors ${
+          error ? "border-[#D92614]" : "border-[#F95716] shadow-[0_0_0_6px_rgba(249,87,22,0.15)]"
+        } ${isLoading ? "opacity-60" : ""}`}
+      >
+        {value ? (
+          <span className="font-mono font-extrabold text-5xl sm:text-6xl tracking-[0.15em] text-[#F4F5F7]">
+            {value}
+          </span>
+        ) : (
+          <span className="font-mono font-extrabold text-3xl sm:text-4xl tracking-[0.2em] text-[#2C2D35]">
+            ••••••••
+          </span>
+        )}
+        {!isLoading && value.length < DNI_MAX_LENGTH && (
+          <span aria-hidden="true" className="w-1 h-12 sm:h-14 ml-1 bg-[#F95716] rounded-full animate-pulse" />
+        )}
+      </div>
 
       {error && (
         <div
           role="alert"
-          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#D92614]/15 border border-[#D92614] text-[#F4F5F7] text-sm font-medium"
+          className="flex items-center gap-3 px-4 py-4 rounded-2xl bg-[#D92614] text-white text-lg sm:text-xl font-bold"
         >
-          <AlertCircle className="w-4 h-4 text-[#D92614] shrink-0" />
+          <AlertCircle className="w-8 h-8 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -89,9 +75,10 @@ export function KeypadInput({
           <button
             key={digit}
             type="button"
-            disabled={isLoading || value.length >= 8}
-            onClick={() => handleDigit(digit)}
-            className="min-h-[56px] sm:min-h-[60px] rounded-xl bg-[#23232A] hover:bg-[#2C2D35] active:scale-[0.98] border border-[#2C2D35] text-2xl font-bold text-[#F4F5F7] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F95716] disabled:opacity-40 cursor-pointer"
+            {...noFocus}
+            disabled={isLoading || value.length >= DNI_MAX_LENGTH}
+            onClick={() => onKey(digit)}
+            className="min-h-[64px] sm:min-h-[72px] rounded-2xl bg-[#23232A] hover:bg-[#2C2D35] active:scale-[0.97] border-2 border-[#2C2D35] text-3xl sm:text-4xl font-extrabold text-[#F4F5F7] transition-all disabled:opacity-40 cursor-pointer"
           >
             {digit}
           </button>
@@ -99,51 +86,59 @@ export function KeypadInput({
 
         <button
           type="button"
+          {...noFocus}
           disabled={isLoading || value.length === 0}
-          onClick={handleClear}
-          className="min-h-[56px] sm:min-h-[60px] rounded-xl bg-[#0B0B0C] hover:bg-[#23232A] border border-[#2C2D35] text-xs sm:text-sm font-semibold text-[#8A909A] hover:text-[#F4F5F7] flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+          onClick={() => onKey("Clear")}
+          className="min-h-[64px] sm:min-h-[72px] rounded-2xl bg-[#0B0B0C] hover:bg-[#23232A] border-2 border-[#2C2D35] text-base font-bold text-[#8A909A] hover:text-[#F4F5F7] flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer disabled:opacity-40"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="w-6 h-6" />
           <span>Limpiar</span>
         </button>
 
         <button
           type="button"
-          disabled={isLoading || value.length >= 8}
-          onClick={() => handleDigit("0")}
-          className="min-h-[56px] sm:min-h-[60px] rounded-xl bg-[#23232A] hover:bg-[#2C2D35] active:scale-[0.98] border border-[#2C2D35] text-2xl font-bold text-[#F4F5F7] transition-all cursor-pointer disabled:opacity-40"
+          {...noFocus}
+          disabled={isLoading || value.length >= DNI_MAX_LENGTH}
+          onClick={() => onKey("0")}
+          className="min-h-[64px] sm:min-h-[72px] rounded-2xl bg-[#23232A] hover:bg-[#2C2D35] active:scale-[0.97] border-2 border-[#2C2D35] text-3xl sm:text-4xl font-extrabold text-[#F4F5F7] transition-all cursor-pointer disabled:opacity-40"
         >
           0
         </button>
 
         <button
           type="button"
+          {...noFocus}
           disabled={isLoading || value.length === 0}
-          onClick={handleBackspace}
-          className="min-h-[56px] sm:min-h-[60px] rounded-xl bg-[#0B0B0C] hover:bg-[#23232A] border border-[#2C2D35] text-xs sm:text-sm font-semibold text-[#8A909A] hover:text-[#F4F5F7] flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+          onClick={() => onKey("Backspace")}
+          className="min-h-[64px] sm:min-h-[72px] rounded-2xl bg-[#0B0B0C] hover:bg-[#23232A] border-2 border-[#2C2D35] text-base font-bold text-[#8A909A] hover:text-[#F4F5F7] flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer disabled:opacity-40"
         >
-          <Delete className="w-5 h-5" />
+          <Delete className="w-6 h-6" />
           <span>Borrar</span>
         </button>
       </div>
 
       <button
-        type="submit"
+        type="button"
+        {...noFocus}
         disabled={isLoading || !isValidLength}
-        className="w-full min-h-[56px] sm:min-h-[60px] rounded-2xl bg-[#F95716] hover:bg-[#F95716]/90 active:scale-[0.99] text-[#F4F5F7] font-extrabold text-lg uppercase tracking-wider flex items-center justify-center gap-3 shadow-lg shadow-[#F95716]/25 transition-all disabled:opacity-40 cursor-pointer"
+        onClick={() => onKey("Enter")}
+        className="w-full min-h-[76px] rounded-2xl bg-[#10B981] hover:bg-[#10B981]/90 active:scale-[0.99] text-white font-extrabold text-2xl uppercase tracking-wider flex items-center justify-center gap-3 shadow-lg shadow-[#10B981]/25 transition-all disabled:bg-[#23232A] disabled:text-[#8A909A] disabled:shadow-none cursor-pointer"
       >
         {isLoading ? (
           <>
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="w-8 h-8 animate-spin" />
             <span>Verificando...</span>
           </>
         ) : (
           <>
-            <span>Registrar Ingreso</span>
-            <CornerDownLeft className="w-5 h-5" />
+            <span>Entrar</span>
+            <CornerDownLeft className="w-7 h-7" />
           </>
         )}
       </button>
-    </form>
+      <p className="text-center text-sm sm:text-base text-[#8A909A]">
+        Al terminar apretá <kbd className="bg-[#2C2D35] text-[#F4F5F7] font-mono font-bold px-2 py-0.5 rounded">ENTER</kbd>
+      </p>
+    </div>
   );
 }

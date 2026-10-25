@@ -49,6 +49,29 @@ En la PC del gimnasio se puede dejar todo permitido de antemano con políticas d
 Para Microsoft Edge es igual, cambiando `Google\Chrome` por `Microsoft\Edge`.
 Referencia: [WindowManagementAllowedForUrls (Microsoft Learn)](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-browser-policies/windowmanagementallowedforurls).
 
+## Pantalla de ingreso en pantalla completa (sin barra de tareas)
+
+La pantalla de ingreso (Check-In) se abre en el segundo monitor y pide pantalla completa sola. La pantalla completa real es la que **tapa la barra de tareas de Windows**.
+
+- Chrome solo deja entrar a pantalla completa después de una tecla o un toque. Por eso, si no se configura nada, la pantalla entra en pantalla completa **con la primera tecla que se apriete** (por ejemplo, el primer número de un DNI) y muestra un botón naranja "Pantalla completa" mientras tanto.
+- Para que entre **sola, sin tocar nada**, en la PC del gimnasio:
+  1. Candado a la izquierda de la dirección → *Configuración del sitio* → **Pantalla completa automática** → *Permitir* (requiere tener permitido también "Gestionar ventanas").
+  2. O, con políticas de Chrome, agregar al `.reg` de arriba:
+     ```reg
+     [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\AutomaticFullscreenAllowedForUrls]
+     "1"="https://TU-DOMINIO"
+     ```
+- Si alguien aprieta `Esc` y sale de pantalla completa, vuelve a entrar con la próxima tecla.
+
+## Teclado numérico → pantalla de ingreso
+
+El teclado numérico (el bloque de números de la derecha o uno USB aparte) **escribe siempre en el DNI de la pantalla de ingreso**, aunque el mouse esté usando el panel de recepción en la otra pantalla. El panel lo indica con el cartel verde "Pantalla de ingreso conectada".
+
+- `Enter` = Entrar · `Borrar` (o `.` / `-` del numérico) = Borrar un número · `*` o `/` = Limpiar todo.
+- Mientras no se esté escribiendo en un campo del panel, `Enter`, `Borrar` y los números de arriba de las letras también van a la pantalla de ingreso.
+- Si se está escribiendo en un campo del panel (buscador, altas, montos), solo el numérico va a la pantalla de ingreso; el resto del teclado escribe en el panel.
+- Si la pantalla de ingreso está cerrada, el numérico funciona normal en el panel.
+
 ## Cambio en el sistema
 
 Si la PC tiene **un solo monitor**, el sistema ya no pide "Gestionar ventanas" (no hace falta). Tampoco lo vuelve a pedir si alguna vez se rechazó.

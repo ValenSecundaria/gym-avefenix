@@ -91,15 +91,17 @@ export interface WeekdayAttendance {
   pctVsAverage: number | null;
 }
 
-export interface HourlyPoint {
-  hour: number;
-  today: number;
-  typical: number;
-}
-
 export interface WeeklyTrendPoint {
   weekStart: string; // YYYY-MM-DD (lunes)
   visits: number;
+  inProgress: boolean; // semana actual, todavía no terminó
+}
+
+export interface MonthlyPoint {
+  month: string; // YYYY-MM
+  revenue: number; // plata cobrada en el mes
+  newMembers: number; // socios dados de alta en el mes
+  inProgress: boolean; // mes actual, todavía no terminó
 }
 
 export interface FrequencyBucket {
@@ -122,10 +124,10 @@ export interface AttendanceAnalytics {
     visitsSoFar: number;
     typicalSoFar: number;
     pctVsTypical: number | null;
-    hourly: HourlyPoint[];
   };
   weeklyTrend: WeeklyTrendPoint[];
   trendPct: number | null; // últimas 4 semanas vs las 4 anteriores
+  monthly: MonthlyPoint[]; // últimos 6 meses, el actual incluido
   frequency: FrequencyBucket[];
   avgVisitsPerWeek: number | null;
   rejected: { cuotaVencida: number; limiteAlcanzado: number };

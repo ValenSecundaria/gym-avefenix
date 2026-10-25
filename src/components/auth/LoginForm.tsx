@@ -11,7 +11,7 @@ import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
 export function LoginForm() {
   const router = useRouter();
   const { login } = useAuthSession();
-  const [username, setUsername] = useState("admin");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -148,7 +148,8 @@ export function LoginForm() {
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="admin"
+              placeholder="Ingresá tu usuario"
+              autoComplete="username"
               className="w-full min-h-[48px] pl-11 pr-4 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] focus:border-[#F95716] focus:outline-none text-sm text-[#F4F5F7]"
             />
           </div>

@@ -6,18 +6,26 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  ComposedChart,
   LabelList,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertTriangle, ArrowRight, Ban, CalendarClock, DoorOpen, Lightbulb, Loader2, Moon, TrendingDown, TrendingUp } from "lucide-react";
-import { getAttendanceAnalytics } from "@/actions/analytics.actions";
-import type { AnalyticsPeriodDays, AttendanceAnalytics, DashboardStats, HeatmapCell } from "@/types";
+import { AlertTriangle, ArrowRight, Ban, CalendarClock, DoorOpen, Lightbulb, Loader2, Moon, RotateCcw, TrendingDown, TrendingUp } from "lucide-react";
+import type {
+  ActionResponse,
+  AnalyticsPeriodDays,
+  AttendanceAnalytics,
+  DashboardStats,
+  HeatmapCell,
+  MonthlyPoint,
+  WeeklyTrendPoint,
+} from "@/types";
+import { formatCurrencyARS } from "@/lib/utils";
+
+/** Si el servidor no contesta en este tiempo se corta y se ofrece reintentar (nunca queda cargando para siempre). */
+const METRICS_TIMEOUT_MS = 20000;
 
 const DAY_NAMES = ["", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const DAY_SHORT = ["", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
@@ -64,8 +72,6 @@ function people(n: number, noun = "socios"): string {
   if (Math.round(n) === 1 && n < 5) return `1 ${noun.replace(/s$/, "")}`;
   return `${approx(n)} ${noun}`;
 }
-// Valores exactos (conteos de hoy) quedan enteros; promedios van aproximados.
-const fmtValue = (n: number) => (Number.isInteger(n) ? String(n) : approx(n));
 
 function buildInsights(d: AttendanceAnalytics): string[] {
   const out: string[] = [];
@@ -185,22 +191,6 @@ function FixedWindow({ label }: { label: string }) {
   );
 }
 
-function ChartTooltip({ active, payload, label, labelFormatter }: { active?: boolean; payload?: { name: string; value: number; color?: string }[]; label?: string | number; labelFormatter: (l: string | number) => string }) {
-  if (!active || !payload?.length || label === undefined) return null;
-  return (
-    <div className="rounded-lg bg-fx-surface border border-fx-border px-3 py-2 text-xs shadow-lg">
-      <div className="font-bold text-fx-text mb-1">{labelFormatter(label)}</div>
-      {payload.map((p) => (
-        <div key={p.name} className="flex items-center gap-2 text-fx-muted">
-          <span className="w-2.5 h-2.5 rounded-sm" style={{ background: p.color }} />
-          <span>{p.name}:</span>
-          <span className="font-mono font-bold text-fx-text">{fmtValue(p.value)}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // "Horarios populares" (como Google Maps): se elige un día y se ven las llegadas por hora.
 // Eje de horas y escala fijos para todos los días, así al cambiar de día las barras se comparan a ojo.
 function HoursByDay({ cells, todayDow }: { cells: HeatmapCell[]; todayDow: number }) {
@@ -315,6 +305,79 @@ function HoursByDay({ cells, todayDow }: { cells: HeatmapCell[]; todayDow: numbe
   );
 }
 
+const MONTH_NAMES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const monthName = (m: string) => MONTH_NAMES[Number(m.slice(5, 7)) - 1] || m;
+const monthShort = (m: string) => monthName(m).slice(0, 3);
+
+// Cobros por mes en barras; el mes en curso más claro para que no parezca una caída.
+function MonthlyRevenue({ points }: { points: MonthlyPoint[] }) {
+  const current = points[points.length - 1];
+  const previous = points[points.length - 2];
+  const totalNew = points.reduce((a, p) => a + p.newMembers, 0);
+
+  return (
+    <div className="flex flex-col gap-3">
+      {current && (
+        <p className="text-sm text-fx-muted">
+          En {monthName(current.month)} van <b className="text-fx-text">{formatCurrencyARS(current.revenue)}</b>
+          {previous && (
+            <>
+              {" "}(todo {monthName(previous.month)}: <b className="text-fx-text">{formatCurrencyARS(previous.revenue)}</b>)
+            </>
+          )}
+          .
+        </p>
+      )}
+      <div className="h-56">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid stroke={C.grid} vertical={false} />
+            <XAxis dataKey="month" tickFormatter={monthShort} tick={{ fill: C.muted, fontSize: 11 }} axisLine={{ stroke: C.border }} tickLine={false} />
+            <YAxis
+              tickFormatter={(v: number) => (v >= 1_000_000 ? `${Math.round(v / 100_000) / 10}M` : v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))}
+              tick={{ fill: C.muted, fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              width={44}
+            />
+            <Tooltip
+              cursor={{ fill: "rgba(128,128,128,0.08)" }}
+              content={({ active, payload }) => {
+                const p = payload?.[0]?.payload as MonthlyPoint | undefined;
+                if (!active || !p) return null;
+                return (
+                  <div className="rounded-lg bg-fx-surface border border-fx-border px-3 py-2 text-xs shadow-lg">
+                    <div className="font-bold text-fx-text capitalize">
+                      {monthName(p.month)}
+                      {p.inProgress && " (en curso)"}
+                    </div>
+                    <div className="text-fx-muted">Cobrado: <b className="text-fx-text">{formatCurrencyARS(p.revenue)}</b></div>
+                    <div className="text-fx-muted">Socios nuevos: <b className="text-fx-text">{p.newMembers}</b></div>
+                  </div>
+                );
+              }}
+            />
+            <Bar dataKey="revenue" radius={[4, 4, 0, 0]} maxBarSize={44} isAnimationActive={false}>
+              {points.map((p) => (
+                <Cell key={p.month} fill={p.inProgress ? "rgba(249,87,22,0.35)" : C.orange} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="pt-3 border-t border-fx-border grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
+        {points.map((p) => (
+          <div key={p.month} className="flex flex-col">
+            <span className="text-[11px] uppercase text-fx-muted">{monthShort(p.month)}</span>
+            <span className="text-sm font-bold text-fx-text">+{p.newMembers}</span>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-fx-muted -mt-1">Socios nuevos cada mes ({totalNew} en 6 meses).</p>
+    </div>
+  );
+}
+
 function SectionTitle({ title, subtitle, right }: { title: string; subtitle: string; right?: React.ReactNode }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
@@ -336,31 +399,48 @@ export function MetricsPanel({ stats, onGoToTab }: MetricsPanelProps) {
   const [period, setPeriod] = useState<AnalyticsPeriodDays>(90);
   const [data, setData] = useState<AttendanceAnalytics | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loadedPeriod, setLoadedPeriod] = useState<AnalyticsPeriodDays | null>(null);
-  const loading = loadedPeriod !== period;
+  // Período + intento ya resueltos (bien o con error): mientras no coincida con el pedido, está cargando.
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const requestKey = `${period}-${attempt}`;
+  const loading = loadedKey !== requestKey;
 
   useEffect(() => {
-    let cancelled = false;
-    getAttendanceAnalytics(period)
-      .then((res) => {
-        if (cancelled) return;
+    const controller = new AbortController();
+    let timedOut = false;
+    const timer = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, METRICS_TIMEOUT_MS);
+
+    fetch(`/api/analytics?period=${period}`, { signal: controller.signal, cache: "no-store" })
+      .then(async (r) => {
+        const res = (await r.json()) as ActionResponse<AttendanceAnalytics>;
         if (res.success && res.data) {
           setData(res.data);
           setError(null);
         } else {
           setError(res.error || "No se pudieron cargar las métricas");
         }
+        setLoadedKey(requestKey);
       })
       .catch(() => {
-        if (!cancelled) setError("No se pudo conectar con el servidor para cargar las métricas");
+        // Abort sin timeout = se cambió de período o se salió de la sección: no se muestra nada.
+        if (controller.signal.aborted && !timedOut) return;
+        setError(
+          timedOut
+            ? "Las métricas están tardando demasiado (puede ser la conexión a internet)"
+            : "No se pudo conectar con el servidor para cargar las métricas"
+        );
+        setLoadedKey(requestKey);
       })
-      .finally(() => {
-        if (!cancelled) setLoadedPeriod(period);
-      });
+      .finally(() => window.clearTimeout(timer));
+
     return () => {
-      cancelled = true;
+      window.clearTimeout(timer);
+      controller.abort();
     };
-  }, [period]);
+  }, [period, requestKey]);
 
   const periodLabel = (d: AnalyticsPeriodDays) => PERIODS.find((p) => p.days === d)?.label.toLowerCase() || "";
   const periodSelector = (
@@ -446,12 +526,22 @@ export function MetricsPanel({ stats, onGoToTab }: MetricsPanelProps) {
           right={periodSelector}
         />
 
-        {error && (
-          <div role="alert" className="p-4 rounded-xl bg-fx-red/10 border border-fx-red/40 text-sm text-fx-red font-bold">
-            {error}.{" "}
-            {staleData && data && (
-              <span className="font-normal">Abajo se muestran los datos de {periodLabel(data.periodDays)}, no de {periodLabel(period)}.</span>
-            )}
+        {error && !loading && (
+          <div role="alert" className="p-4 rounded-xl bg-fx-red/10 border border-fx-red/40 text-sm text-fx-red font-bold flex flex-wrap items-center justify-between gap-3">
+            <span>
+              {error}.{" "}
+              {staleData && data && (
+                <span className="font-normal">Abajo se muestran los datos de {periodLabel(data.periodDays)}, no de {periodLabel(period)}.</span>
+              )}
+            </span>
+            <button
+              type="button"
+              onClick={() => setAttempt((a) => a + 1)}
+              className="min-h-[44px] px-4 rounded-xl bg-fx-red text-white text-sm font-bold inline-flex items-center gap-2 cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Reintentar
+            </button>
           </div>
         )}
 
@@ -520,7 +610,7 @@ export function MetricsPanel({ stats, onGoToTab }: MetricsPanelProps) {
                           );
                         }}
                       />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false}>
                         {data.weekdays.map((w) => (
                           <Cell key={w.dow} fill={w.avgVisits === maxWeekday && maxWeekday > 0 ? C.orange : "rgba(249,87,22,0.35)"} />
                         ))}
@@ -530,42 +620,49 @@ export function MetricsPanel({ stats, onGoToTab }: MetricsPanelProps) {
                 </div>
               </Card>
 
-              <Card title={`Hoy vs. un ${todayName} normal`} subtitle="Llegadas por hora. Barras: hoy • Línea: promedio de ese día">
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={data.today.hourly} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                      <CartesianGrid stroke={C.grid} vertical={false} />
-                      <XAxis dataKey="hour" tickFormatter={(h) => `${h}`} tick={{ fill: C.muted, fontSize: 11 }} axisLine={{ stroke: C.border }} tickLine={false} />
-                      <YAxis allowDecimals={false} tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                      <Tooltip cursor={{ fill: "rgba(128,128,128,0.08)" }} content={<ChartTooltip labelFormatter={(l) => slotLabel(Number(l))} />} />
-                      <Bar dataKey="today" name="Hoy" fill={C.orange} radius={[4, 4, 0, 0]} maxBarSize={24} />
-                      <Line dataKey="typical" name={`Un ${todayName} normal`} stroke={C.text} strokeWidth={2} strokeDasharray="4 3" dot={false} type="monotone" />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="flex items-center gap-4 text-xs text-fx-muted">
-                  <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-fx-orange" />Hoy</span>
-                  <span className="inline-flex items-center gap-1.5"><span className="w-4 border-t-2 border-dashed border-fx-text" />Un {todayName} normal</span>
-                </div>
+              <Card title="Plata cobrada por mes" subtitle="Cuotas cobradas en los últimos 6 meses • el mes actual todavía no terminó">
+                <MonthlyRevenue points={data.monthly} />
               </Card>
 
-              <Card title="Tendencia semanal" subtitle="Total de visitas por semana (semanas completas)">
+              <Card title="Tendencia semanal" subtitle="Visitas por semana • la última barra es esta semana (todavía en curso)">
                 <FixedWindow label="al menos las últimas 8 semanas" />
                 <div className="text-xs"><Delta pct={data.trendPct} suffix="últimas 4 semanas vs. las 4 anteriores" /></div>
                 <div className="h-56">
                   {data.weeklyTrend.length > 1 ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={data.weeklyTrend} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
+                      <BarChart data={data.weeklyTrend} margin={{ top: 8, right: 8, left: -20, bottom: 0 }} barCategoryGap={3}>
                         <CartesianGrid stroke={C.grid} vertical={false} />
                         <XAxis dataKey="weekStart" tickFormatter={fmtWeek} tick={{ fill: C.muted, fontSize: 11 }} axisLine={{ stroke: C.border }} tickLine={false} minTickGap={16} />
                         <YAxis allowDecimals={false} tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                        <Tooltip cursor={{ stroke: C.muted, strokeDasharray: "3 3" }} content={<ChartTooltip labelFormatter={(l) => `Semana del ${fmtWeek(String(l))}`} />} />
-                        <Line dataKey="visits" name="Visitas" stroke={C.orange} strokeWidth={2} dot={false} activeDot={{ r: 5, stroke: C.base, strokeWidth: 2 }} type="monotone" />
-                      </LineChart>
+                        <Tooltip
+                          cursor={{ fill: "rgba(128,128,128,0.08)" }}
+                          content={({ active, payload }) => {
+                            const w = payload?.[0]?.payload as WeeklyTrendPoint | undefined;
+                            if (!active || !w) return null;
+                            return (
+                              <div className="rounded-lg bg-fx-surface border border-fx-border px-3 py-2 text-xs shadow-lg">
+                                <div className="font-bold text-fx-text">
+                                  {w.inProgress ? "Esta semana (en curso)" : `Semana del ${fmtWeek(w.weekStart)}`}
+                                </div>
+                                <div className="text-fx-muted"><b className="text-fx-text">{w.visits}</b> visitas</div>
+                              </div>
+                            );
+                          }}
+                        />
+                        <Bar dataKey="visits" radius={[4, 4, 0, 0]} maxBarSize={28} isAnimationActive={false}>
+                          {data.weeklyTrend.map((w) => (
+                            <Cell key={w.weekStart} fill={w.inProgress ? "rgba(249,87,22,0.35)" : C.orange} />
+                          ))}
+                        </Bar>
+                      </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-xs text-fx-muted">Hacen falta al menos 2 semanas completas de datos.</div>
+                    <div className="h-full flex items-center justify-center text-xs text-fx-muted">Hacen falta al menos 2 semanas de datos.</div>
                   )}
+                </div>
+                <div className="flex items-center gap-4 text-xs text-fx-muted">
+                  <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-fx-orange" />Semana completa</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-fx-orange/35" />Esta semana (en curso)</span>
                 </div>
               </Card>
 

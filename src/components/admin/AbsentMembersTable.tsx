@@ -81,7 +81,7 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div className="w-full sm:w-auto flex items-center gap-2.5 [&>button:not(:last-child)]:flex-1 sm:[&>button]:flex-none [&>button]:justify-center">
                 {member.phone ? (
                   <button
                     type="button"
