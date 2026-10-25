@@ -1,12 +1,14 @@
 // Canal de comunicación en tiempo real inter-pantallas (BroadcastChannel 'gym_channel').
 // Permite que la pantalla de Check-in notifique al Dashboard de recepción sin recargas,
 // y que el Dashboard envíe comandos a la pantalla del socio.
-import type { CheckInVerificationResult } from "@/types";
+import type { CachedMember, CheckInVerificationResult, LiveCheckInItem } from "@/types";
 
 export const GYM_BROADCAST_CHANNEL_NAME = "gym_channel";
 
 export type GymBroadcastMessage =
   | { type: "CHECKIN_EVENT"; payload: CheckInVerificationResult }
+  | { type: "CHECKIN_LOGGED"; checkIn: LiveCheckInItem }
+  | { type: "MEMBER_UPDATED"; member: CachedMember }
   | { type: "REFRESH_DASHBOARD" }
   | { type: "RESET_CHECKIN" }
   | { type: "SESSION_LOGOUT" }

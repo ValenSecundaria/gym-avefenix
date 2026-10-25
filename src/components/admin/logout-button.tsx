@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { Loader2, LogOut } from "lucide-react";
 import { useAuthSession } from "@/context/auth-session-context";
 import { gymBroadcast } from "@/lib/screens/broadcast-channel";
+import { getPendingCheckIns, removeSyncedCheckIns } from "@/lib/db/indexed-db";
+import { syncBatchCheckInsAction } from "@/actions/sync.actions";
 
 interface LogoutButtonProps {
   collapsed?: boolean;
@@ -27,14 +29,33 @@ export function LogoutButton({
     onLogoutStart?.();
 
     try {
-      // 1. Notificar inmediatamente por BroadcastChannel para sincronizar pantallas
+      // 1. Flush de seguridad del lote pendiente de check-ins antes de salir
+      try {
+        const pending = await getPendingCheckIns();
+        if (pending.length > 0) {
+          const payload = pending.map((p) => ({
+            memberId: p.memberId,
+            status: p.status,
+            createdAt: p.createdAt,
+          }));
+          const res = await syncBatchCheckInsAction(payload);
+          if (res.success) {
+            const ids = pending.map((p) => p.id!).filter((id): id is number => typeof id === "number");
+            await removeSyncedCheckIns(ids);
+          }
+        }
+      } catch (err) {
+        console.warn("[LogoutButton] Error sincronizando lote antes de salir:", err);
+      }
+
+      // 2. Notificar inmediatamente por BroadcastChannel para sincronizar pantallas
       gymBroadcast.postMessage({ type: "RESET_CHECKIN" });
       gymBroadcast.postMessage({ type: "SESSION_LOGOUT" });
 
-      // 2. Destruir sesión en el contexto, Server Action de cookies e IndexedDB/storage
+      // 3. Destruir sesión en el contexto, Server Action de cookies e IndexedDB/storage
       await logout();
 
-      // 3. Garantizar limpieza total de almacenamiento de sesión en ventana
+      // 4. Garantizar limpieza total de almacenamiento de sesión en ventana
       if (typeof window !== "undefined") {
         try {
           window.sessionStorage.clear();
@@ -45,7 +66,7 @@ export function LogoutButton({
     } catch (error) {
       console.error("[LogoutButton] Error al procesar salida:", error);
     } finally {
-      // 4. Redirección segura reemplazando el historial para impedir volver con botón Atrás
+      // 5. Redirección segura reemplazando el historial para impedir volver con botón Atrás
       if (typeof window !== "undefined") {
         window.location.replace("/login");
       }

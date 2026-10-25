@@ -213,3 +213,5 @@ export interface MemberDetail extends MemberListItem {
   recentPayments: MemberPaymentItem[];
   recentCheckIns: MemberCheckInItem[];
 }
+
+export * from "./sync";

@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { verifyAndCheckIn } from "@/actions/checkin.actions";
 import { CheckInMonitorClient } from "@/components/check-in/CheckInMonitorClient";
 
 export const metadata: Metadata = {
@@ -9,11 +8,6 @@ export const metadata: Metadata = {
 };
 
 export default function CheckInPage() {
-  async function handleVerifyDni(dni: string) {
-    "use server";
-    return verifyAndCheckIn(dni);
-  }
-
   return (
     <Suspense
       fallback={
@@ -22,7 +16,7 @@ export default function CheckInPage() {
         </div>
       }
     >
-      <CheckInMonitorClient onVerifyDni={handleVerifyDni} />
+      <CheckInMonitorClient />
     </Suspense>
   );
 }

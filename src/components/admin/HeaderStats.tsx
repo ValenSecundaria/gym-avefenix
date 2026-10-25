@@ -25,6 +25,7 @@ interface HeaderStatsProps {
   isRefreshing?: boolean;
   theme: AdminTheme;
   onToggleTheme: () => void;
+  batchSyncSlot?: React.ReactNode;
 }
 
 export function HeaderStats({
@@ -34,6 +35,7 @@ export function HeaderStats({
   isRefreshing = false,
   theme,
   onToggleTheme,
+  batchSyncSlot,
 }: HeaderStatsProps) {
   return (
     <header className="w-full flex flex-col gap-6">
@@ -60,6 +62,8 @@ export function HeaderStats({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+          {batchSyncSlot}
+
           <div className="font-mono text-xs sm:text-sm bg-fx-base border border-fx-border px-3.5 py-2.5 rounded-xl text-fx-text font-semibold flex items-center gap-2">
             <span className="text-fx-muted uppercase text-xs">Caja Mes:</span>
             <span className="text-fx-orange font-bold">{formatCurrencyARS(stats.monthlyRevenue)}</span>
