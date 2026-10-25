@@ -22,6 +22,7 @@ import { PendingMembersBanner } from "./PendingMembersBanner";
 import { MembersSection } from "./MembersSection";
 import { MemberEditModal } from "./MemberEditModal";
 import { PlansAdminSection } from "./PlansAdminSection";
+import { GymPhoneSettings } from "./gym-phone-settings";
 import { enqueuePendingMember, PendingDniError } from "@/lib/offline/pending-members-store";
 import { usePendingMembers } from "@/lib/offline/use-pending-members";
 import type { MemberSyncSummary } from "@/lib/offline/member-sync";
@@ -34,7 +35,7 @@ import { gymBroadcast } from "@/lib/screens/broadcast-channel";
 import { useAuthSession } from "@/context/auth-session-context";
 import { matchesSearch } from "@/lib/text";
 
-export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "METRICS";
+export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "METRICS" | "SETTINGS";
 
 interface AdminDashboardClientProps {
   initialStats: DashboardStats;
@@ -249,7 +250,7 @@ export function AdminDashboardClient({
               <h2 className="text-lg font-extrabold text-fx-text">{section.label}</h2>
             </div>
 
-            <div className={`relative w-full lg:w-72 ${activeTab === "METRICS" || activeTab === "PLANS" ? "hidden" : ""}`}>
+            <div className={`relative w-full lg:w-72 ${activeTab === "METRICS" || activeTab === "PLANS" || activeTab === "SETTINGS" ? "hidden" : ""}`}>
               <Search className="w-4 h-4 text-fx-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar por DNI o apellido..." className="w-full min-h-[48px] pl-10 pr-4 rounded-xl bg-fx-base border border-fx-border focus:border-fx-orange focus:outline-none text-sm text-fx-text" />
             </div>
@@ -261,6 +262,7 @@ export function AdminDashboardClient({
           {activeTab === "MEMBERS" && <MembersSection searchQuery={searchQuery} reloadKey={membersReloadKey} onEditMember={setEditingMemberId} />}
           {activeTab === "PLANS" && <PlansAdminSection onChanged={handlePlansChanged} />}
           {activeTab === "METRICS" && <MetricsPanel stats={stats} onGoToTab={setActiveTab} />}
+          {activeTab === "SETTINGS" && <GymPhoneSettings />}
         </div>
       </div>
       </div>

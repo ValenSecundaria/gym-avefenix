@@ -4,6 +4,7 @@ export interface AuthenticatedUser {
   id: string;
   username: string;
   name: string;
+  gymPhone?: string;
 }
 
 /** Payload firmado (HMAC) que viaja en la cookie de sesión. */

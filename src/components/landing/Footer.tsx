@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,13 +13,26 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { buildWhatsAppLink } from "@/lib/utils";
+import { useAuth } from "@/context/auth-session-context";
 
-const GYM_WHATSAPP = "5492915768403";
-const GYM_PHONE_DISPLAY = "+54 9 291 5768403";
 const INSTAGRAM_URL = "https://www.instagram.com/avefenix.gimnasio/";
 const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61589622244223";
 const ADDRESS_TEXT = "Lautaro 3322, Ingeniero White";
 const MAPS_URL = "https://www.google.com/maps/search/?api=1&query=Lautaro+3322,+Ingeniero+White";
+
+function formatGymPhoneDisplay(rawPhone: string): string {
+  const digits = (rawPhone || "").replace(/\D/g, "");
+  if (!digits) return "+54 9 291 5768403";
+  if (digits.startsWith("549") && digits.length >= 12) {
+    const area = digits.slice(3, 6);
+    const num = digits.slice(6);
+    return `+54 9 ${area} ${num}`;
+  }
+  if (digits.startsWith("54") && digits.length >= 11) {
+    return `+${digits.slice(0, 2)} ${digits.slice(2)}`;
+  }
+  return `+${digits}`;
+}
 
 function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -56,8 +71,12 @@ function FacebookIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 export function Footer() {
+  const { user } = useAuth();
+  const gymPhone = user?.gymPhone || "5492915768403";
+  const gymPhoneDisplay = formatGymPhoneDisplay(gymPhone);
+
   const whatsappUrl = buildWhatsAppLink(
-    GYM_WHATSAPP,
+    gymPhone,
     "Hola Gimnasio Ave Fénix! Me gustaría recibir más información sobre horarios y planes."
   );
 
@@ -89,7 +108,7 @@ export function Footer() {
               className="min-h-[48px] inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-sm font-extrabold uppercase tracking-wider shadow-[0_0_20px_-4px_rgba(37,211,102,0.4)] transition-all"
             >
               <MessageCircle className="w-5 h-5 shrink-0" aria-hidden="true" />
-              <span>WhatsApp ({GYM_PHONE_DISPLAY})</span>
+              <span>WhatsApp ({gymPhoneDisplay})</span>
             </a>
             <div className="flex gap-2">
               <a
@@ -229,7 +248,7 @@ export function Footer() {
               className="flex items-center gap-2.5 text-[#8A909A] hover:text-[#25D366] transition-colors"
             >
               <MessageCircle className="w-4 h-4 text-[#25D366]" aria-hidden="true" />
-              <span>{GYM_PHONE_DISPLAY}</span>
+              <span>{gymPhoneDisplay}</span>
             </a>
           </div>
 

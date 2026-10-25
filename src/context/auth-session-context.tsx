@@ -8,6 +8,7 @@ import {
   loginWithOfflineFallback,
   restoreClientSession,
 } from "@/lib/auth/login-flow";
+import { persistClientSession, readWindowSession } from "@/lib/auth/client-session";
 
 interface AuthContextValue {
   user: AuthenticatedUser | null;
@@ -16,6 +17,7 @@ interface AuthContextValue {
   login: (username: string, password: string) => Promise<LoginOutcome>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<ClientSession | null>;
+  updateCurrentGymPhone: (newPhone: string) => Promise<void> | void;
 }
 
 const AuthSessionContext = createContext<AuthContextValue | null>(null);
@@ -86,6 +88,24 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
     setStatus("UNAUTHENTICATED");
   };
 
+  const updateCurrentGymPhone = useCallback(async (newPhone: string) => {
+    setSession((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        user: { ...prev.user, gymPhone: newPhone },
+      };
+    });
+    const current = session || readWindowSession();
+    if (current) {
+      const updated: ClientSession = {
+        ...current,
+        user: { ...current.user, gymPhone: newPhone },
+      };
+      await persistClientSession(updated);
+    }
+  }, [session]);
+
   return (
     <AuthSessionContext.Provider
       value={{
@@ -95,6 +115,7 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
         login,
         logout,
         refreshSession: syncSession,
+        updateCurrentGymPhone,
       }}
     >
       {children}
@@ -109,3 +130,5 @@ export function useAuthSession(): AuthContextValue {
   }
   return ctx;
 }
+
+export const useAuth = useAuthSession;

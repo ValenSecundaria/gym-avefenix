@@ -22,6 +22,7 @@ export async function getDevAdminUser(): Promise<AuthenticatedUser> {
         id: dbAdmin.id,
         username: dbAdmin.username,
         name: dbAdmin.name,
+        gymPhone: dbAdmin.gymPhone ?? "5492915768403",
       };
     }
 
@@ -32,6 +33,7 @@ export async function getDevAdminUser(): Promise<AuthenticatedUser> {
         username: "admin",
         passwordHash,
         name: "Administrador AveFenix",
+        gymPhone: "5492915768403",
       },
     });
 
@@ -39,6 +41,7 @@ export async function getDevAdminUser(): Promise<AuthenticatedUser> {
       id: created.id,
       username: created.username,
       name: created.name,
+      gymPhone: created.gymPhone ?? "5492915768403",
     };
   } catch (dbError) {
     console.warn("[getDevAdminUser] Acceso admin fallback (DB no disponible en desarrollo):", dbError);
@@ -46,6 +49,7 @@ export async function getDevAdminUser(): Promise<AuthenticatedUser> {
       id: "admin-master-id",
       username: "admin",
       name: "Administrador AveFenix",
+      gymPhone: "5492915768403",
     };
   }
 }

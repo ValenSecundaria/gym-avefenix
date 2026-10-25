@@ -18,8 +18,8 @@ export interface LoginCredentials {
 /**
  * Server action principal de autenticación:
  * 1. Validación de esquema con loginSchema (Zod).
- * 2. Bypass exclusivo en entorno de desarrollo para usuario admin.
- * 3. En producción o credenciales estándar, validación exclusiva contra PostgreSQL y bcrypt.
+ * 2. Bypass exclusivo en desarrollo para usuario admin.
+ * 3. Validación contra PostgreSQL y bcrypt.
  * 4. Emisión de cookies firmadas de sesión.
  */
 export async function authenticateUser(
@@ -40,13 +40,10 @@ export async function authenticateUser(
       return { success: true, data: session };
     }
 
-    // Autenticación en PostgreSQL mediante Prisma
     let user = null;
     try {
       user = await prisma.user.findFirst({
-        where: {
-          username: { equals: username, mode: "insensitive" },
-        },
+        where: { username: { equals: username, mode: "insensitive" } },
       });
     } catch (dbError) {
       console.error("[authenticateUser] Error al consultar DB:", dbError);
@@ -57,20 +54,15 @@ export async function authenticateUser(
       };
     }
 
-    if (!user) {
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return { success: false, error: "Credenciales inválidas" };
     }
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) {
-      return { success: false, error: "Credenciales inválidas" };
-    }
-
-    // Solo se expone id, username y name (jamás passwordHash)
     const authenticatedUser: AuthenticatedUser = {
       id: user.id,
       username: user.username,
       name: user.name,
+      gymPhone: user.gymPhone ?? "5492915768403",
     };
 
     const session = await issueSessionCookies(authenticatedUser);
@@ -85,9 +77,7 @@ export async function authenticateUser(
   }
 }
 
-/**
- * Server action de inicio de sesión que retorna AuthenticatedUser directamente.
- */
+/** Server action de login que retorna AuthenticatedUser directamente. */
 export async function loginAction(
   credentials: LoginCredentials
 ): Promise<ActionResponse<AuthenticatedUser>> {
@@ -98,16 +88,19 @@ export async function loginAction(
   return { success: true, data: res.data.user };
 }
 
-/**
- * Re-emite la cookie de sesión a partir de un token firmado previamente por el servidor.
- */
+/** Re-emite la cookie de sesión a partir de un token firmado previamente por el servidor. */
 export async function resumeSession(sessionToken: string): Promise<ActionResponse<AuthSessionResult>> {
   try {
     const payload = await verifySessionToken(sessionToken, OFFLINE_RESUME_MAX_AGE_MS);
     if (!payload) {
       return { success: false, error: "La sesión guardada expiró. Ingresá nuevamente." };
     }
-    const session = await issueSessionCookies({ id: payload.id, username: payload.username, name: payload.name });
+    const session = await issueSessionCookies({
+      id: payload.id,
+      username: payload.username,
+      name: payload.name,
+      gymPhone: payload.gymPhone ?? "5492915768403",
+    });
     return { success: true, data: session };
   } catch (error) {
     console.error("[resumeSession] Error:", error);
@@ -115,9 +108,7 @@ export async function resumeSession(sessionToken: string): Promise<ActionRespons
   }
 }
 
-/**
- * Cierra la sesión activa eliminando las cookies del cliente.
- */
+/** Cierra la sesión activa eliminando las cookies del cliente. */
 export async function logoutUser(): Promise<ActionResponse<null>> {
   try {
     await clearSessionCookies();
@@ -128,9 +119,7 @@ export async function logoutUser(): Promise<ActionResponse<null>> {
   }
 }
 
-/**
- * Obtiene el usuario autenticado actualmente a partir de la cookie de sesión.
- */
+/** Obtiene el usuario autenticado actualmente a partir de la cookie de sesión. */
 export async function getSessionUser(): Promise<ActionResponse<AuthenticatedUser | null>> {
   try {
     const token = await getSessionCookie();
@@ -138,7 +127,15 @@ export async function getSessionUser(): Promise<ActionResponse<AuthenticatedUser
     if (!payload) {
       return { success: true, data: null };
     }
-    return { success: true, data: { id: payload.id, username: payload.username, name: payload.name } };
+    return {
+      success: true,
+      data: {
+        id: payload.id,
+        username: payload.username,
+        name: payload.name,
+        gymPhone: payload.gymPhone ?? "5492915768403",
+      },
+    };
   } catch {
     return { success: true, data: null };
   }

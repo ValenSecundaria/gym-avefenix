@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   Flame,
@@ -12,8 +14,7 @@ import {
   Shield,
 } from "lucide-react";
 import { buildWhatsAppLink } from "@/lib/utils";
-
-const GYM_WHATSAPP = "5492915768403";
+import { useAuth } from "@/context/auth-session-context";
 
 const METRICS = [
   { value: "+850", label: "Socios Activos", sub: "Comunidad en crecimiento", icon: Users, accent: "text-[#F95716]" },
@@ -50,8 +51,10 @@ const PILLARS = [
 ];
 
 export function Hero() {
+  const { user } = useAuth();
+  const gymPhone = user?.gymPhone || "5492915768403";
   const whatsappUrl = buildWhatsAppLink(
-    GYM_WHATSAPP,
+    gymPhone,
     "Hola Gimnasio Ave Fénix! Quiero consultar para empezar a entrenar."
   );
 
