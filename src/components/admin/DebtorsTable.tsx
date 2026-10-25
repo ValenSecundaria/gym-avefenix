@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { MessageCircle, CreditCard, CheckCircle2, Wallet, User } from "lucide-react";
 import type { DebtorMemberItem } from "@/types";
-import { buildWhatsAppLink, formatCurrencyARS, formatDateAR } from "@/lib/utils";
+import { formatCurrencyARS, formatDateAR } from "@/lib/utils";
 import { EditMemberButton } from "./EditMemberButton";
+import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
 
 interface DebtorsTableProps {
   debtors: DebtorMemberItem[];
@@ -11,6 +12,8 @@ interface DebtorsTableProps {
 }
 
 export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: DebtorsTableProps) {
+  const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
+
   if (debtors.length === 0) {
     return (
       <div className="bg-fx-surface border border-fx-border rounded-2xl p-10 text-center">
@@ -49,7 +52,6 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
       <div className="flex flex-col gap-3">
         {debtors.map((debtor) => {
           const waMessage = `¡Hola ${debtor.fullName}! Te escribimos de Gimnasio Ave Fénix para recordarte que tu cuota del plan ${debtor.planName} venció el ${formatDateAR(debtor.validUntil)}. ¡Te esperamos en recepción para renovarla!`;
-          const waUrl = buildWhatsAppLink(debtor.phone, waMessage);
 
           return (
             <div
@@ -87,15 +89,22 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
                   {formatCurrencyARS(debtor.planPrice)}
                 </span>
                 <div className="flex items-center gap-2.5">
-                  <a
-                    href={waUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>Aviso WhatsApp</span>
-                  </a>
+                  {debtor.phone ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setWaTarget({
+                          fullName: debtor.fullName,
+                          phone: debtor.phone!,
+                          defaultMessage: waMessage,
+                        })
+                      }
+                      className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Aviso WhatsApp</span>
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => onRegisterPayment(debtor)}
@@ -111,6 +120,8 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
           );
         })}
       </div>
+
+      <WhatsAppEditModal target={waTarget} onClose={() => setWaTarget(null)} />
     </div>
   );
 }

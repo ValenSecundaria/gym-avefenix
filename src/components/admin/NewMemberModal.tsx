@@ -110,7 +110,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={LABEL_CLS}>Número de DNI *</label>
-                <input type="text" inputMode="numeric" required value={dni} onChange={(e) => setDni(e.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="Sin puntos (6 a 8 dígitos)" className={`${INPUT_CLS} font-mono`} />
+                <input type="text" inputMode="numeric" required value={dni} onChange={(e) => setDni(e.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="Ej: 40123456" className={`${INPUT_CLS} font-mono`} />
               </div>
               <div>
                 <label className={LABEL_CLS}>Teléfono / WhatsApp</label>

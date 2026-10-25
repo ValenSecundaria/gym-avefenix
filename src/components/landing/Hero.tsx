@@ -13,10 +13,13 @@ import {
 } from "lucide-react";
 import { buildWhatsAppLink } from "@/lib/utils";
 
+interface HeroProps {
+  activeMembers?: number;
+}
+
 const GYM_WHATSAPP = "5492915768403";
 
-const METRICS = [
-  { value: "+850", label: "Socios Activos", sub: "Comunidad en crecimiento", icon: Users, accent: "text-[#F95716]" },
+const STATIC_METRICS = [
   { value: "100% Pro", label: "Equipamiento Biomecánico", sub: "Línea Importada Calibrada", icon: Dumbbell, accent: "text-[#FFB300]" },
   { value: "Élite", label: "Entrenadores en Sala", sub: "Profesores Certificados", icon: Award, accent: "text-[#10B981]" },
   { value: "DNI Ágil", label: "Ingreso Automático", sub: "Molinete sin Demoras", icon: ScanLine, accent: "text-[#F95716]" },
@@ -49,11 +52,25 @@ const PILLARS = [
   },
 ];
 
-export function Hero() {
+export function Hero({ activeMembers }: HeroProps) {
   const whatsappUrl = buildWhatsAppLink(
     GYM_WHATSAPP,
     "Hola Gimnasio Ave Fénix! Quiero consultar para empezar a entrenar."
   );
+
+  const activeMembersValue =
+    typeof activeMembers === "number" ? String(activeMembers) : "0";
+
+  const metrics = [
+    {
+      value: activeMembersValue,
+      label: "Socios Activos",
+      sub: "Comunidad activa con cuota al día",
+      icon: Users,
+      accent: "text-[#F95716]",
+    },
+    ...STATIC_METRICS,
+  ];
 
   return (
     <section
@@ -103,7 +120,7 @@ export function Hero() {
         </div>
 
         <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-4 p-5 sm:p-6 rounded-2xl bg-[#17171C] border border-[#2C2D35] shadow-xl mb-14">
-          {METRICS.map((item) => {
+          {metrics.map((item) => {
             const Icon = item.icon;
             return (
               <div key={item.label} className="flex flex-col items-center justify-center p-3">

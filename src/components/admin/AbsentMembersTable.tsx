@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { MessageCircle, CalendarClock, UserCheck, User } from "lucide-react";
 import type { AbsentMemberItem } from "@/types";
-import { buildWhatsAppLink, formatDateAR } from "@/lib/utils";
+import { formatDateAR } from "@/lib/utils";
 import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 import { EditMemberButton } from "./EditMemberButton";
+import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
 
 interface AbsentMembersTableProps {
   absentMembers: AbsentMemberItem[];
@@ -11,6 +12,8 @@ interface AbsentMembersTableProps {
 }
 
 export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMembersTableProps) {
+  const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
+
   if (absentMembers.length === 0) {
     return (
       <div className="bg-fx-surface border border-fx-border rounded-2xl p-10 text-center">
@@ -46,7 +49,6 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
       <div className="flex flex-col gap-3">
         {absentMembers.map((member) => {
           const waMessage = `¡Hola ${member.fullName}! Te escribimos de Gimnasio Ave Fénix. Hace ${member.daysAbsent} días que no te vemos entrenar y queríamos saber cómo estás. ¡Te esperamos esta semana para retomar con toda la energía!`;
-          const waUrl = buildWhatsAppLink(member.phone, waMessage);
 
           return (
             <div
@@ -80,21 +82,30 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
               </div>
 
               <div className="flex items-center gap-2.5">
-                <a
-                  href={waUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="min-h-[48px] px-5 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Recontactar por WhatsApp</span>
-                </a>
+                {member.phone ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setWaTarget({
+                        fullName: member.fullName,
+                        phone: member.phone!,
+                        defaultMessage: waMessage,
+                      })
+                    }
+                    className="min-h-[48px] px-5 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>Recontactar por WhatsApp</span>
+                  </button>
+                ) : null}
                 <EditMemberButton fullName={member.fullName} onClick={() => onEditMember(member.id)} />
               </div>
             </div>
           );
         })}
       </div>
+
+      <WhatsAppEditModal target={waTarget} onClose={() => setWaTarget(null)} />
     </div>
   );
 }

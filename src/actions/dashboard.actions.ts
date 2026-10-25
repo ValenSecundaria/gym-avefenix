@@ -118,3 +118,21 @@ export async function getDashboardOverview(): Promise<ActionResponse<DashboardOv
     return { success: false, error: "No se pudieron obtener las métricas del panel de administración" };
   }
 }
+
+/**
+ * Retorna la cantidad exacta de socios activos en la base de datos
+ * utilizando la misma consulta y regla de negocio que el panel de administración:
+ * socios activos (isActive = true) con última membresía ACTIVA y fecha de vencimiento vigente.
+ */
+export async function getActiveMembersCount(): Promise<ActionResponse<number>> {
+  try {
+    const overview = await getDashboardOverview();
+    if (!overview.success || !overview.data) {
+      return { success: false, error: overview.error || "No se pudo obtener la cantidad de socios activos" };
+    }
+    return { success: true, data: overview.data.stats.activeMembers };
+  } catch (error) {
+    console.error("[getActiveMembersCount] Error:", error);
+    return { success: false, error: "Error al consultar los socios activos" };
+  }
+}

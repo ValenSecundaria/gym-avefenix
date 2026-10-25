@@ -135,9 +135,12 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
 
   return (
     <div className="flex flex-col gap-3 w-full">
-      <label className="text-xs sm:text-sm text-fx-text font-bold flex items-center gap-2">
-        <Camera className="w-4 h-4 text-fx-orange" />
-        <span>Foto de Identificación Biométrica</span>
+      <label className="text-xs sm:text-sm text-fx-text font-bold flex items-center justify-between">
+        <span className="flex items-center gap-2">
+          <Camera className="w-4 h-4 text-fx-orange" />
+          <span>Foto de Identificación Biométrica</span>
+        </span>
+        <span className="text-[11px] font-normal text-fx-muted">(Opcional)</span>
       </label>
 
       <div className="relative w-full aspect-4/3 rounded-xl bg-fx-base border border-fx-border overflow-hidden flex items-center justify-center">
@@ -146,14 +149,20 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
         ) : cameraActive ? (
           <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
         ) : (
-          <div className="p-6 text-center flex flex-col items-center gap-2 text-fx-muted">
-            <VideoOff className="w-9 h-9 text-fx-orange" />
-            <p className="text-xs">{cameraError || "Cámara en espera"}</p>
+          <div className="relative w-full h-full flex flex-col items-center justify-center bg-fx-base">
+            <img
+              src="/UserImage.png"
+              alt="Silueta por defecto"
+              className="w-28 h-28 object-contain opacity-50 mb-2"
+            />
+            <p className="text-xs text-fx-muted px-4 text-center">
+              {cameraError || "Sin foto seleccionada (se usará la imagen por defecto)"}
+            </p>
           </div>
         )}
         <div className="absolute inset-3 rounded-xl border-2 border-dashed border-fx-orange/60 pointer-events-none flex items-end justify-center pb-2">
           <span className="text-[11px] bg-fx-base/80 border border-fx-orange/40 text-fx-text px-3 py-0.5 rounded-full font-semibold">
-            {capturedUrl ? "✓ Foto Capturada" : "Encuadrar Rostro"}
+            {capturedUrl ? "✓ Foto Capturada" : cameraActive ? "Encuadrar Rostro" : "Foto Opcional"}
           </span>
         </div>
         <canvas ref={canvasRef} className="hidden" />

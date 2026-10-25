@@ -47,8 +47,8 @@ export function buildWhatsAppLink(phone: string | null | undefined, message: str
     : `https://wa.me/?text=${encodedMsg}`;
 }
 
-export function getMemberPhotoUrl(dni: string, photoFilename?: string | null): string | null {
-  if (!photoFilename) return null;
+export function getMemberPhotoUrl(dni: string, photoFilename?: string | null): string {
+  if (!photoFilename) return "/UserImage.png";
   return `/api/members/${encodeURIComponent(dni)}/photo?v=${encodeURIComponent(photoFilename)}`;
 }
 

@@ -18,6 +18,7 @@ model User {
   username     String   @unique
   passwordHash String
   name         String
+  gymPhone     String?  @default("5492915768403")
   createdAt    DateTime @default(now())
 }
 

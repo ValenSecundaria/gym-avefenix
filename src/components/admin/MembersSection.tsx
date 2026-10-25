@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { AlertCircle, ChevronLeft, ChevronRight, Loader2, MessageCircle, User, UserPen, Users } from "lucide-react";
 import type { MemberRowItem, MembersPage, MemberStatusFilter } from "@/types";
-import { buildWhatsAppLink, formatDateAR } from "@/lib/utils";
+import { formatDateAR } from "@/lib/utils";
 import { getMembersPage } from "@/actions/members.actions";
+import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
 
 interface MembersSectionProps {
   searchQuery: string;
@@ -60,6 +61,7 @@ function FilterButton({ active, onClick, children }: { active: boolean; onClick:
 }
 
 export function MembersSection({ searchQuery, reloadKey, onEditMember }: MembersSectionProps) {
+  const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
   const [showInactive, setShowInactive] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MemberStatusFilter>("ALL");
   const [page, setPage] = useState(1);
@@ -196,16 +198,21 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${badge.cls}`}>{badge.text}</span>
                   {m.phone && (
-                    <a
-                      href={buildWhatsAppLink(m.phone, whatsAppMessage(m))}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setWaTarget({
+                          fullName: m.fullName,
+                          phone: m.phone!,
+                          defaultMessage: whatsAppMessage(m),
+                        })
+                      }
                       aria-label={`Contactar por WhatsApp a ${m.fullName}`}
-                      className="min-h-[40px] px-3 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-sm font-extrabold inline-flex items-center gap-2 transition-colors"
+                      className="min-h-[40px] px-3 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span className="hidden sm:inline">WhatsApp</span>
-                    </a>
+                    </button>
                   )}
                   <button
                     type="button"
@@ -221,6 +228,8 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
           })}
         </div>
       )}
+
+      <WhatsAppEditModal target={waTarget} onClose={() => setWaTarget(null)} />
 
       {data && totalPages > 1 && (
         <nav aria-label="Páginas de clientes" className="flex items-center justify-between gap-3 pt-1">

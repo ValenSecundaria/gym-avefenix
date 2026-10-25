@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AlertCircle, Camera, Check, Loader2, RotateCcw, Trash2, User, UserMinus, UserPen, X } from "lucide-react";
+import { AlertCircle, Camera, Check, Loader2, MessageCircle, RotateCcw, Trash2, User, UserMinus, UserPen, X } from "lucide-react";
 import type { MemberDetail } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import {
@@ -13,6 +13,7 @@ import {
 import { WebcamCapture } from "./WebcamCapture";
 import { sanitizeNameInput, sanitizePhoneInput } from "@/lib/validations/member.schema";
 import { MemberHistory, MemberSummary } from "./MemberHistory";
+import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
 
 interface MemberEditModalProps {
   memberId: string | null;
@@ -41,6 +42,7 @@ export function MemberEditModal({ memberId, onClose, onChanged }: MemberEditModa
 }
 
 function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string } & Omit<MemberEditModalProps, "memberId">) {
+  const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
   const [member, setMember] = useState<MemberDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [fullName, setFullName] = useState("");
@@ -224,32 +226,56 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
               )}
               <div>
                 <label htmlFor="edit-fullName" className={LABEL_CLS}>Nombre y Apellido *</label>
-                <input id="edit-fullName" type="text" required value={fullName} onChange={(e) => setFullName(sanitizeNameInput(e.target.value))} className={INPUT_CLS} />
+                <input id="edit-fullName" type="text" required value={fullName} onChange={(e) => setFullName(sanitizeNameInput(e.target.value))} placeholder="Ej: Mariano Alejandro Castro" className={INPUT_CLS} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="edit-dni" className={LABEL_CLS}>Número de DNI *</label>
-                  <input id="edit-dni" type="text" inputMode="numeric" required value={dni} onChange={(e) => setDni(e.target.value.replace(/\D/g, "").slice(0, 8))} className={`${INPUT_CLS} font-mono`} />
+                  <input id="edit-dni" type="text" inputMode="numeric" required value={dni} onChange={(e) => setDni(e.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="Ej: 40123456" className={`${INPUT_CLS} font-mono`} />
                 </div>
                 <div>
                   <label htmlFor="edit-phone" className={LABEL_CLS}>Teléfono / WhatsApp</label>
-                  <input id="edit-phone" type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))} placeholder="Solo números" className={INPUT_CLS} />
+                  <input id="edit-phone" type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))} placeholder="Ej: 1154923810 (solo números)" className={INPUT_CLS} />
                 </div>
               </div>
               <div>
                 <label htmlFor="edit-notes" className={LABEL_CLS}>Observaciones</label>
-                <textarea id="edit-notes" rows={3} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} className={`${INPUT_CLS} py-3 resize-y`} />
+                <textarea id="edit-notes" rows={3} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej: Abonó en dos partes, presenta apto médico..." className={`${INPUT_CLS} py-3 resize-y`} />
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-fx-border">
-                <button type="button" onClick={onClose} disabled={isBusy} className="min-h-[48px] px-6 rounded-xl bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text font-semibold text-sm cursor-pointer">
-                  Cancelar
-                </button>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={onClose} disabled={isBusy} className="min-h-[48px] px-6 rounded-xl bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text font-semibold text-sm cursor-pointer">
+                    Cancelar
+                  </button>
+                  {phone.trim() && (
+                    <button
+                      type="button"
+                      disabled={isBusy}
+                      onClick={() =>
+                        setWaTarget({
+                          fullName: fullName.trim() || member.fullName,
+                          phone: phone.trim(),
+                          defaultMessage:
+                            member.membershipStatus === "VENCIDA" && member.validUntil
+                              ? `¡Hola ${fullName.trim() || member.fullName}! Te escribimos de Gimnasio Ave Fénix para recordarte que tu cuota del plan ${member.planName} venció el ${formatDateAR(member.validUntil)}. ¡Te esperamos en recepción para renovarla!`
+                              : `¡Hola ${fullName.trim() || member.fullName}! Te escribimos de Gimnasio Ave Fénix.`,
+                        })
+                      }
+                      className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Aviso WhatsApp</span>
+                    </button>
+                  )}
+                </div>
                 <button type="submit" disabled={isBusy} className="min-h-[50px] px-7 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-bold text-sm inline-flex items-center gap-2 shadow-[0_4px_20px_rgba(249,87,22,0.4)] disabled:opacity-50 cursor-pointer">
                   {isBusy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                   <span>Guardar cambios</span>
                 </button>
               </div>
+
+              <WhatsAppEditModal target={waTarget} onClose={() => setWaTarget(null)} />
 
               {/* Zona de baja / eliminación: siempre con un paso de confirmación */}
               <div className="mt-2 p-4 rounded-xl border border-fx-red/40 bg-fx-red/5 flex flex-col gap-3">
