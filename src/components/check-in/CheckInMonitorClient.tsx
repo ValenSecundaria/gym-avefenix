@@ -200,7 +200,6 @@ export function CheckInMonitorClient({ onVerifyDni }: CheckInMonitorClientProps)
           <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981] animate-pulse" />
           <span>Molinete Ave Fénix Conectado • Listo para ingreso</span>
         </div>
-        <span> Alertas de cuota/límite reinician automáticamente en 60 seg</span>
       </footer>
     </div>
   );
