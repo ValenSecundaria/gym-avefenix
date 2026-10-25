@@ -6,8 +6,6 @@ import { ScheduleSection } from "@/components/landing/ScheduleSection";
 import { Footer } from "@/components/landing/Footer";
 import { getActiveMembersCount } from "@/actions/dashboard.actions";
 
-export const dynamic = "force-dynamic";
-
 export default async function PublicLandingPage() {
   const activeMembersRes = await getActiveMembersCount();
   const activeMembers = activeMembersRes.success ? activeMembersRes.data : 0;
