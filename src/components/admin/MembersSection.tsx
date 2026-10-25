@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AlertCircle, ChevronLeft, ChevronRight, Loader2, User, UserPen, Users } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Loader2, MessageCircle, User, UserPen, Users } from "lucide-react";
 import type { MemberRowItem, MembersPage, MemberStatusFilter } from "@/types";
-import { formatDateAR } from "@/lib/utils";
+import { buildWhatsAppLink, formatDateAR } from "@/lib/utils";
 import { getMembersPage } from "@/actions/members.actions";
 
 interface MembersSectionProps {
@@ -35,6 +35,13 @@ function lastVisitLabel(iso: string | null, now: number): string {
   if (days <= 0) return "Vino hoy";
   if (days === 1) return "Vino ayer";
   return `Vino hace ${days} días`;
+}
+
+function whatsAppMessage(m: MemberRowItem): string {
+  if (m.membershipStatus === "VENCIDA" && m.validUntil) {
+    return `¡Hola ${m.fullName}! Te escribimos de Gimnasio Ave Fénix para recordarte que tu cuota del plan ${m.planName} venció el ${formatDateAR(m.validUntil)}. ¡Te esperamos en recepción para renovarla!`;
+  }
+  return `¡Hola ${m.fullName}! Te escribimos de Gimnasio Ave Fénix.`;
 }
 
 function FilterButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -151,13 +158,15 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
           {(data?.items ?? []).map((m) => {
             const badge = STATUS_BADGE[m.membershipStatus];
             return (
-              <button
+              <div
                 key={m.id}
-                type="button"
-                onClick={() => onEditMember(m.id)}
-                className="w-full text-left p-3 sm:p-4 rounded-xl bg-fx-base border border-fx-border hover:border-fx-orange/60 flex flex-wrap items-center justify-between gap-3 transition-colors cursor-pointer"
+                className="p-3 sm:p-4 rounded-xl bg-fx-base border border-fx-border hover:border-fx-orange/60 flex flex-wrap items-center justify-between gap-3 transition-colors"
               >
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => onEditMember(m.id)}
+                  className="flex-1 min-w-0 text-left flex items-center gap-3 sm:gap-4 cursor-pointer"
+                >
                   <div className="w-11 h-11 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center shrink-0">
                     {m.photoUrl ? <img src={m.photoUrl} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-fx-muted" />}
                   </div>
@@ -183,15 +192,31 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
                       <span>{lastVisitLabel(m.lastCheckInAt, loadedAt)}</span>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
+                </button>
+                <div className="flex flex-wrap items-center gap-2">
                   <span className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${badge.cls}`}>{badge.text}</span>
-                  <span className="min-h-[40px] px-3 rounded-xl bg-fx-surface border border-fx-border text-fx-text text-sm font-bold inline-flex items-center gap-2">
+                  {m.phone && (
+                    <a
+                      href={buildWhatsAppLink(m.phone, whatsAppMessage(m))}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Contactar por WhatsApp a ${m.fullName}`}
+                      className="min-h-[40px] px-3 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-sm font-extrabold inline-flex items-center gap-2 transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">WhatsApp</span>
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onEditMember(m.id)}
+                    className="min-h-[40px] px-3 rounded-xl bg-fx-surface border border-fx-border hover:border-fx-orange text-fx-text text-sm font-bold inline-flex items-center gap-2 cursor-pointer"
+                  >
                     <UserPen className="w-4 h-4 text-fx-orange" />
                     <span>Ver / editar</span>
-                  </span>
+                  </button>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>

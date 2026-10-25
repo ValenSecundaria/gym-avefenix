@@ -107,18 +107,30 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
     startCamera();
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // La foto subida se recorta y achica igual que la de la cámara (480x480 JPEG): una foto de celular
+  // sin achicar supera el límite de 1 MB de las Server Actions y el alta falla.
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setCapturedUrl(reader.result);
-        onPhotoCapture(reader.result);
-        stopCamera();
-      }
-    };
-    reader.readAsDataURL(file);
+    e.target.value = ""; // permite volver a elegir el mismo archivo
+    const canvas = canvasRef.current;
+    if (!file || !canvas) return;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const size = Math.min(bitmap.width, bitmap.height);
+      canvas.width = 480;
+      canvas.height = 480;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(bitmap, (bitmap.width - size) / 2, (bitmap.height - size) / 2, size, size, 0, 0, 480, 480);
+      bitmap.close();
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      setCameraError(null);
+      setCapturedUrl(dataUrl);
+      onPhotoCapture(dataUrl);
+      stopCamera();
+    } catch {
+      setCameraError("No se pudo leer la imagen. Probá con un archivo JPG o PNG.");
+    }
   };
 
   return (

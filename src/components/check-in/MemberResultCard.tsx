@@ -7,8 +7,6 @@ import { StatusBanner } from "./StatusBanner";
 
 interface MemberResultCardProps {
   result: CheckInVerificationResult;
-  remainingSeconds?: number | null;
-  totalAlertSeconds?: number;
 }
 
 function getInitials(fullName: string): string {
@@ -20,11 +18,7 @@ function getInitials(fullName: string): string {
     .join("");
 }
 
-export function MemberResultCard({
-  result,
-  remainingSeconds = null,
-  totalAlertSeconds = 60,
-}: MemberResultCardProps) {
+export function MemberResultCard({ result }: MemberResultCardProps) {
   const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null);
   const showPhoto = Boolean(result.photoUrl && failedPhotoUrl !== result.photoUrl);
 
@@ -44,11 +38,6 @@ export function MemberResultCard({
 
   const CornerIcon =
     result.status === "HABILITADO" ? Check : result.status === "CUOTA_VENCIDA" ? AlertCircle : Clock;
-
-  const progressPercent =
-    typeof remainingSeconds === "number" && totalAlertSeconds > 0
-      ? Math.max(0, Math.min(100, (remainingSeconds / totalAlertSeconds) * 100))
-      : null;
 
   return (
     <div className="w-full bg-[#17171C] border border-[#2C2D35] rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col items-center text-center transition-all">
@@ -101,24 +90,6 @@ export function MemberResultCard({
         allowedDaysPerWeek={result.allowedDaysPerWeek}
       />
 
-      {/* Temporizador de 60s para alertas */}
-      {typeof remainingSeconds === "number" && remainingSeconds > 0 && (
-        <div className="w-full mt-6 pt-4 border-t border-[#2C2D35]/70 flex flex-col gap-2">
-          <div className="flex items-center justify-between text-xs text-[#8A909A]">
-            <span className="inline-flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-[#F95716]" />
-              Reinicia automáticamente en
-            </span>
-            <span className="font-mono font-bold text-[#F4F5F7]">{remainingSeconds} seg</span>
-          </div>
-          <div className="w-full h-1.5 bg-[#0B0B0C] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#F95716] transition-all duration-1000 ease-linear"
-              style={{ width: `${progressPercent ?? 0}%` }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

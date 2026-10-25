@@ -32,6 +32,7 @@ import { getTodayCheckIns } from "@/actions/checkin.actions";
 import { useAdminTheme, type AdminTheme } from "@/lib/use-admin-theme";
 import { gymBroadcast } from "@/lib/screens/broadcast-channel";
 import { useAuthSession } from "@/context/auth-session-context";
+import { matchesSearch } from "@/lib/text";
 
 export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "METRICS";
 
@@ -197,8 +198,9 @@ export function AdminDashboardClient({
     return { success: res.success, error: res.error };
   };
 
-  const q = searchQuery.trim().toLowerCase();
-  const match = (name: string, dni: string) => !q || name.toLowerCase().includes(q) || dni.includes(q);
+  const q = searchQuery.trim();
+  // Sin distinguir acentos: "martin" encuentra "Martín".
+  const match = (name: string, dni: string) => !q || matchesSearch(name, q) || dni.includes(q);
   const section = ADMIN_SECTIONS.find((s) => s.tab === activeTab) || ADMIN_SECTIONS[0];
   const SectionIcon = section.icon;
 
