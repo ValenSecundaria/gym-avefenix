@@ -52,7 +52,7 @@ export function LiveFeedTable({ items, onEditMember }: LiveFeedTableProps) {
           <button type="button" onClick={() => setFilter("ALL")} className={`min-h-[40px] px-4 rounded-lg text-xs font-bold transition-colors cursor-pointer ${filter === "ALL" ? "bg-fx-orange text-white" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"}`}>
             Todos los ingresos ({items.length})
           </button>
-          <button type="button" onClick={() => setFilter("DUE")} className={`min-h-[40px] px-4 rounded-lg text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${filter === "DUE" ? "bg-fx-red text-fx-text" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"}`}>
+          <button type="button" onClick={() => setFilter("DUE")} className={`min-h-[40px] px-4 rounded-lg text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${filter === "DUE" ? "bg-fx-red text-white" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"}`}>
             <span className="w-2 h-2 rounded-full bg-fx-red" />
             <span>Con alerta de cuota ({dueCount})</span>
           </button>

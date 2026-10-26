@@ -208,7 +208,7 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
                         })
                       }
                       aria-label={`Contactar por WhatsApp a ${m.fullName}`}
-                      className="min-h-[40px] px-3 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                      className="min-h-[40px] px-3 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span className="hidden sm:inline">WhatsApp</span>

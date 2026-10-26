@@ -7,10 +7,21 @@ export function getLocalPhotosDir(): string {
   return getBasePhotosDir();
 }
 
+// Las fotos viven en el disco de la notebook del mostrador (LOCAL_PHOTOS_PATH), donde corre el servidor.
+// En Vercel el disco es temporal y se borra en cada deploy: guardar ahí dejaría socios apuntando a
+// fotos que ya no existen, así que el socio se guarda sin foto (se usa la imagen por defecto).
+function canStorePhotos(): boolean {
+  return !process.env.VERCEL;
+}
+
 export async function saveMemberPhotoToDisk(
   dni: string,
   photoBase64: string
-): Promise<string> {
+): Promise<string | null> {
+  if (!canStorePhotos()) {
+    console.warn("[photo-storage] Servidor en Vercel: la foto no se guarda (disco temporal).");
+    return null;
+  }
   const cleanDni = dni.replace(/\D/g, "");
   const cleanBase64 = photoBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, "");
   const inputBuffer = Buffer.from(cleanBase64, "base64");

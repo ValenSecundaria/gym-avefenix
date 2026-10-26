@@ -37,7 +37,38 @@ import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
 import { useAuthSession } from "@/context/auth-session-context";
 import { matchesSearch } from "@/lib/text";
 import { useBatchSync } from "@/hooks/use-batch-sync";
-import { saveMembersToCache, updateMemberInCache, getMemberFromCache } from "@/lib/db/indexed-db";
+import {
+  saveMembersToCache,
+  updateMemberInCache,
+  getMemberFromCache,
+  getPendingCheckIns,
+} from "@/lib/db/indexed-db";
+import { getMemberPhotoUrl } from "@/lib/utils";
+
+// Ingresos de hoy que siguen en la cola local (todavía no subidos a la base en el lote horario).
+// La lista del servidor no los tiene: sin esto, cada refresco "borraba" los ingresos del día.
+async function getTodayLocalCheckIns(): Promise<LiveCheckInItem[]> {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const pending = await getPendingCheckIns();
+  const items: LiveCheckInItem[] = [];
+  for (const p of pending) {
+    if (new Date(p.createdAt) < startOfToday) continue;
+    // Ingresos encolados antes de que la cola guardara el nombre: se completan con la caché de socios.
+    const cached = p.fullName ? undefined : await getMemberFromCache(p.dni);
+    items.push({
+      id: `pending_${p.id}`,
+      memberId: p.memberId,
+      dni: p.dni,
+      fullName: p.fullName ?? cached?.fullName ?? `DNI ${p.dni}`,
+      photoUrl: getMemberPhotoUrl(p.dni, p.photoFilename ?? cached?.photoFilename),
+      planName: p.planName ?? cached?.planName ?? "Sin plan",
+      status: p.status,
+      createdAt: p.createdAt,
+    });
+  }
+  return items;
+}
 
 /** Si la pantalla de ingreso no da señales en este tiempo, se considera cerrada. */
 const CHECKIN_ALIVE_TIMEOUT_MS = 6000;
@@ -74,7 +105,8 @@ export function AdminDashboardClient({
   const [plans, setPlans] = useState<PlanOption[]>(initialPlans);
   const [activeTab, setActiveTab] = useState<AdminTab>("LIVE_FEED");
   const [stats, setStats] = useState<DashboardStats>(initialStats);
-  const [checkIns, setCheckIns] = useState<LiveCheckInItem[]>(initialCheckIns);
+  const [serverCheckIns, setServerCheckIns] = useState<LiveCheckInItem[]>(initialCheckIns);
+  const [localCheckIns, setLocalCheckIns] = useState<LiveCheckInItem[]>([]);
   const [debtors, setDebtors] = useState<DebtorMemberItem[]>(initialDebtors);
   const [absentMembers, setAbsentMembers] = useState<AbsentMemberItem[]>(initialAbsent);
   const [searchQuery, setSearchQuery] = useState("");
@@ -161,6 +193,15 @@ export function AdminDashboardClient({
   // Las Server Actions se ejecutan en fila: si una actualización quedó esperando (red lenta),
   // no se encolan más cada 15 s, porque trabarían todo lo demás del panel detrás de ellas.
   const refreshInFlightRef = useRef(false);
+
+  const reloadLocalCheckIns = useCallback(async () => {
+    try {
+      setLocalCheckIns(await getTodayLocalCheckIns());
+    } catch {
+      // IndexedDB no disponible: solo se ven los ingresos ya subidos
+    }
+  }, []);
+
   const refreshAllData = useCallback(async () => {
     if (refreshInFlightRef.current) return;
     refreshInFlightRef.current = true;
@@ -173,27 +214,24 @@ export function AdminDashboardClient({
         setAbsentMembers(overviewRes.data.absentMembers);
         setPlans(overviewRes.data.plans);
       }
-      if (checkInsRes.success && checkInsRes.data) setCheckIns(checkInsRes.data);
+      if (checkInsRes.success && checkInsRes.data) setServerCheckIns(checkInsRes.data);
     } catch {
       // Sin conexión: se mantienen los datos previos
     } finally {
+      // La cola se lee después de la consulta al servidor: si el lote se subió en el medio, no se duplica.
+      await reloadLocalCheckIns();
       refreshInFlightRef.current = false;
       setIsRefreshing(false);
     }
-  }, []);
+  }, [reloadLocalCheckIns]);
 
   useEffect(() => {
+    const kickoffId = window.setTimeout(() => void reloadLocalCheckIns(), 0);
     const interval = window.setInterval(refreshAllData, 15000);
     const unsubscribe = gymBroadcast.subscribe((msg) => {
       if (msg.type === "CHECKIN_LOGGED" && msg.checkIn) {
-        setCheckIns((prev) => {
-          if (prev.some((c) => c.id === msg.checkIn.id)) return prev;
-          return [msg.checkIn, ...prev];
-        });
-        setStats((prev) => ({
-          ...prev,
-          todayCheckIns: prev.todayCheckIns + 1,
-        }));
+        // El ingreso ya quedó en la cola local (IndexedDB compartida con la pantalla de Check-in).
+        void reloadLocalCheckIns();
       } else if (msg.type === "REFRESH_DASHBOARD") {
         refreshAllData();
       } else if (msg.type === "SESSION_LOGOUT") {
@@ -201,10 +239,14 @@ export function AdminDashboardClient({
       }
     });
     return () => {
+      window.clearTimeout(kickoffId);
       window.clearInterval(interval);
       unsubscribe();
     };
-  }, [refreshAllData]);
+  }, [refreshAllData, reloadLocalCheckIns]);
+
+  const checkIns = [...localCheckIns, ...serverCheckIns].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const displayStats: DashboardStats = { ...stats, todayCheckIns: stats.todayCheckIns + localCheckIns.length };
 
   const toastTimerRef = useRef<number | null>(null);
   const showToast = useCallback((msg: string) => {
@@ -319,7 +361,7 @@ export function AdminDashboardClient({
       <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 pb-28 lg:pb-8">
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
           <HeaderStats
-            stats={stats}
+            stats={displayStats}
             onOpenNewMember={openNewMember}
             onRefresh={refreshAllData}
             isRefreshing={isRefreshing}
@@ -403,7 +445,7 @@ export function AdminDashboardClient({
               <>
                 {/* Los gráficos no entran bien en el celular: ahí no se muestran. */}
                 <div className="hidden lg:block">
-                  <MetricsPanel stats={stats} onGoToTab={goToTab} />
+                  <MetricsPanel stats={displayStats} onGoToTab={goToTab} />
                 </div>
                 <div className="lg:hidden p-8 text-center rounded-2xl bg-fx-base border border-fx-border">
                   <BarChart3 className="w-10 h-10 text-fx-muted mx-auto mb-3" />

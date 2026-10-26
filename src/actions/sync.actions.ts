@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getStartOfWeekMonday } from "@/lib/utils";
+import { insertCheckInBatch } from "@/lib/checkin-batch";
 import { batchCheckInSchema } from "@/lib/validations/sync.schema";
 import type { ActionResponse, CachedMember } from "@/types";
 
@@ -133,17 +134,10 @@ export async function syncBatchCheckInsAction(
       return { success: true, data: { count: 0 } };
     }
 
-    const inserted = await prisma.checkIn.createMany({
-      data: parsed.data.map((item) => ({
-        memberId: item.memberId,
-        status: item.status,
-        createdAt: new Date(item.createdAt),
-        isSynced: true,
-      })),
-    });
+    const count = await insertCheckInBatch(parsed.data);
 
     revalidatePath("/admin");
-    return { success: true, data: { count: inserted.count } };
+    return { success: true, data: { count } };
   } catch (error) {
     console.error("[syncBatchCheckInsAction] Error:", error);
     return { success: false, error: "Error al guardar el lote de ingresos" };

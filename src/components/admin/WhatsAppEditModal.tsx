@@ -121,7 +121,7 @@ export function WhatsAppEditModal({ target, onClose }: WhatsAppEditModalProps) {
             <button
               type="submit"
               disabled={!message.trim()}
-              className="min-h-[46px] px-6 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base font-extrabold text-sm inline-flex items-center gap-2 shadow-[0_4px_16px_rgba(37,211,102,0.3)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+              className="min-h-[46px] px-6 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] font-extrabold text-sm inline-flex items-center gap-2 shadow-[0_4px_16px_rgba(37,211,102,0.3)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
             >
               <Send className="w-4 h-4" />
               <span>Continuar a WhatsApp</span>

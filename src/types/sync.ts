@@ -17,6 +17,10 @@ export interface PendingCheckIn {
   dni: string;
   status: AccessStatusType;
   createdAt: string;
+  // Datos para mostrar el ingreso en "Ingresos del día" antes de que el lote llegue a la base.
+  fullName?: string;
+  planName?: string;
+  photoFilename?: string | null;
 }
 
 export interface BatchCheckInPayload {

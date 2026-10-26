@@ -10,6 +10,15 @@ El sistema usa 3 permisos del navegador:
 
 **Chrome recuerda cada "Permitir" para siempre, pero por dirección web.** Si la dirección cambia, pregunta de nuevo.
 
+> **Sistema corriendo en la notebook (`http://localhost:3000`, ver `docs/SERVIDOR-LOCAL-Y-FOTOS.md`):** la dirección es siempre la misma. Hacer doble clic como administrador en `scripts\local\chrome-permisos-localhost.reg` y Chrome no vuelve a preguntar nada.
+
+### Cámara: ¿se puede activar sin pedir permiso?
+
+Una página web **no puede** saltearse el cartel de la cámara: es una protección del navegador. Lo que hace el sistema:
+- Al abrir el alta (o "Cambiar foto"), la cámara **se enciende sola** si el permiso ya está dado (una vez aceptado con *Permitir al visitar el sitio*, o con la política de arriba).
+- Si el permiso se rechazó, no insiste ni muestra carteles: queda la opción *Subir foto local* y el alta se puede hacer sin foto.
+- Si la notebook no tiene cámara, pasa lo mismo.
+
 ## Causa principal: se está entrando por una dirección que cambia
 
 Una dirección como `gym-avefenix-3r6jds5n5-valens-projects-6c195848.vercel.app` es la de **un deploy puntual de Vercel**: cada deploy genera otra distinta. Para el navegador es un sitio nuevo cada vez, y por eso vuelve a pedir todo.

@@ -85,11 +85,14 @@ export function useCheckIn() {
         dni: member.dni,
         status,
         createdAt,
+        fullName: member.fullName,
+        planName: member.planName,
+        photoFilename: member.photoFilename,
       });
 
       const photoUrl = getMemberPhotoUrl(member.dni, member.photoFilename);
       const liveCheckIn: LiveCheckInItem = {
-        id: `pending_${pendingId}_${Date.now()}`,
+        id: `pending_${pendingId}`,
         memberId: member.id,
         dni: member.dni,
         fullName: member.fullName,

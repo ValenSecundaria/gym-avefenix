@@ -8,6 +8,22 @@ interface WebcamCaptureProps {
   onPhotoCapture: (base64DataUrl: string | null) => void;
 }
 
+const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
+  video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+  audio: false,
+};
+
+// "denied" = el permiso se rechazó antes: no se vuelve a pedir solo (no se puede saltear el cartel
+// del navegador; con "granted" la cámara se enciende directo, sin preguntar).
+async function getCameraPermission(): Promise<PermissionState | "unknown"> {
+  try {
+    const status = await navigator.permissions?.query({ name: "camera" as PermissionName });
+    return status?.state ?? "unknown";
+  } catch {
+    return "unknown"; // Navegadores que no permiten consultar el permiso de cámara
+  }
+}
+
 export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -34,10 +50,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
     }
     try {
       stopCamera();
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
-        audio: false,
-      });
+      const stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
       streamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
       setCameraActive(true);
@@ -47,21 +60,22 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
     }
   }, [stopCamera]);
 
+  // Al abrir el alta la cámara se enciende sola. Si el permiso está rechazado o no hay cámara,
+  // no pasa nada: queda la opción de subir una foto o seguir sin foto.
   useEffect(() => {
     let active = true;
     if (!photoDataUrl) {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        Promise.resolve().then(() => {
+      (async () => {
+        if (!navigator.mediaDevices?.getUserMedia) {
           if (active) setCameraError("El navegador no soporta cámara web.");
-        });
-        return;
-      }
-      navigator.mediaDevices
-        .getUserMedia({
-          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
-          audio: false,
-        })
-        .then((stream) => {
+          return;
+        }
+        if ((await getCameraPermission()) === "denied") {
+          if (active) setCameraError("La cámara está bloqueada en el navegador. Podés subir una foto desde tu PC.");
+          return;
+        }
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
           if (!active) {
             stream.getTracks().forEach((t) => t.stop());
             return;
@@ -70,18 +84,24 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
           if (videoRef.current) videoRef.current.srcObject = stream;
           setCameraActive(true);
           setCameraError(null);
-        })
-        .catch(() => {
+        } catch {
           if (!active) return;
           setCameraError("Sin acceso a cámara. Podés subir una foto desde tu PC.");
           setCameraActive(false);
-        });
+        }
+      })();
     }
     return () => {
       active = false;
       stopCamera();
     };
   }, [photoDataUrl, stopCamera]);
+
+  // El <video> se monta recién cuando la cámara ya está activa: hay que conectarle el stream al montarse.
+  const attachVideo = useCallback((el: HTMLVideoElement | null) => {
+    videoRef.current = el;
+    if (el && streamRef.current && el.srcObject !== streamRef.current) el.srcObject = streamRef.current;
+  }, []);
 
   const handleCapture = () => {
     const video = videoRef.current;
@@ -147,7 +167,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
         {capturedUrl ? (
           <img src={capturedUrl} alt="Vista previa del socio" className="w-full h-full object-cover" />
         ) : cameraActive ? (
-          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
+          <video ref={attachVideo} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
         ) : (
           <div className="relative w-full h-full flex flex-col items-center justify-center bg-fx-base">
             <img
