@@ -16,14 +16,19 @@ interface WhatsAppEditModalProps {
 }
 
 export function WhatsAppEditModal({ target, onClose }: WhatsAppEditModalProps) {
-  const [message, setMessage] = useState(target?.defaultMessage ?? "");
+  if (!target) return null;
+  // key: al abrir el modal para otro socio, el mensaje arranca de nuevo con el precargado.
+  return (
+    <WhatsAppEditDialog
+      key={`${target.phone}|${target.fullName}|${target.defaultMessage}`}
+      target={target}
+      onClose={onClose}
+    />
+  );
+}
 
-  // Cuando cambia el destinatario, actualizamos el mensaje precargado
-  useEffect(() => {
-    if (target) {
-      setMessage(target.defaultMessage);
-    }
-  }, [target]);
+function WhatsAppEditDialog({ target, onClose }: { target: WhatsAppMessageTarget; onClose: () => void }) {
+  const [message, setMessage] = useState(target.defaultMessage);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -34,8 +39,6 @@ export function WhatsAppEditModal({ target, onClose }: WhatsAppEditModalProps) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
-
-  if (!target) return null;
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();

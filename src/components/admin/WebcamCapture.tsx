@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Camera, RefreshCw, Upload, VideoOff, CheckCircle2 } from "lucide-react";
+import { Camera, RefreshCw, Upload, CheckCircle2 } from "lucide-react";
 
 interface WebcamCaptureProps {
   photoDataUrl?: string | null;
