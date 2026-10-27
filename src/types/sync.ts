@@ -9,6 +9,8 @@ export interface CachedMember {
   allowedDays: number | null;
   validUntil: string | null;
   weeklyCheckIns: number;
+  // Último ingreso HABILITADO (ISO). Opcional: cachés guardados antes de este campo no lo tienen.
+  lastCheckInAt?: string | null;
 }
 
 export interface PendingCheckIn {

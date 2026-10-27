@@ -42,12 +42,15 @@ export async function getFullMembersCacheAction(): Promise<ActionResponse<Cached
           createdAt: { gte: startOfWeek },
         },
         _count: { id: true },
+        _max: { createdAt: true },
       }),
     ]);
 
     const weeklyMap = new Map<string, number>();
+    const lastCheckInMap = new Map<string, string>();
     for (const row of weeklyCheckIns) {
       weeklyMap.set(row.memberId, row._count.id);
+      if (row._max.createdAt) lastCheckInMap.set(row.memberId, row._max.createdAt.toISOString());
     }
 
     const data: CachedMember[] = members.map((m) => {
@@ -61,6 +64,7 @@ export async function getFullMembersCacheAction(): Promise<ActionResponse<Cached
         allowedDays: activeMembership?.plan?.allowedDaysPerWeek ?? null,
         validUntil: activeMembership ? activeMembership.validUntil.toISOString() : null,
         weeklyCheckIns: weeklyMap.get(m.id) || 0,
+        lastCheckInAt: lastCheckInMap.get(m.id) ?? null,
       };
     });
 
@@ -94,13 +98,19 @@ export async function fetchSingleMemberAction(dniInput: string): Promise<ActionR
     }
 
     const startOfWeek = getStartOfWeekMonday(new Date());
-    const weeklyCheckInsCount = await prisma.checkIn.count({
-      where: {
-        memberId: member.id,
-        status: "HABILITADO",
-        createdAt: { gte: startOfWeek },
-      },
-    });
+    const weeklyWhere = {
+      memberId: member.id,
+      status: "HABILITADO" as const,
+      createdAt: { gte: startOfWeek },
+    };
+    const [weeklyCheckInsCount, lastCheckIn] = await Promise.all([
+      prisma.checkIn.count({ where: weeklyWhere }),
+      prisma.checkIn.findFirst({
+        where: weeklyWhere,
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      }),
+    ]);
 
     const latestMembership = member.memberships[0];
     const data: CachedMember = {
@@ -112,6 +122,7 @@ export async function fetchSingleMemberAction(dniInput: string): Promise<ActionR
       allowedDays: latestMembership?.plan?.allowedDaysPerWeek ?? null,
       validUntil: latestMembership ? latestMembership.validUntil.toISOString() : null,
       weeklyCheckIns: weeklyCheckInsCount,
+      lastCheckInAt: lastCheckIn ? lastCheckIn.createdAt.toISOString() : null,
     };
 
     return { success: true, data };

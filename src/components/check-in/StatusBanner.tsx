@@ -7,7 +7,13 @@ interface StatusBannerProps {
   planName?: string;
   daysUsedThisWeek?: number;
   allowedDaysPerWeek?: number | null;
+  limitReason?: "DIARIO" | "SEMANAL";
 }
+
+const DAILY_LIMIT_TEXT = {
+  title: "YA INGRESASTE HOY",
+  subtitle: "Tu plan incluye un ingreso por día. Te esperamos mañana.",
+};
 
 const STATUS_CONFIG: Record<
   AccessStatusType,
@@ -43,8 +49,12 @@ export function StatusBanner({
   planName,
   daysUsedThisWeek,
   allowedDaysPerWeek,
+  limitReason,
 }: StatusBannerProps) {
-  const config = STATUS_CONFIG[status];
+  const config =
+    status === "LIMITE_ALCANZADO" && limitReason === "DIARIO"
+      ? { ...STATUS_CONFIG[status], ...DAILY_LIMIT_TEXT }
+      : STATUS_CONFIG[status];
   const { Icon } = config;
 
   return (

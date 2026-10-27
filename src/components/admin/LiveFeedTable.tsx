@@ -31,7 +31,7 @@ function StatusBadge({ status }: { status: AccessStatusType }) {
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-fx-amber/15 text-fx-amber border border-fx-amber/40">
       <Clock className="w-4 h-4" />
-      <span>Límite Semanal Alcanzado</span>
+      <span>Límite de Ingresos Alcanzado</span>
     </span>
   );
 }
@@ -58,7 +58,7 @@ export function LiveFeedTable({ items, onEditMember }: LiveFeedTableProps) {
           </button>
           <button type="button" onClick={() => setFilter("LIMIT")} className={`min-h-[40px] px-4 rounded-lg text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${filter === "LIMIT" ? "bg-fx-amber text-fx-base" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"}`}>
             <span className="w-2 h-2 rounded-full bg-fx-amber" />
-            <span>Límite semanal alcanzado ({limitCount})</span>
+            <span>Límite de ingresos alcanzado ({limitCount})</span>
           </button>
         </div>
 

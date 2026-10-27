@@ -23,6 +23,8 @@ export interface CheckInVerificationResult {
   validUntil?: string | null;
   daysUsedThisWeek?: number;
   allowedDaysPerWeek?: number | null;
+  // Solo con LIMITE_ALCANZADO: si ya ingresó hoy o si completó los días de la semana.
+  limitReason?: "DIARIO" | "SEMANAL";
   checkedInAt: string;
 }
 

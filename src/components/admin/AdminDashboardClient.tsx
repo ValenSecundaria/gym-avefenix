@@ -301,9 +301,10 @@ export function AdminDashboardClient({
         fullName: createdItem.fullName,
         photoFilename: createdItem.photoFilename,
         planName: createdItem.planName,
-        allowedDays: null,
+        allowedDays: plans.find((p) => p.id === v.planId)?.allowedDaysPerWeek ?? null,
         validUntil: createdItem.validUntil,
         weeklyCheckIns: 0,
+        lastCheckInAt: null,
       };
       saveMembersToCache([cached]).catch(() => { });
       gymBroadcast.postMessage({ type: "MEMBER_UPDATED", member: cached });
@@ -326,6 +327,7 @@ export function AdminDashboardClient({
         updateMemberInCache(selectedDebtor.dni, {
           validUntil: res.data.validUntil,
           planName: res.data.planName,
+          allowedDays: plans.find((p) => p.id === payload.planId)?.allowedDaysPerWeek ?? null,
         })
           .then(() => getMemberFromCache(selectedDebtor.dni))
           .then((updated) => {

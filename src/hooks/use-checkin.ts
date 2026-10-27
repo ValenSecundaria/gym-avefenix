@@ -7,11 +7,26 @@ import {
   updateMemberInCache,
   enqueuePendingCheckIn,
   getMembersCacheCount,
+  getPendingCheckIns,
 } from "@/lib/db/indexed-db";
 import { fetchSingleMemberAction, getFullMembersCacheAction } from "@/actions/sync.actions";
 import { gymBroadcast } from "@/lib/screens/broadcast-channel";
 import { getMemberPhotoUrl } from "@/lib/utils";
 import type { AccessStatusType, CheckInVerificationResult, LiveCheckInItem } from "@/types";
+
+function isSameLocalDay(iso: string, now: Date): boolean {
+  return new Date(iso).toDateString() === now.toDateString();
+}
+
+// Mira el caché y también la cola sin subir: si el caché se refrescó desde el servidor antes de
+// sincronizar el lote, el ingreso de hoy todavía solo está en la cola.
+async function hasEnteredToday(memberId: string, lastCheckInAt: string | null | undefined, now: Date) {
+  if (lastCheckInAt && isSameLocalDay(lastCheckInAt, now)) return true;
+  const pending = await getPendingCheckIns();
+  return pending.some(
+    (p) => p.memberId === memberId && p.status === "HABILITADO" && isSameLocalDay(p.createdAt, now)
+  );
+}
 
 export function useCheckIn() {
   useEffect(() => {
@@ -60,26 +75,29 @@ export function useCheckIn() {
       }
 
       const now = new Date();
+      const createdAt = now.toISOString();
       let status: AccessStatusType = "HABILITADO";
+      let limitReason: CheckInVerificationResult["limitReason"];
+      // Solo el pase libre (allowedDays = null) puede entrar varias veces en el mismo día.
+      const hasDayLimit = member.allowedDays !== null && member.allowedDays !== undefined;
 
       if (!member.validUntil || new Date(member.validUntil) < now) {
         status = "CUOTA_VENCIDA";
-      } else if (
-        member.allowedDays !== null &&
-        member.allowedDays !== undefined &&
-        member.weeklyCheckIns >= member.allowedDays
-      ) {
+      } else if (hasDayLimit && (await hasEnteredToday(member.id, member.lastCheckInAt, now))) {
         status = "LIMITE_ALCANZADO";
+        limitReason = "DIARIO";
+      } else if (hasDayLimit && member.weeklyCheckIns >= member.allowedDays!) {
+        status = "LIMITE_ALCANZADO";
+        limitReason = "SEMANAL";
       }
 
       let weeklyCheckIns = member.weeklyCheckIns;
       if (status === "HABILITADO") {
         weeklyCheckIns += 1;
-        member = { ...member, weeklyCheckIns };
-        await updateMemberInCache(dni, { weeklyCheckIns });
+        member = { ...member, weeklyCheckIns, lastCheckInAt: createdAt };
+        await updateMemberInCache(dni, { weeklyCheckIns, lastCheckInAt: createdAt });
       }
 
-      const createdAt = new Date().toISOString();
       const pendingId = await enqueuePendingCheckIn({
         memberId: member.id,
         dni: member.dni,
@@ -112,6 +130,7 @@ export function useCheckIn() {
         validUntil: member.validUntil,
         daysUsedThisWeek: weeklyCheckIns,
         allowedDaysPerWeek: member.allowedDays,
+        limitReason,
         checkedInAt: createdAt,
       };
 
