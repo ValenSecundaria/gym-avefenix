@@ -199,8 +199,7 @@ export function LoginForm() {
         </button>
       </form>
 
-      <div className="mt-6 pt-5 border-t border-[#2C2D35] flex items-center justify-between text-xs text-[#8A909A]">
-        <span>Demo inicial: admin / admin123</span>
+      <div className="mt-6 pt-5 border-t border-[#2C2D35] flex items-center justify-end text-xs text-[#8A909A]">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-[#F4F5F7] hover:text-[#F95716] font-semibold transition-colors"
