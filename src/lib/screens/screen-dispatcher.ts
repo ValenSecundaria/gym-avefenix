@@ -86,12 +86,20 @@ export async function getConnectedScreens(): Promise<{
   };
 }
 
+/** Celular o tablet: pantalla táctil sin mouse, o angosta. Ahí solo se usa el panel de administración. */
+export function isMobileDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  const touchOnly = window.matchMedia("(pointer: coarse) and (hover: none)").matches;
+  return touchOnly || window.matchMedia("(max-width: 767px)").matches;
+}
+
 /**
  * Despliega la terminal de Check-In (/check-in) en el monitor secundario.
  * Si detecta múltiples pantallas, calcula las coordenadas exactas de la pantalla externa.
+ * En el celular no se abre: la pantalla de ingreso es solo para la PC de recepción.
  */
 export async function dispatchScreens(): Promise<ScreenDispatchResult> {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || isMobileDevice()) {
     return { success: false, hasMultipleScreens: false, secondaryOpened: false, popupBlocked: false };
   }
 

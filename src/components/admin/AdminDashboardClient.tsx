@@ -144,8 +144,11 @@ export function AdminDashboardClient({
     // El teclado numérico es exclusivo de la pantalla de ingreso: aunque el mouse esté
     // usando este panel, cada tecla del numpad se reenvía al Check-In. Si no se está
     // escribiendo en un campo del panel, también se reenvían Borrar, Enter y los números comunes.
+    // Mientras hay una ventana abierta (alta de socio, cobro, edición...) no se reenvía nada:
+    // el teclado numérico escribe en el formulario (DNI, teléfono, montos) y al cerrarla vuelve al ingreso.
     const onKeyDown = (e: KeyboardEvent) => {
       if (Date.now() - lastCheckInAliveRef.current > CHECKIN_ALIVE_TIMEOUT_MS) return;
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       const typingInPanel = isEditableElement(document.activeElement);
       // Escape queda para el panel (cerrar ventanas y menús).
       if (!typingInPanel && e.key === "Escape") return;
@@ -308,7 +311,11 @@ export function AdminDashboardClient({
       };
       saveMembersToCache([cached]).catch(() => { });
       gymBroadcast.postMessage({ type: "MEMBER_UPDATED", member: cached });
-      showToast(`Socio ${v.fullName} registrado y habilitado con éxito.`);
+      showToast(
+        v.planId
+          ? `Socio ${v.fullName} registrado y habilitado con éxito.`
+          : `Socio ${v.fullName} registrado sin plan: cobrale desde Deudores para habilitarlo.`
+      );
       await refreshAllData();
     }
     return { success: res.success, error: res.error };

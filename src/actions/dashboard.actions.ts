@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getMemberPhotoUrl } from "@/lib/utils";
-import { ensureDefaultPlansExist } from "@/actions/members.actions";
+import { ensureDefaultDisciplinesExist } from "@/actions/members.actions";
 import { planWithDiscipline, sellablePlanOrder, sellablePlanWhere, toPlanOption } from "@/lib/plans";
 import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 import type {
@@ -24,7 +24,7 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 export async function getDashboardOverview(): Promise<ActionResponse<DashboardOverviewData>> {
   try {
-    await ensureDefaultPlansExist();
+    await ensureDefaultDisciplinesExist();
 
     const now = new Date();
     const startOfToday = new Date(now);

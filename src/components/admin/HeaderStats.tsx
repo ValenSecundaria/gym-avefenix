@@ -142,7 +142,7 @@ export function HeaderStats({
           {checkInScreenOnline ? (
             <span
               title="El teclado numérico escribe en la pantalla de ingreso"
-              className="min-h-[48px] px-4 rounded-xl bg-fx-green/10 border border-fx-green/40 text-sm font-bold text-fx-green inline-flex items-center gap-2"
+              className="min-h-[48px] px-4 rounded-xl bg-fx-green/10 border border-fx-green/40 text-sm font-bold text-fx-green hidden md:inline-flex items-center gap-2"
             >
               <MonitorCheck className="w-5 h-5" />
               Pantalla de ingreso conectada
@@ -151,7 +151,7 @@ export function HeaderStats({
             <button
               type="button"
               onClick={onOpenCheckInScreen}
-              className="min-h-[48px] px-4 rounded-xl bg-fx-amber/10 border border-fx-amber/50 hover:bg-fx-amber/20 text-sm font-bold text-fx-amber inline-flex items-center gap-2 transition-colors cursor-pointer"
+              className="min-h-[48px] px-4 rounded-xl bg-fx-amber/10 border border-fx-amber/50 hover:bg-fx-amber/20 text-sm font-bold text-fx-amber hidden md:inline-flex items-center gap-2 transition-colors cursor-pointer"
             >
               <MonitorX className="w-5 h-5" />
               Abrir pantalla de ingreso

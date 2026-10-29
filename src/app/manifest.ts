@@ -14,7 +14,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/login",
     scope: "/",
     display: "standalone",
-    orientation: "landscape",
+    orientation: "any",
     background_color: "#0B0B0C",
     theme_color: "#F95716",
     categories: ["business", "productivity", "health"],

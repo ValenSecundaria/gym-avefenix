@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hasActionSession } from "@/lib/auth/require-session";
-import { planWithDiscipline, sellablePlanWhere, toPlanOption } from "@/lib/plans";
-import { ensureDefaultPlansExist } from "@/actions/members.actions";
+import { planWithDiscipline, toPlanOption } from "@/lib/plans";
+import { ensureDefaultDisciplinesExist } from "@/actions/members.actions";
 import {
   disciplineSchema,
   planRulesFor,
@@ -30,7 +30,7 @@ function isUniqueConstraintError(error: unknown): boolean {
 export async function getPlanCatalog(): Promise<ActionResponse<PlanCatalog>> {
   try {
     if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
-    await ensureDefaultPlansExist();
+    await ensureDefaultDisciplinesExist();
     const now = new Date();
     const [disciplines, plans, currentByPlan] = await Promise.all([
       prisma.discipline.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { plans: true } } } }),
@@ -98,10 +98,6 @@ export async function setPlanActive(planId: string, isActive: boolean): Promise<
     const id = idSchema.safeParse(planId);
     if (!id.success || typeof isActive !== "boolean") return { success: false, error: "Plan inválido" };
 
-    if (!isActive) {
-      const remaining = await prisma.plan.count({ where: { ...sellablePlanWhere, id: { not: id.data } } });
-      if (remaining === 0) return { success: false, error: "Tiene que quedar al menos un plan activo para poder dar altas" };
-    }
     const plan = await prisma.plan.update({ where: { id: id.data }, data: { isActive }, select: { name: true } });
     revalidatePath("/admin");
     return { success: true, data: plan };
@@ -119,15 +115,11 @@ export async function deletePlan(planId: string): Promise<ActionResponse<{ name:
 
     const plan = await prisma.plan.findUnique({
       where: { id: id.data },
-      select: { name: true, isActive: true, _count: { select: { memberships: true } } },
+      select: { name: true, _count: { select: { memberships: true } } },
     });
     if (!plan) return { success: false, error: "El plan ya no existe" };
     if (plan._count.memberships > 0) {
       return { success: false, error: `${plan.name} ya se usó en ${plan._count.memberships} cobros: desactivalo en lugar de borrarlo` };
-    }
-    if (plan.isActive) {
-      const remaining = await prisma.plan.count({ where: { ...sellablePlanWhere, id: { not: id.data } } });
-      if (remaining === 0) return { success: false, error: "Tiene que quedar al menos un plan activo para poder dar altas" };
     }
     await prisma.plan.delete({ where: { id: id.data } });
     revalidatePath("/admin");
@@ -175,13 +167,7 @@ export async function setDisciplineActive(
     const id = idSchema.safeParse(disciplineId);
     if (!id.success || typeof isActive !== "boolean") return { success: false, error: "Disciplina inválida" };
 
-    // Al desactivarla, sus planes dejan de ofrecerse; no puede quedar el gimnasio sin planes a la venta.
-    if (!isActive) {
-      const remaining = await prisma.plan.count({
-        where: { isActive: true, OR: [{ disciplineId: null }, { discipline: { isActive: true, id: { not: id.data } } }] },
-      });
-      if (remaining === 0) return { success: false, error: "Tiene que quedar al menos un plan activo para poder dar altas" };
-    }
+    // Al desactivarla, sus planes dejan de ofrecerse en el alta y el cobro.
     const discipline = await prisma.discipline.update({ where: { id: id.data }, data: { isActive }, select: { name: true } });
     revalidatePath("/admin");
     return { success: true, data: discipline };

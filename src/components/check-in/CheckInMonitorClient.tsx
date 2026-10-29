@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Flame, LayoutDashboard, Maximize } from "lucide-react";
 import type { CheckInVerificationResult } from "@/types";
 import { gymBroadcast, toCheckInKey, type CheckInKey } from "@/lib/screens/broadcast-channel";
+import { isMobileDevice } from "@/lib/screens/screen-dispatcher";
 import {
   getCheckInDisplaySnapshot,
   getCheckInDisplayServerSnapshot,
@@ -152,6 +153,11 @@ export function CheckInMonitorClient({
     else if (current.length < DNI_MAX_LENGTH) setDni(current + key);
   };
   const onExternalKey = useEffectEvent(pressKey);
+
+  // En el celular solo se usa el panel de administración: el teclado de ingreso es para la PC.
+  useEffect(() => {
+    if (isMobileDevice()) window.location.replace("/admin");
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

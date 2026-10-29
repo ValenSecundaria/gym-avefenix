@@ -41,7 +41,8 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
-  const selectedPlan = plans.find((p) => p.id === planId) ?? plans[0];
+  // Sin plan elegido el socio se registra igual y se le cobra después desde Deudores.
+  const selectedPlan = plans.find((p) => p.id === planId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +50,6 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
     const cleanDni = dni.replace(/\D/g, "");
     if (!fullName.trim()) return setError("Ingresá el nombre y apellido del socio.");
     if (cleanDni.length < 6 || cleanDni.length > 8) return setError("El DNI debe tener 6 a 8 dígitos.");
-    if (!selectedPlan) return setError("Seleccioná un plan válido.");
 
     setIsSubmitting(true);
     try {
@@ -57,7 +57,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
         fullName: fullName.trim(),
         dni: cleanDni,
         phone: phone.trim(),
-        planId: selectedPlan.id,
+        planId: selectedPlan?.id ?? "",
         paymentMethod,
         photoBase64,
         notes: notes.trim() || undefined,
@@ -119,22 +119,37 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
             </div>
 
             <div>
-              <span className={LABEL_CLS}>Plan Seleccionado *</span>
-              <PlanPicker plans={plans} selectedPlanId={selectedPlan?.id ?? ""} onSelect={setPlanId} />
+              <span className={LABEL_CLS}>Plan</span>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={!selectedPlan}
+                  onClick={() => setPlanId("")}
+                  className={`min-h-[44px] px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${!selectedPlan ? "bg-fx-orange text-white border-fx-orange" : "bg-fx-base border-fx-border text-fx-muted hover:text-fx-text"}`}
+                >
+                  Sin plan por ahora (se cobra después desde Deudores)
+                </button>
+                {plans.length > 0 && <PlanPicker plans={plans} selectedPlanId={selectedPlan?.id ?? ""} onSelect={setPlanId} />}
+              </div>
             </div>
 
             <div className="p-4 rounded-xl bg-fx-base border border-fx-border flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-fx-muted uppercase tracking-wider font-bold">Método de Cobro Inicial</span>
-                <span className="font-mono text-lg text-fx-orange font-extrabold">{selectedPlan ? formatCurrencyARS(selectedPlan.price) : "$0"}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {(["EFECTIVO", "TRANSFERENCIA"] as PaymentMethodType[]).map((m) => (
-                  <button key={m} type="button" onClick={() => setPaymentMethod(m)} className={`min-h-[48px] rounded-xl text-xs font-bold border transition-all cursor-pointer ${paymentMethod === m ? "bg-fx-orange/20 border-fx-orange text-fx-text" : "bg-fx-surface border-fx-border text-fx-muted hover:text-fx-text"}`}>
-                    {m === "EFECTIVO" ? "Efectivo en Caja" : "Transferencia / QR"}
-                  </button>
-                ))}
-              </div>
+              {selectedPlan && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-fx-muted uppercase tracking-wider font-bold">Método de Cobro Inicial</span>
+                    <span className="font-mono text-lg text-fx-orange font-extrabold">{formatCurrencyARS(selectedPlan.price)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["EFECTIVO", "TRANSFERENCIA"] as PaymentMethodType[]).map((m) => (
+                      <button key={m} type="button" onClick={() => setPaymentMethod(m)} className={`min-h-[48px] rounded-xl text-xs font-bold border transition-all cursor-pointer ${paymentMethod === m ? "bg-fx-orange/20 border-fx-orange text-fx-text" : "bg-fx-surface border-fx-border text-fx-muted hover:text-fx-text"}`}>
+                        {m === "EFECTIVO" ? "Efectivo en Caja" : "Transferencia / QR"}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones opcionales..." className={INPUT_CLS} />
             </div>
 
@@ -144,7 +159,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
               </button>
               <button type="submit" disabled={isSubmitting} className="min-h-[50px] px-7 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-bold text-sm inline-flex items-center gap-2 shadow-[0_4px_20px_rgba(249,87,22,0.4)] disabled:opacity-50 cursor-pointer">
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                <span>✓ Guardar y Habilitar Socio</span>
+                <span>{selectedPlan ? "✓ Guardar y Habilitar Socio" : "✓ Guardar Socio"}</span>
               </button>
             </div>
           </div>
