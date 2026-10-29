@@ -7,7 +7,9 @@ Objetivo: si algo se rompe o se borra, volver a tener el sistema andando **en mi
 | Dato | Dónde vive | Cómo se respalda |
 |---|---|---|
 | Base de datos (socios, membresías, pagos, ingresos, usuarios) | Neon (PostgreSQL en la nube) | Historial de Neon + `pg_dump` diario propio |
-| Fotos de los socios | Disco, en `LOCAL_PHOTOS_PATH` (por defecto `C:\GymData\photos`) | Zip diario junto con el dump |
+| Fotos de los socios | Disco de la notebook, en `LOCAL_PHOTOS_PATH` (por defecto `C:\GymData\photos`; ver `docs/SERVIDOR-LOCAL-Y-FOTOS.md`) | Zip diario junto con el dump |
+
+Backup a mano en cualquier momento (por ejemplo antes de actualizar el sistema): `npm run backup`.
 
 ## Capa 1 — Lo que Neon ya trae (gratis, cero configuración)
 

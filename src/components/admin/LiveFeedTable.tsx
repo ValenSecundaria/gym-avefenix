@@ -31,7 +31,7 @@ function StatusBadge({ status }: { status: AccessStatusType }) {
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-fx-amber/15 text-fx-amber border border-fx-amber/40">
       <Clock className="w-4 h-4" />
-      <span>Límite Semanal Alcanzado</span>
+      <span>Límite de Ingresos Alcanzado</span>
     </span>
   );
 }
@@ -52,19 +52,19 @@ export function LiveFeedTable({ items, onEditMember }: LiveFeedTableProps) {
           <button type="button" onClick={() => setFilter("ALL")} className={`min-h-[40px] px-4 rounded-lg text-xs font-bold transition-colors cursor-pointer ${filter === "ALL" ? "bg-fx-orange text-white" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"}`}>
             Todos los ingresos ({items.length})
           </button>
-          <button type="button" onClick={() => setFilter("DUE")} className={`min-h-[40px] px-4 rounded-lg text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${filter === "DUE" ? "bg-fx-red text-fx-text" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"}`}>
+          <button type="button" onClick={() => setFilter("DUE")} className={`min-h-[40px] px-4 rounded-lg text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${filter === "DUE" ? "bg-fx-red text-white" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"}`}>
             <span className="w-2 h-2 rounded-full bg-fx-red" />
             <span>Con alerta de cuota ({dueCount})</span>
           </button>
           <button type="button" onClick={() => setFilter("LIMIT")} className={`min-h-[40px] px-4 rounded-lg text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${filter === "LIMIT" ? "bg-fx-amber text-fx-base" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"}`}>
             <span className="w-2 h-2 rounded-full bg-fx-amber" />
-            <span>Límite semanal alcanzado ({limitCount})</span>
+            <span>Límite de ingresos alcanzado ({limitCount})</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-2 text-fx-green text-xs font-bold">
+        <div className="hidden sm:flex items-center gap-2 text-fx-green text-sm font-bold">
           <span className="w-2.5 h-2.5 rounded-full bg-fx-green animate-pulse" />
-          <span>Transmisión en vivo molinete Ave Fénix</span>
+          <span>En vivo</span>
         </div>
       </div>
 
@@ -77,7 +77,39 @@ export function LiveFeedTable({ items, onEditMember }: LiveFeedTableProps) {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-fx-border bg-fx-surface">
+        <>
+        {/* Celular: una tarjeta por ingreso */}
+        <ul className="md:hidden flex flex-col gap-3">
+          {filteredItems.map((item) => (
+            <li
+              key={item.id}
+              className={`p-4 rounded-2xl border bg-fx-base flex flex-col gap-3 ${
+                item.status === "CUOTA_VENCIDA" ? "border-fx-red/50" : "border-fx-border"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center shrink-0">
+                  {item.photoUrl ? (
+                    <img src={item.photoUrl} alt={item.fullName} className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-6 h-6 text-fx-muted" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-bold text-lg text-fx-text leading-tight">{item.fullName}</div>
+                  <div className="font-mono text-sm text-fx-muted">DNI {item.dni}</div>
+                </div>
+                <div className="font-mono font-extrabold text-lg text-fx-orange shrink-0">{formatTimeAR(item.createdAt)}</div>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <StatusBadge status={item.status} />
+                <EditMemberButton fullName={item.fullName} onClick={() => onEditMember(item.memberId)} />
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <div className="hidden md:block overflow-x-auto rounded-xl border border-fx-border bg-fx-surface">
           <table className="w-full text-left text-sm text-fx-text border-collapse">
             <thead>
               <tr className="bg-fx-base text-fx-muted font-bold text-xs uppercase tracking-wider border-b border-fx-border">
@@ -122,6 +154,7 @@ export function LiveFeedTable({ items, onEditMember }: LiveFeedTableProps) {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

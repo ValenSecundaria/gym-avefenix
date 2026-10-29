@@ -10,6 +10,7 @@ import {
   setMemberActive,
   updateMember,
 } from "@/actions/members.actions";
+import { getMemberFromCache, removeMembersFromCache, saveMembersToCache } from "@/lib/db/indexed-db";
 import { WebcamCapture } from "./WebcamCapture";
 import { sanitizeNameInput, sanitizePhoneInput } from "@/lib/validations/member.schema";
 import { MemberHistory, MemberSummary } from "./MemberHistory";
@@ -34,6 +35,28 @@ const STATUS_LABEL: Record<MemberDetail["membershipStatus"], { text: string; cls
 };
 
 type DangerStep = null | "deactivate" | "delete";
+
+// La caché local del molinete (IndexedDB) habilita el ingreso sin consultar al servidor:
+// un socio eliminado o dado de baja tiene que salir de ahí en el momento, no en la próxima recarga.
+async function forgetCachedMember(dni: string) {
+  try {
+    await removeMembersFromCache([dni]);
+  } catch {
+    // IndexedDB no disponible: la caché se reemplaza completa en la próxima descarga del catálogo.
+  }
+}
+
+// Mantiene la caché al día tras editar nombre, foto o DNI (la clave de la caché es el DNI).
+async function refreshCachedMember(oldDni: string, data: { dni: string; fullName: string; photoFilename: string | null }) {
+  try {
+    const cached = await getMemberFromCache(oldDni);
+    if (!cached) return;
+    if (oldDni !== data.dni) await removeMembersFromCache([oldDni]);
+    await saveMembersToCache([{ ...cached, ...data }]);
+  } catch {
+    // ver forgetCachedMember
+  }
+}
 
 export function MemberEditModal({ memberId, onClose, onChanged }: MemberEditModalProps) {
   if (!memberId) return null;
@@ -113,6 +136,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
         notes: notes.trim(),
         photoBase64: newPhoto,
       });
+      if (res.success && res.data) await refreshCachedMember(member.dni, res.data);
       return { ...res, message: `Datos de ${fullName.trim()} actualizados.` };
     });
   };
@@ -121,6 +145,8 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
     if (!member) return;
     void run(async () => {
       const res = await setMemberActive(member.id, isActive);
+      // Al reactivarlo no hace falta cargarlo: el molinete lo busca en el servidor si no está en la caché.
+      if (res.success && !isActive) await forgetCachedMember(member.dni);
       return {
         ...res,
         message: isActive
@@ -134,6 +160,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
     if (!member) return;
     void run(async () => {
       const res = await deleteMemberPermanently(member.id, confirmDni.trim());
+      if (res.success) await forgetCachedMember(member.dni);
       return { ...res, message: `Se eliminó definitivamente a ${member.fullName}.` };
     });
   };
@@ -262,7 +289,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
                               : `¡Hola ${fullName.trim() || member.fullName}! Te escribimos de Gimnasio Ave Fénix.`,
                         })
                       }
-                      className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                      className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span>Aviso WhatsApp</span>

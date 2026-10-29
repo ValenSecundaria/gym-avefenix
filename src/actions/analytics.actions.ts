@@ -9,7 +9,7 @@ import type {
   AttendanceAnalytics,
   FrequencyBucket,
   HeatmapCell,
-  HourlyPoint,
+  MonthlyPoint,
   WeekdayAttendance,
   WeeklyTrendPoint,
 } from "@/types";
@@ -17,6 +17,7 @@ import type {
 const ALLOWED_PERIODS: AnalyticsPeriodDays[] = [30, 90, 365];
 const TREND_MIN_DAYS = 56; // 8 semanas: alcanza para comparar 4 vs 4
 const FREQUENCY_WINDOW_DAYS = 28;
+const MONTHLY_WINDOW = 6; // meses en "Plata cobrada por mes"
 
 // -------------------------------------------------------------
 // Fechas en hora local del gimnasio (el server puede correr en UTC)
@@ -44,6 +45,12 @@ function addDays(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+function addMonths(month: string, delta: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return d.toISOString().slice(0, 7);
 }
 
 function isoWeekday(date: string): number {
@@ -92,8 +99,10 @@ export async function getAttendanceAnalytics(
     const periodStart = addDays(today, -periodDays);
     const historyStart = addDays(today, -Math.max(periodDays, TREND_MIN_DAYS));
     const frequencyStart = addDays(today, -FREQUENCY_WINDOW_DAYS);
+    const months = Array.from({ length: MONTHLY_WINDOW }, (_, i) => addMonths(today.slice(0, 7), i - (MONTHLY_WINDOW - 1)));
+    const monthsStart = `${months[0]}-01`;
 
-    const [heatmapRows, dailyRows, todayRows, frequencyRows, rejectedRows] = await Promise.all([
+    const [heatmapRows, dailyRows, todayRows, frequencyRows, rejectedRows, revenueRows, newMemberRows] = await Promise.all([
       prisma.$queryRaw<{ dow: number; hour: number; n: number }[]>`
         ${visitsCte(periodStart, today)}
         SELECT EXTRACT(ISODOW FROM first_ts)::int AS dow, EXTRACT(HOUR FROM first_ts)::int AS hour, count(*)::int AS n
@@ -119,6 +128,16 @@ export async function getAttendanceAnalytics(
           createdAt: { gte: new Date(now.getTime() - periodDays * 86_400_000) },
         },
       }),
+      prisma.$queryRaw<{ month: string; total: number }[]>`
+        SELECT to_char(("paidAt" AT TIME ZONE 'UTC') AT TIME ZONE ${GYM_TIMEZONE}, 'YYYY-MM') AS month, sum(amount)::float8 AS total
+        FROM "Payment"
+        WHERE "paidAt" >= ${monthsStart}::date - INTERVAL '1 day'
+        GROUP BY 1`,
+      prisma.$queryRaw<{ month: string; n: number }[]>`
+        SELECT to_char(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${GYM_TIMEZONE}, 'YYYY-MM') AS month, count(*)::int AS n
+        FROM "Member"
+        WHERE "createdAt" >= ${monthsStart}::date - INTERVAL '1 day'
+        GROUP BY 1`,
     ]);
 
     // --- Días abiertos y asistencia por día de la semana (solo el período elegido) ---
@@ -162,14 +181,6 @@ export async function getAttendanceAnalytics(
     // --- Hoy vs un día normal del mismo tipo ---
     const todayDow = isoWeekday(today);
     const typicalByHour = new Map(heatmap.filter((c) => c.dow === todayDow).map((c) => [c.hour, c.avgArrivals]));
-    const todayByHour = new Map(todayRows.map((r) => [r.hour, r.n]));
-    const activeHours = [...typicalByHour.keys(), ...todayByHour.keys()];
-    const firstHour = activeHours.length ? Math.min(...activeHours) : 7;
-    const lastHour = activeHours.length ? Math.max(...activeHours) : 22;
-    const hourly: HourlyPoint[] = [];
-    for (let h = firstHour; h <= lastHour; h++) {
-      hourly.push({ hour: h, today: todayByHour.get(h) || 0, typical: typicalByHour.get(h) || 0 });
-    }
     const visitsSoFar = todayRows.reduce((a, r) => a + r.n, 0);
     let typicalSoFar = 0;
     for (const [h, avg] of typicalByHour) {
@@ -177,19 +188,37 @@ export async function getAttendanceAnalytics(
       else if (h === local.hour) typicalSoFar += avg * (local.minute / 60);
     }
 
-    // --- Tendencia semanal (semanas completas, lunes a domingo) ---
+    // --- Tendencia semanal (lunes a domingo). La semana actual va al final marcada "en curso",
+    // y se saltean las semanas vacías del principio (antes de que hubiera datos). ---
     const currentWeekStart = addDays(today, -(todayDow - 1));
     let weekStart = addDays(historyStart, (8 - isoWeekday(historyStart)) % 7);
     const weeklyTrend: WeeklyTrendPoint[] = [];
-    while (weekStart < currentWeekStart) {
+    while (weekStart <= currentWeekStart) {
       let visits = 0;
-      for (let i = 0; i < 7; i++) visits += visitsByDay.get(addDays(weekStart, i)) || 0;
-      weeklyTrend.push({ weekStart, visits });
+      // Hoy todavía no se cuenta en dailyRows (llega hasta ayer): se suma aparte.
+      for (let i = 0; i < 7; i++) {
+        const day = addDays(weekStart, i);
+        visits += day === today ? todayRows.reduce((a, r) => a + r.n, 0) : visitsByDay.get(day) || 0;
+      }
+      if (visits > 0 || weeklyTrend.length > 0) {
+        weeklyTrend.push({ weekStart, visits, inProgress: weekStart === currentWeekStart });
+      }
       weekStart = addDays(weekStart, 7);
     }
+    const completeWeeks = weeklyTrend.filter((w) => !w.inProgress);
     const sumWeeks = (pts: WeeklyTrendPoint[]) => pts.reduce((a, p) => a + p.visits, 0);
     const trendPct =
-      weeklyTrend.length >= 8 ? pctChange(sumWeeks(weeklyTrend.slice(-4)), sumWeeks(weeklyTrend.slice(-8, -4))) : null;
+      completeWeeks.length >= 8 ? pctChange(sumWeeks(completeWeeks.slice(-4)), sumWeeks(completeWeeks.slice(-8, -4))) : null;
+
+    // --- Plata cobrada y socios nuevos por mes ---
+    const revenueByMonth = new Map(revenueRows.map((r) => [r.month, Number(r.total) || 0]));
+    const newMembersByMonth = new Map(newMemberRows.map((r) => [r.month, r.n]));
+    const monthly: MonthlyPoint[] = months.map((month, i) => ({
+      month,
+      revenue: Math.round(revenueByMonth.get(month) || 0),
+      newMembers: newMembersByMonth.get(month) || 0,
+      inProgress: i === months.length - 1,
+    }));
 
     // --- Frecuencia de los socios en las últimas 4 semanas ---
     const weeks = FREQUENCY_WINDOW_DAYS / 7;
@@ -229,10 +258,10 @@ export async function getAttendanceAnalytics(
           visitsSoFar,
           typicalSoFar: round1(typicalSoFar),
           pctVsTypical: pctChange(visitsSoFar, typicalSoFar),
-          hourly,
         },
         weeklyTrend,
         trendPct,
+        monthly,
         frequency,
         avgVisitsPerWeek: freqMembers > 0 ? round1(freqVisits / freqMembers / weeks) : null,
         rejected: {

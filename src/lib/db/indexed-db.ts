@@ -54,6 +54,37 @@ export async function saveMembersToCache(membersArray: CachedMember[]): Promise<
   });
 }
 
+// Reemplaza todo el catálogo local por el del servidor: así desaparecen los socios eliminados
+// o dados de baja que quedaron en la caché (si no, podrían seguir pasando por el molinete).
+export async function replaceMembersCache(membersArray: CachedMember[]): Promise<void> {
+  if (!isAvailable()) return;
+  const db = await openGymDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_MEMBERS, "readwrite");
+    const store = tx.objectStore(STORE_MEMBERS);
+    store.clear();
+    for (const member of membersArray) {
+      store.put(member);
+    }
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function removeMembersFromCache(dnis: string[]): Promise<void> {
+  if (!isAvailable() || dnis.length === 0) return;
+  const db = await openGymDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_MEMBERS, "readwrite");
+    const store = tx.objectStore(STORE_MEMBERS);
+    for (const dni of dnis) {
+      store.delete(dni);
+    }
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 export async function getMemberFromCache(dni: string): Promise<CachedMember | undefined> {
   if (!isAvailable()) return undefined;
   const db = await openGymDb();

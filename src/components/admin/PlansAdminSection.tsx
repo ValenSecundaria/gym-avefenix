@@ -18,8 +18,14 @@ interface PlansAdminSectionProps {
   onChanged: (message: string) => void;
 }
 
-const SMALL_BTN =
-  "min-h-[40px] px-3 rounded-lg bg-fx-surface border border-fx-border text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+// El fondo va aparte: si se suman dos bg-* a un mismo botón, Tailwind no aplica "el último" sino el
+// que figura después en el CSS. Así los botones naranja/rojo quedaban con fondo blanco y texto blanco
+// en el modo claro (el mensaje "desaparecía").
+const SMALL_BTN_BASE =
+  "min-h-[40px] px-3 rounded-lg border text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+const SMALL_BTN = `${SMALL_BTN_BASE} bg-fx-surface border-fx-border hover:bg-fx-hover`;
+const SMALL_BTN_PRIMARY = `${SMALL_BTN_BASE} bg-fx-orange border-fx-orange text-white hover:bg-fx-orange/90`;
+const SMALL_BTN_DANGER = `${SMALL_BTN_BASE} bg-fx-red border-fx-red text-white hover:bg-fx-red/90`;
 
 function planDetail(p: PlanAdminItem): string {
   if (p.category === "MENSUAL_DIAS") return `${p.allowedDaysPerWeek} días por semana • 30 días`;
@@ -200,7 +206,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
                             type="button"
                             onClick={() => run(p.id, () => deletePlan(p.id), `Plan ${p.name} borrado.`)}
                             disabled={busy}
-                            className={`${SMALL_BTN} bg-fx-red border-fx-red text-white`}
+                            className={SMALL_BTN_DANGER}
                           >
                             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Sí, borrar
                           </button>
@@ -262,7 +268,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
             <button type="button" onClick={() => setDisciplineDraft(null)} className={`${SMALL_BTN} text-fx-muted`}>
               Cancelar
             </button>
-            <button type="submit" disabled={disciplineDraft.name.trim().length < 2 || busyId !== null} className={`${SMALL_BTN} bg-fx-orange border-fx-orange text-white`}>
+            <button type="submit" disabled={disciplineDraft.name.trim().length < 2 || busyId !== null} className={SMALL_BTN_PRIMARY}>
               <Check className="w-3.5 h-3.5" /> {disciplineDraft.id ? "Guardar nombre" : "Crear"}
             </button>
           </form>

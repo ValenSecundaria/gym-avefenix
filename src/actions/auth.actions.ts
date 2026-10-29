@@ -6,7 +6,6 @@ import { loginSchema, type LoginInput } from "@/lib/validations/auth.schema";
 import { AUTH_UNAVAILABLE_CODE, OFFLINE_RESUME_MAX_AGE_MS } from "@/lib/auth/auth-constants";
 import { verifySessionToken } from "@/lib/auth/session-token";
 import { issueSessionCookies, clearSessionCookies, getSessionCookie } from "@/lib/auth/session-cookie";
-import { getDevAdminUser } from "@/lib/auth/dev-admin";
 import type { ActionResponse } from "@/types";
 import type { AuthenticatedUser, AuthSessionResult } from "@/types/auth";
 
@@ -18,9 +17,8 @@ export interface LoginCredentials {
 /**
  * Server action principal de autenticación:
  * 1. Validación de esquema con loginSchema (Zod).
- * 2. Bypass exclusivo en desarrollo para usuario admin.
- * 3. Validación contra PostgreSQL y bcrypt.
- * 4. Emisión de cookies firmadas de sesión.
+ * 2. Validación contra PostgreSQL y bcrypt.
+ * 3. Emisión de cookies firmadas de sesión.
  */
 export async function authenticateUser(
   input: LoginInput | LoginCredentials
@@ -32,13 +30,6 @@ export async function authenticateUser(
     }
 
     const { username, password } = validation.data;
-
-    // Bypass exclusivo en desarrollo para la cuenta de pruebas
-    if (process.env.NODE_ENV === "development" && username === "admin" && password === "admin123") {
-      const adminUser = await getDevAdminUser();
-      const session = await issueSessionCookies(adminUser);
-      return { success: true, data: session };
-    }
 
     let user = null;
     try {

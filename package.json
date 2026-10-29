@@ -10,6 +10,8 @@
     "demo:seed": "node --env-file=.env scripts/demo-data/seed.mjs",
     "demo:clear": "node --env-file=.env scripts/demo-data/clear.mjs",
     "pwa:icons": "node scripts/pwa/generate-icons.mjs",
+    "backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backup/backup-db.ps1",
+    "start:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/start-server.ps1",
     "postinstall": "prisma generate"
   },
   "dependencies": {
