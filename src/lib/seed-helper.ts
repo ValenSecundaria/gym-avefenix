@@ -1,34 +1,17 @@
-import bcrypt from 'bcryptjs';
 import { PlanCategory } from '@prisma/client';
 import { prisma } from './prisma';
 
 let initialized = false;
 
 /**
- * Verifica e inserta de forma idempotente el usuario administrador por defecto
- * y los planes base del gimnasio si las tablas se encuentran vacías.
+ * Verifica e inserta de forma idempotente los planes base del gimnasio
+ * si la tabla se encuentra vacía.
  */
 export async function ensureInitialGymData(): Promise<void> {
   if (initialized) return;
 
   try {
-    const [userCount, planCount] = await Promise.all([
-      prisma.user.count(),
-      prisma.plan.count(),
-    ]);
-
-    if (userCount === 0) {
-      const passwordHash = await bcrypt.hash('admin123', 10);
-      await prisma.user.upsert({
-        where: { username: 'admin' },
-        update: {},
-        create: {
-          username: 'admin',
-          passwordHash,
-          name: 'Administrador Ave Fénix',
-        },
-      });
-    }
+    const planCount = await prisma.plan.count();
 
     if (planCount === 0) {
       await prisma.plan.createMany({
@@ -38,7 +21,7 @@ export async function ensureInitialGymData(): Promise<void> {
             category: PlanCategory.MENSUAL_LIBRE,
             allowedDaysPerWeek: null,
             durationDays: 30,
-            price: 25000,
+            price: 55000,
             isActive: true,
           },
           {
@@ -46,7 +29,7 @@ export async function ensureInitialGymData(): Promise<void> {
             category: PlanCategory.MENSUAL_DIAS,
             allowedDaysPerWeek: 3,
             durationDays: 30,
-            price: 20000,
+            price: 50000,
             isActive: true,
           },
           {
@@ -54,7 +37,7 @@ export async function ensureInitialGymData(): Promise<void> {
             category: PlanCategory.DIARIO,
             allowedDaysPerWeek: 1,
             durationDays: 1,
-            price: 3500,
+            price: 55000,
             isActive: true,
           },
         ],

@@ -88,6 +88,7 @@ export function MemberResultCard({ result }: MemberResultCardProps) {
         planName={result.planName}
         daysUsedThisWeek={result.daysUsedThisWeek}
         allowedDaysPerWeek={result.allowedDaysPerWeek}
+        limitReason={result.limitReason}
       />
 
     </div>

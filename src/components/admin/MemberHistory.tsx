@@ -6,7 +6,7 @@ import { formatCurrencyARS, formatDateAR, formatTimeAR } from "@/lib/utils";
 const CHECKIN_LABEL: Record<AccessStatusType, { text: string; cls: string }> = {
   HABILITADO: { text: "Ingresó", cls: "text-fx-green" },
   CUOTA_VENCIDA: { text: "Rechazado: cuota vencida", cls: "text-fx-red" },
-  LIMITE_ALCANZADO: { text: "Rechazado: límite semanal", cls: "text-fx-amber" },
+  LIMITE_ALCANZADO: { text: "Rechazado: límite de ingresos", cls: "text-fx-amber" },
 };
 
 function Stat({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {

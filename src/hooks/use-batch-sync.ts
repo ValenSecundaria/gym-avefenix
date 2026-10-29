@@ -5,7 +5,7 @@ import {
   getPendingCheckIns,
   removeSyncedCheckIns,
   getMembersCacheCount,
-  saveMembersToCache,
+  replaceMembersCache,
 } from "@/lib/db/indexed-db";
 import { syncBatchCheckInsAction, getFullMembersCacheAction } from "@/actions/sync.actions";
 import { gymBroadcast } from "@/lib/screens/broadcast-channel";
@@ -74,7 +74,7 @@ export function useBatchSync() {
         if (count === 0 || isStale) {
           const res = await getFullMembersCacheAction();
           if (res.success && res.data) {
-            await saveMembersToCache(res.data);
+            await replaceMembersCache(res.data);
             localStorage.setItem("gym_cache_sync_ts", Date.now().toString());
           }
         }

@@ -103,10 +103,12 @@ export async function dispatchScreens(): Promise<ScreenDispatchResult> {
     let windowFeatures = "menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes";
 
     if (secondaryScreen) {
-      const left = secondaryScreen.availLeft ?? secondaryScreen.left ?? 0;
-      const top = secondaryScreen.availTop ?? secondaryScreen.top ?? 0;
-      const width = secondaryScreen.availWidth ?? secondaryScreen.width ?? window.screen.availWidth;
-      const height = secondaryScreen.availHeight ?? secondaryScreen.height ?? window.screen.availHeight;
+      // Se usa el tamaño total del monitor (no el "avail", que descuenta la barra de tareas).
+      // La pantalla completa real la pide la propia ventana de Check-In al cargar o con la primera tecla.
+      const left = secondaryScreen.left ?? secondaryScreen.availLeft ?? 0;
+      const top = secondaryScreen.top ?? secondaryScreen.availTop ?? 0;
+      const width = secondaryScreen.width ?? secondaryScreen.availWidth ?? window.screen.width;
+      const height = secondaryScreen.height ?? secondaryScreen.availHeight ?? window.screen.height;
       windowFeatures += `,left=${left},top=${top},width=${width},height=${height}`;
     }
 

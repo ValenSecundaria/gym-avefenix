@@ -84,11 +84,11 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4">
-                <span className="font-mono font-extrabold text-xl text-fx-red">
+              <div className="w-full sm:w-auto flex flex-wrap items-center gap-3 sm:gap-4">
+                <span className="font-mono font-extrabold text-2xl text-fx-red">
                   {formatCurrencyARS(debtor.planPrice)}
                 </span>
-                <div className="flex items-center gap-2.5">
+                <div className="w-full sm:w-auto flex items-center gap-2.5 [&>button:not(:last-child)]:flex-1 sm:[&>button]:flex-none [&>button]:justify-center">
                   {debtor.phone ? (
                     <button
                       type="button"
@@ -99,7 +99,7 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
                           defaultMessage: waMessage,
                         })
                       }
-                      className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                      className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span>Aviso WhatsApp</span>

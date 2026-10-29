@@ -9,6 +9,8 @@ export interface CachedMember {
   allowedDays: number | null;
   validUntil: string | null;
   weeklyCheckIns: number;
+  // Último ingreso HABILITADO (ISO). Opcional: cachés guardados antes de este campo no lo tienen.
+  lastCheckInAt?: string | null;
 }
 
 export interface PendingCheckIn {
@@ -17,6 +19,10 @@ export interface PendingCheckIn {
   dni: string;
   status: AccessStatusType;
   createdAt: string;
+  // Datos para mostrar el ingreso en "Ingresos del día" antes de que el lote llegue a la base.
+  fullName?: string;
+  planName?: string;
+  photoFilename?: string | null;
 }
 
 export interface BatchCheckInPayload {

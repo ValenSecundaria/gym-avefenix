@@ -16,14 +16,19 @@ interface WhatsAppEditModalProps {
 }
 
 export function WhatsAppEditModal({ target, onClose }: WhatsAppEditModalProps) {
-  const [message, setMessage] = useState(target?.defaultMessage ?? "");
+  if (!target) return null;
+  // key: al abrir el modal para otro socio, el mensaje arranca de nuevo con el precargado.
+  return (
+    <WhatsAppEditDialog
+      key={`${target.phone}|${target.fullName}|${target.defaultMessage}`}
+      target={target}
+      onClose={onClose}
+    />
+  );
+}
 
-  // Cuando cambia el destinatario, actualizamos el mensaje precargado
-  useEffect(() => {
-    if (target) {
-      setMessage(target.defaultMessage);
-    }
-  }, [target]);
+function WhatsAppEditDialog({ target, onClose }: { target: WhatsAppMessageTarget; onClose: () => void }) {
+  const [message, setMessage] = useState(target.defaultMessage);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -34,8 +39,6 @@ export function WhatsAppEditModal({ target, onClose }: WhatsAppEditModalProps) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
-
-  if (!target) return null;
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,7 +124,7 @@ export function WhatsAppEditModal({ target, onClose }: WhatsAppEditModalProps) {
             <button
               type="submit"
               disabled={!message.trim()}
-              className="min-h-[46px] px-6 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-fx-base font-extrabold text-sm inline-flex items-center gap-2 shadow-[0_4px_16px_rgba(37,211,102,0.3)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+              className="min-h-[46px] px-6 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] font-extrabold text-sm inline-flex items-center gap-2 shadow-[0_4px_16px_rgba(37,211,102,0.3)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
             >
               <Send className="w-4 h-4" />
               <span>Continuar a WhatsApp</span>

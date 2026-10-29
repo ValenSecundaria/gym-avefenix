@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import { insertCheckInBatch } from "@/lib/checkin-batch";
 import { batchCheckInSchema } from "@/lib/validations/sync.schema";
 
 export async function POST(req: Request) {
@@ -15,17 +15,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, count: 0 });
     }
 
-    const inserted = await prisma.checkIn.createMany({
-      data: parsed.data.map((item) => ({
-        memberId: item.memberId,
-        status: item.status,
-        createdAt: new Date(item.createdAt),
-        isSynced: true,
-      })),
-    });
+    const count = await insertCheckInBatch(parsed.data);
 
     revalidatePath("/admin");
-    return NextResponse.json({ success: true, count: inserted.count });
+    return NextResponse.json({ success: true, count });
   } catch (error) {
     console.error("[api/sync/batch] Error:", error);
     return NextResponse.json({ success: false, error: "Error interno" }, { status: 500 });
