@@ -2,10 +2,12 @@
 
 import { prisma } from "@/lib/prisma";
 import { getMemberPhotoUrl } from "@/lib/utils";
+import { hasAdminSession } from "@/lib/auth/require-session";
 import type { ActionResponse, LiveCheckInItem } from "@/types";
 
 export async function getTodayCheckIns(): Promise<ActionResponse<LiveCheckInItem[]>> {
   try {
+    if (!(await hasAdminSession())) return { success: false, error: "Tu sesión expiró. Volvé a iniciar sesión." };
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
 

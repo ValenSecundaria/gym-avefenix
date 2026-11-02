@@ -16,7 +16,19 @@ export const AUTH_DB_NAME = "gym_auth_store";
 export const OFFLINE_RESUME_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** Rutas que exigen sesión activa (se validan en proxy.ts y en el SessionGuard del cliente). */
-export const PROTECTED_ROUTE_PREFIXES = ["/admin", "/launch"] as const;
+export const PROTECTED_ROUTE_PREFIXES = ["/admin", "/launch", "/profesor"] as const;
+
+/** Panel de cada rol: la cuenta de profesor no entra a /admin ni la de administración a /profesor. */
+export const ADMIN_HOME = "/admin";
+export const PROFESOR_HOME = "/profesor";
+
+export function roleOf(user: { role?: string } | null | undefined): "ADMIN" | "PROFESOR" {
+  return user?.role === "PROFESOR" ? "PROFESOR" : "ADMIN";
+}
+
+export function homePathFor(user: { role?: string } | null | undefined): string {
+  return roleOf(user) === "PROFESOR" ? PROFESOR_HOME : ADMIN_HOME;
+}
 
 /** Código de error devuelto cuando el servidor/base de datos no está disponible (habilita el login offline). */
 export const AUTH_UNAVAILABLE_CODE = "SERVICE_UNAVAILABLE";

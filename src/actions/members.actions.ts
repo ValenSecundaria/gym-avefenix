@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { deleteMemberPhotoFromDisk, saveMemberPhotoToDisk } from "@/lib/photo-storage";
-import { hasActionSession } from "@/lib/auth/require-session";
+import { getActionSession, hasAdminSession, type ActionSession } from "@/lib/auth/require-session";
 import { planWithDiscipline, sellablePlanOrder, sellablePlanWhere, toPlanOption } from "@/lib/plans";
 import { getMemberPhotoUrl, getStartOfWeekMonday } from "@/lib/utils";
 import { normalizeSearchText } from "@/lib/text";
@@ -27,6 +27,7 @@ import type {
 } from "@/types";
 
 const DEFAULT_DISCIPLINES = ["Musculación", "Funcional"];
+const NO_SESSION_ERROR = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 // La primera vez crea las disciplinas iniciales y pasa a Musculación los planes que ya existían.
 // Los planes no se crean solos: los carga el gimnasio desde la sección Planes.
@@ -68,7 +69,11 @@ function isUniqueConstraintError(error: unknown): boolean {
 // Alta del socio; si se eligió plan, también la membresía y el pago inicial (sin plan queda para
 // cobrarle después desde Deudores). La unicidad del DNI en la base es la garantía
 // final contra duplicados: si dos altas del mismo DNI llegan a la vez, la segunda termina en "duplicate".
-async function createMemberRecord(input: CreateMemberInput, startDate: Date): Promise<CreateMemberRecordResult> {
+async function createMemberRecord(
+  input: CreateMemberInput,
+  startDate: Date,
+  registeredBy: ActionSession
+): Promise<CreateMemberRecordResult> {
   const parsed = createMemberSchema.safeParse(input);
   if (!parsed.success) {
     return { kind: "invalid", error: parsed.error.issues[0]?.message || "Datos del socio inválidos" };
@@ -88,7 +93,8 @@ async function createMemberRecord(input: CreateMemberInput, startDate: Date): Pr
   }
 
   const plan = planId ? await prisma.plan.findFirst({ where: { id: planId, ...sellablePlanWhere } }) : null;
-  if (planId && !plan) return { kind: "invalid", error: "El plan seleccionado no existe o ya no está disponible" };
+  // Toda alta lleva plan: sin planes a la venta no se puede registrar a nadie.
+  if (!plan) return { kind: "invalid", error: "Elegí un plan: sin plan no se puede dar el alta" };
 
   let photoFilename: string | null = null;
   if (photoBase64 && photoBase64.trim().length > 0) {
@@ -114,6 +120,8 @@ async function createMemberRecord(input: CreateMemberInput, startDate: Date): Pr
           method: paymentMethod,
           notes: notes || `Alta inicial - ${plan.name}`,
           paidAt: startDate,
+          registeredById: registeredBy.id,
+          registeredByName: registeredBy.name,
         },
       });
       return { member, membership };
@@ -147,7 +155,9 @@ export async function createMember(
   input: CreateMemberInput
 ): Promise<ActionResponse<MemberListItem>> {
   try {
-    const result = await createMemberRecord(input, new Date());
+    const session = await getActionSession();
+    if (!session) return { success: false, error: NO_SESSION_ERROR };
+    const result = await createMemberRecord(input, new Date(), session);
     if (result.kind === "invalid") return { success: false, error: result.error };
     if (result.kind === "duplicate") {
       return { success: false, error: `Ya existe un socio registrado con el DNI ${input.dni}` };
@@ -198,6 +208,8 @@ export async function syncPendingMembers(
   if (!Array.isArray(items) || items.length > MAX_SYNC_BATCH) {
     return { success: false, error: "Lote de sincronización inválido" };
   }
+  const session = await getActionSession();
+  if (!session) return { success: false, error: NO_SESSION_ERROR };
 
   const results: PendingMemberSyncResult[] = [];
   const seenDnis = new Set<string>();
@@ -225,7 +237,7 @@ export async function syncPendingMembers(
       Number.isFinite(createdAt) && createdAt <= now && createdAt >= now - MAX_OFFLINE_AGE_MS ? createdAt : now;
 
     try {
-      const result = await createMemberRecord(item.input, new Date(startMs));
+      const result = await createMemberRecord(item.input, new Date(startMs), session);
       if (result.kind === "created") {
         anyCreated = true;
         results.push({ clientId, status: "created" });
@@ -293,7 +305,6 @@ function toMemberListItem(m: MemberWithLatestMembership, now: Date): MemberListI
 // "Eliminar definitivamente" borra el socio con todo su historial (para altas cargadas por error).
 // -------------------------------------------------------------
 
-const NO_SESSION_ERROR = "Tu sesión expiró. Volvé a iniciar sesión.";
 const memberIdSchema = z.string().trim().min(1).max(64);
 const RECENT_HISTORY_SIZE = 10;
 
@@ -338,7 +349,7 @@ export async function getMembersPage(
   input: { search?: string; inactive?: boolean; status?: MemberStatusFilter; page?: number } = {}
 ): Promise<ActionResponse<MembersPage>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const parsed = membersPageSchema.safeParse(input);
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message || "Filtros inválidos" };
@@ -384,7 +395,7 @@ export async function getMembersPage(
 
 export async function getMemberDetail(memberId: string): Promise<ActionResponse<MemberDetail>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const id = memberIdSchema.safeParse(memberId);
     if (!id.success) return { success: false, error: "Socio inválido" };
 
@@ -397,7 +408,10 @@ export async function getMemberDetail(memberId: string): Promise<ActionResponse<
           payments: {
             orderBy: { paidAt: "desc" },
             take: RECENT_HISTORY_SIZE,
-            include: { membership: { select: { plan: { select: { name: true } } } } },
+            include: {
+              membership: { select: { plan: { select: { name: true } } } },
+              registeredBy: { select: { name: true } },
+            },
           },
           checkIns: { orderBy: { createdAt: "desc" }, take: RECENT_HISTORY_SIZE },
           _count: { select: { payments: true, checkIns: true } },
@@ -429,6 +443,7 @@ export async function getMemberDetail(memberId: string): Promise<ActionResponse<
           method: p.method,
           planName: p.membership?.plan.name ?? null,
           notes: p.notes,
+          registeredByName: p.registeredBy?.name ?? p.registeredByName,
         })),
         recentCheckIns: member.checkIns.map((c) => ({
           id: c.id,
@@ -445,7 +460,7 @@ export async function getMemberDetail(memberId: string): Promise<ActionResponse<
 
 export async function updateMember(input: UpdateMemberInput): Promise<ActionResponse<MemberListItem>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const parsed = updateMemberSchema.safeParse(input);
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message || "Datos del socio inválidos" };
@@ -501,7 +516,7 @@ export async function setMemberActive(
   isActive: boolean
 ): Promise<ActionResponse<{ fullName: string }>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const id = memberIdSchema.safeParse(memberId);
     if (!id.success || typeof isActive !== "boolean") return { success: false, error: "Socio inválido" };
 
@@ -523,7 +538,7 @@ export async function deleteMemberPermanently(
   confirmDni: string
 ): Promise<ActionResponse<{ fullName: string }>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const id = memberIdSchema.safeParse(memberId);
     if (!id.success) return { success: false, error: "Socio inválido" };
 

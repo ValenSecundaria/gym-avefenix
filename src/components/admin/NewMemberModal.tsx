@@ -23,13 +23,15 @@ interface NewMemberModalProps {
   onClose: () => void;
   plans: PlanOption[];
   onSubmitMember: (data: NewMemberFormValues) => Promise<{ success: boolean; error?: string }>;
+  /** Cuenta de profesor: no ve montos (se cobra el precio del plan). */
+  hidePrices?: boolean;
 }
 
 const INPUT_CLS =
   "w-full min-h-[48px] px-4 rounded-xl bg-fx-base border border-fx-border focus:border-fx-orange focus:outline-none text-sm text-fx-text";
 const LABEL_CLS = "block text-xs font-bold uppercase tracking-wider text-fx-muted mb-1.5";
 
-export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMemberModalProps) {
+export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember, hidePrices = false }: NewMemberModalProps) {
   const [fullName, setFullName] = useState("");
   const [dni, setDni] = useState("");
   const [phone, setPhone] = useState("");
@@ -41,8 +43,8 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
-  // Sin plan elegido el socio se registra igual y se le cobra después desde Deudores.
-  const selectedPlan = plans.find((p) => p.id === planId);
+  // Sin planes a la venta no hay alta posible (el botón "Nuevo socio" queda desactivado).
+  const selectedPlan = plans.find((p) => p.id === planId) ?? plans[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +52,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
     const cleanDni = dni.replace(/\D/g, "");
     if (!fullName.trim()) return setError("Ingresá el nombre y apellido del socio.");
     if (cleanDni.length < 6 || cleanDni.length > 8) return setError("El DNI debe tener 6 a 8 dígitos.");
+    if (!selectedPlan) return setError("Seleccioná un plan válido.");
 
     setIsSubmitting(true);
     try {
@@ -119,37 +122,24 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
             </div>
 
             <div>
-              <span className={LABEL_CLS}>Plan</span>
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={!selectedPlan}
-                  onClick={() => setPlanId("")}
-                  className={`min-h-[44px] px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${!selectedPlan ? "bg-fx-orange text-white border-fx-orange" : "bg-fx-base border-fx-border text-fx-muted hover:text-fx-text"}`}
-                >
-                  Sin plan por ahora (se cobra después desde Deudores)
-                </button>
-                {plans.length > 0 && <PlanPicker plans={plans} selectedPlanId={selectedPlan?.id ?? ""} onSelect={setPlanId} />}
-              </div>
+              <span className={LABEL_CLS}>Plan Seleccionado *</span>
+              <PlanPicker plans={plans} selectedPlanId={selectedPlan?.id ?? ""} onSelect={setPlanId} hidePrices={hidePrices} />
             </div>
 
             <div className="p-4 rounded-xl bg-fx-base border border-fx-border flex flex-col gap-3">
-              {selectedPlan && (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-fx-muted uppercase tracking-wider font-bold">Método de Cobro Inicial</span>
-                    <span className="font-mono text-lg text-fx-orange font-extrabold">{formatCurrencyARS(selectedPlan.price)}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(["EFECTIVO", "TRANSFERENCIA"] as PaymentMethodType[]).map((m) => (
-                      <button key={m} type="button" onClick={() => setPaymentMethod(m)} className={`min-h-[48px] rounded-xl text-xs font-bold border transition-all cursor-pointer ${paymentMethod === m ? "bg-fx-orange/20 border-fx-orange text-fx-text" : "bg-fx-surface border-fx-border text-fx-muted hover:text-fx-text"}`}>
-                        {m === "EFECTIVO" ? "Efectivo en Caja" : "Transferencia / QR"}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-fx-muted uppercase tracking-wider font-bold">Método de Cobro Inicial</span>
+                {!hidePrices && (
+                  <span className="font-mono text-lg text-fx-orange font-extrabold">{selectedPlan ? formatCurrencyARS(selectedPlan.price) : "$0"}</span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {(["EFECTIVO", "TRANSFERENCIA"] as PaymentMethodType[]).map((m) => (
+                  <button key={m} type="button" onClick={() => setPaymentMethod(m)} className={`min-h-[48px] rounded-xl text-xs font-bold border transition-all cursor-pointer ${paymentMethod === m ? "bg-fx-orange/20 border-fx-orange text-fx-text" : "bg-fx-surface border-fx-border text-fx-muted hover:text-fx-text"}`}>
+                    {m === "EFECTIVO" ? "Efectivo en Caja" : "Transferencia / QR"}
+                  </button>
+                ))}
+              </div>
               <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones opcionales..." className={INPUT_CLS} />
             </div>
 

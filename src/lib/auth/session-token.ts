@@ -41,6 +41,7 @@ function isPayload(value: unknown): value is SessionTokenPayload {
     typeof v.username === "string" &&
     typeof v.name === "string" &&
     typeof v.iat === "number" &&
+    (v.role === undefined || v.role === "ADMIN" || v.role === "PROFESOR") &&
     (v.gymPhone === undefined || typeof v.gymPhone === "string")
   );
 }
@@ -52,6 +53,7 @@ export async function signSessionToken(user: AuthenticatedUser, issuedAt = Date.
     id: user.id,
     username: user.username,
     name: user.name,
+    role: user.role ?? "ADMIN",
     gymPhone: user.gymPhone ?? "5492915768403",
     iat: issuedAt,
   };

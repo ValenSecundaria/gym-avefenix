@@ -30,7 +30,11 @@ interface HeaderStatsProps {
   /** La ventana de Check-In (pantalla 2) está abierta y recibiendo el teclado numérico. */
   checkInScreenOnline: boolean;
   onOpenCheckInScreen: () => void;
+  /** Sin planes a la venta no se puede dar de alta a nadie. */
+  canCreateMember: boolean;
 }
+
+export const NO_PLANS_HINT = "Primero creá un plan en la sección Planes";
 
 const ICON_BTN =
   "min-h-[48px] min-w-[48px] px-3 rounded-xl bg-fx-base hover:bg-fx-hover border border-fx-border text-sm font-bold text-fx-muted hover:text-fx-text inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50";
@@ -93,6 +97,7 @@ export function HeaderStats({
   onGoToTab,
   checkInScreenOnline,
   onOpenCheckInScreen,
+  canCreateMember,
 }: HeaderStatsProps) {
   const themeLabel = theme === "light" ? "Modo oscuro" : "Modo claro";
   const ThemeIcon = theme === "light" ? Moon : Sun;
@@ -172,7 +177,9 @@ export function HeaderStats({
           <button
             type="button"
             onClick={onOpenNewMember}
-            className="min-h-[52px] px-6 rounded-xl bg-fx-orange hover:bg-fx-orange/90 active:scale-[0.98] text-white font-extrabold text-base inline-flex items-center gap-2.5 shadow-[0_4px_16px_rgba(249,87,22,0.35)] transition-all cursor-pointer"
+            disabled={!canCreateMember}
+            title={canCreateMember ? undefined : NO_PLANS_HINT}
+            className="min-h-[52px] px-6 rounded-xl bg-fx-orange hover:bg-fx-orange/90 active:scale-[0.98] text-white font-extrabold text-base inline-flex items-center gap-2.5 shadow-[0_4px_16px_rgba(249,87,22,0.35)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:active:scale-100"
           >
             <UserPlus className="w-5 h-5" />
             <span>Nuevo socio</span>

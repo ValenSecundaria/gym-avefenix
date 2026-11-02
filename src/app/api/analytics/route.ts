@@ -4,6 +4,7 @@ import { hasActionSession } from "@/lib/auth/require-session";
 
 // Las métricas se piden por acá (GET) y no como Server Action: las acciones se ejecutan
 // de a una en fila en el navegador, y si otra quedaba trabada las métricas no cargaban nunca.
+// Las ven la administración y los profesores (a estos, getAttendanceAnalytics no les manda la plata).
 export async function GET(req: Request) {
   if (!(await hasActionSession())) {
     return NextResponse.json({ success: false, error: "Sesión vencida: volvé a iniciar sesión" }, { status: 401 });

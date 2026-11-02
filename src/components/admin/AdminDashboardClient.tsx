@@ -24,6 +24,8 @@ import { MembersSection } from "./MembersSection";
 import { MemberEditModal } from "./MemberEditModal";
 import { PlansAdminSection } from "./PlansAdminSection";
 import { GymPhoneSettings } from "./gym-phone-settings";
+import { ProfessorAccountsSettings } from "./ProfessorAccountsSettings";
+import { PROFESOR_HOME, roleOf } from "@/lib/auth/auth-constants";
 import { enqueuePendingMember, PendingDniError } from "@/lib/offline/pending-members-store";
 import { usePendingMembers } from "@/lib/offline/use-pending-members";
 import type { MemberSyncSummary } from "@/lib/offline/member-sync";
@@ -118,7 +120,7 @@ export function AdminDashboardClient({
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [membersReloadKey, setMembersReloadKey] = useState(0);
   const { theme, toggleTheme } = useAdminTheme(initialTheme);
-  const { status: authStatus, refreshSession } = useAuthSession();
+  const { status: authStatus, refreshSession, user } = useAuthSession();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
@@ -172,14 +174,22 @@ export function AdminDashboardClient({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // Sin planes a la venta no hay alta posible: el botón se desactiva hasta crear uno.
+  const canCreateMember = plans.length > 0;
   const openNewMember = useCallback(() => {
+    if (!canCreateMember) return;
     setNewMemberFormKey((k) => k + 1);
     setIsNewMemberOpen(true);
-  }, []);
+  }, [canCreateMember]);
 
   useEffect(() => {
     if (authStatus === "UNAUTHENTICATED") {
       window.location.replace("/login");
+      return;
+    }
+    // Sin conexión el proxy no corre: la cuenta de profesor podría llegar acá desde la caché.
+    if (authStatus === "AUTHENTICATED" && roleOf(user) === "PROFESOR") {
+      window.location.replace(PROFESOR_HOME);
       return;
     }
     const handlePageShow = (e: PageTransitionEvent) => {
@@ -191,7 +201,7 @@ export function AdminDashboardClient({
     };
     window.addEventListener("pageshow", handlePageShow);
     return () => window.removeEventListener("pageshow", handlePageShow);
-  }, [authStatus, refreshSession]);
+  }, [authStatus, refreshSession, user]);
 
   // Las Server Actions se ejecutan en fila: si una actualización quedó esperando (red lenta),
   // no se encolan más cada 15 s, porque trabarían todo lo demás del panel detrás de ellas.
@@ -365,6 +375,7 @@ export function AdminDashboardClient({
         onOpenMobile={() => setMobileMenuOpen(true)}
         onCloseMobile={closeMobileMenu}
         onOpenNewMember={openNewMember}
+        canCreateMember={canCreateMember}
       />
 
       <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 pb-28 lg:pb-8">
@@ -379,6 +390,7 @@ export function AdminDashboardClient({
             onGoToTab={goToTab}
             checkInScreenOnline={checkInScreenOnline}
             onOpenCheckInScreen={() => void dispatchScreens()}
+            canCreateMember={canCreateMember}
           />
 
           <PendingMembersBanner
@@ -462,14 +474,19 @@ export function AdminDashboardClient({
                 </div>
               </>
             )}
-            {activeTab === "SETTINGS" && <GymPhoneSettings />}
+            {activeTab === "SETTINGS" && (
+              <div className="flex flex-col gap-10">
+                <GymPhoneSettings />
+                <ProfessorAccountsSettings />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <NewMemberModal
         key={newMemberFormKey}
-        isOpen={isNewMemberOpen}
+        isOpen={isNewMemberOpen && canCreateMember}
         onClose={() => setIsNewMemberOpen(false)}
         plans={plans}
         onSubmitMember={handleCreateMember}

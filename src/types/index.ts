@@ -155,7 +155,7 @@ export interface DisciplineItem {
 
 export interface PlanAdminItem extends PlanOption {
   isActive: boolean;
-  membershipsCount: number; // membresías históricas: si hay, el plan no se puede borrar
+  membershipsCount: number; // membresías históricas: si hay, al borrarlo se oculta en vez de eliminarse
   currentMembersCount: number; // socios con la cuota al día en este plan
 }
 
@@ -197,6 +197,8 @@ export interface MemberPaymentItem {
   method: PaymentMethodType;
   planName: string | null;
   notes: string | null;
+  /** Cuenta que registró el cobro (null en pagos anteriores a este dato). */
+  registeredByName: string | null;
 }
 
 export interface MemberCheckInItem {
@@ -216,6 +218,37 @@ export interface MemberDetail extends MemberListItem {
   lastCheckInAt: string | null;
   recentPayments: MemberPaymentItem[];
   recentCheckIns: MemberCheckInItem[];
+}
+
+// -------------------------------------------------------------
+// CUENTA DE PROFESOR
+// -------------------------------------------------------------
+
+/** Estado de la cuota tal como lo ve el profesor (sin fechas ni montos). */
+export type StaffMemberStatus = "AL_DIA" | "VENCIDA" | "SIN_PLAN";
+
+export interface StaffMemberItem {
+  id: string;
+  dni: string;
+  fullName: string;
+  status: StaffMemberStatus;
+  /** Plan sugerido al registrar un cobro (el último que tuvo, si se sigue ofreciendo). */
+  planId: string | null;
+}
+
+export interface StaffMembersPage {
+  items: StaffMemberItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface ProfessorAccountItem {
+  id: string;
+  name: string;
+  username: string;
+  createdAt: string;
+  paymentsCount: number;
 }
 
 export * from "./sync";

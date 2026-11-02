@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getMemberPhotoUrl } from "@/lib/utils";
-import { ensureDefaultDisciplinesExist } from "@/actions/members.actions";
+import { hasActionSession, hasAdminSession } from "@/lib/auth/require-session";
 import { planWithDiscipline, sellablePlanOrder, sellablePlanWhere, toPlanOption } from "@/lib/plans";
 import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 import type {
@@ -22,10 +22,16 @@ export interface DashboardOverviewData {
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
+// Deudores, ausentes y caja del mes: solo para la administración.
 export async function getDashboardOverview(): Promise<ActionResponse<DashboardOverviewData>> {
-  try {
-    await ensureDefaultDisciplinesExist();
+  if (!(await hasAdminSession())) {
+    return { success: false, error: "Tu sesión expiró. Volvé a iniciar sesión." };
+  }
+  return computeDashboardOverview();
+}
 
+async function computeDashboardOverview(): Promise<ActionResponse<DashboardOverviewData>> {
+  try {
     const now = new Date();
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
@@ -120,13 +126,32 @@ export async function getDashboardOverview(): Promise<ActionResponse<DashboardOv
 }
 
 /**
+ * Contadores del día para el panel del profesor: los mismos que ve la administración, sin la caja.
+ * Los planes van sin precio: el profesor no ve montos.
+ */
+export async function getStaffOverview(): Promise<ActionResponse<{ stats: DashboardStats; plans: PlanOption[] }>> {
+  if (!(await hasActionSession())) {
+    return { success: false, error: "Tu sesión expiró. Volvé a iniciar sesión." };
+  }
+  const overview = await computeDashboardOverview();
+  if (!overview.success || !overview.data) return { success: false, error: overview.error };
+  return {
+    success: true,
+    data: {
+      stats: { ...overview.data.stats, monthlyRevenue: 0 },
+      plans: overview.data.plans.map((p) => ({ ...p, price: 0 })),
+    },
+  };
+}
+
+/**
  * Retorna la cantidad exacta de socios activos en la base de datos
  * utilizando la misma consulta y regla de negocio que el panel de administración:
  * socios activos (isActive = true) con última membresía ACTIVA y fecha de vencimiento vigente.
  */
 export async function getActiveMembersCount(): Promise<ActionResponse<number>> {
   try {
-    const overview = await getDashboardOverview();
+    const overview = await computeDashboardOverview();
     if (!overview.success || !overview.data) {
       return { success: false, error: overview.error || "No se pudo obtener la cantidad de socios activos" };
     }
