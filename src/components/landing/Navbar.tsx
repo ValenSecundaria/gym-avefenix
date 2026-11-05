@@ -5,6 +5,7 @@ import { ShieldCheck, QrCode, Flame } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "Inicio", href: "#inicio" },
+  { label: "Instalaciones", href: "#instalaciones" },
   { label: "Planes y Tarifas", href: "#planes" },
   { label: "Horarios", href: "#horarios" },
   { label: "Contacto", href: "#contacto" },

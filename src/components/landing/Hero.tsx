@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/auth-session-context";
 import { buildWhatsAppLink } from "@/lib/utils";
+import { GlowCard } from "@/components/ui/spotlight-card";
 
 interface HeroProps {
   activeMembers?: number;
@@ -22,32 +23,32 @@ interface HeroProps {
 
 const STATIC_METRICS = [
   { value: "100% Pro", label: "Equipamiento Biomecánico", sub: "Línea Importada Calibrada", icon: Dumbbell, accent: "text-[#FFB300]" },
-  { value: "Élite", label: "Entrenadores en Sala", sub: "Profesores Certificados", icon: Award, accent: "text-[#10B981]" },
-  { value: "DNI Ágil", label: "Ingreso Automático", sub: "Molinete sin Demoras", icon: ScanLine, accent: "text-[#F95716]" },
+  { value: "Élite", label: "Entrenadores en Sala", sub: "Profesores Certificados y de Primer Nivel", icon: Award, accent: "text-[#10B981]" },
+  { value: "DNI Ágil", label: "Ingreso Automático", sub: "Ingreso Rápido y Seguro", icon: ScanLine, accent: "text-[#F95716]" },
 ];
 
 const PILLARS = [
   {
-    title: "Zona Musculación Pesada",
-    description: "Racks olímpicos reglamentarios, mancuernas sólidas de hasta 50kg y discos calibrados para sobrecarga progresiva real.",
-    tag: "Alto Impacto",
+    title: "Zona Musculación y Fuerza",
+    description: "Equipamiento completo de peso libre, racks olímpicos y mancuernas de alto rendimiento para desarrollar fuerza y superar tus límites.",
+    tag: "Entrenamiento de Fuerza",
     icon: Dumbbell,
   },
   {
     title: "Sector Cardio & HIIT",
-    description: "Cintas de alto rendimiento, remos de aire y bicicletas ergométricas diseñadas para optimizar capacidad pulmonar.",
-    tag: "Resistencia Pura",
+    description: "Equipamiento aeróbico y entrenamiento de alta intensidad para mejorar tu resistencia, capacidad cardiovascular y rendimiento físico.",
+    tag: "Resistencia y Rendimiento",
     icon: Activity,
   },
   {
     title: "Rutinas Personalizadas",
-    description: "Planes orientados a hipertrofia, potencia explosiva o recomposición corporal, supervisados en sala.",
+    description: "Planes de entrenamiento adaptados a tus objetivos, con acompañamiento y supervisión profesional en cada etapa.",
     tag: "Seguimiento Continuo",
     icon: ClipboardCheck,
   },
   {
     title: "Acceso Rápido y Seguro",
-    description: "Terminales ágiles de ingreso por DNI en tiempo real para entrenar sin demoras ni filas en recepción.",
+    description: "Ingresá fácilmente con tu DNI mediante un sistema de acceso ágil y seguro, sin demoras ni esperas.",
     tag: "Tecnología Ágil",
     icon: Shield,
   },
@@ -58,7 +59,7 @@ export function Hero({ activeMembers }: HeroProps) {
   const gymPhone = user?.gymPhone || "5492915768403";
   const whatsappUrl = buildWhatsAppLink(
     gymPhone,
-    "Hola Gimnasio Ave Fénix! Quiero consultar para empezar a entrenar."
+    "Hola Gimnasio Ave Fénix! Quiero consultar acerca del gimnasio para empezar a entrenar."
   );
 
   const activeMembersValue =
@@ -99,8 +100,8 @@ export function Hero({ activeMembers }: HeroProps) {
         </h1>
 
         <p className="text-base sm:text-lg lg:text-xl text-[#8A909A] max-w-2xl mx-auto mb-10 leading-relaxed">
-          Musculación, fuerza y entrenamiento personalizado en un ambiente pensado para superar tus
-          límites. Equipamiento biomecánico de primer nivel y acompañamiento constante.
+          Entrená fuerza, desarrollá tu potencial y alcanzá tus objetivos en un espacio diseñado para acompañar tu evolución.
+          Contamos con equipamiento de primer nivel y asesoramiento personalizado para que cada entrenamiento marque la diferencia.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mb-16">
@@ -122,25 +123,36 @@ export function Hero({ activeMembers }: HeroProps) {
           </a>
         </div>
 
-        <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-4 p-5 sm:p-6 rounded-2xl bg-[#17171C] border border-[#2C2D35] shadow-xl mb-14">
-          {metrics.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.label} className="flex flex-col items-center justify-center p-3">
-                <Icon className={`w-6 h-6 mb-2 ${item.accent}`} aria-hidden="true" />
-                <span className="text-2xl sm:text-3xl font-extrabold text-[#F4F5F7] tracking-tight">{item.value}</span>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#F4F5F7] mt-1">{item.label}</span>
-                <span className="text-xs text-[#8A909A] mt-0.5">{item.sub}</span>
-              </div>
-            );
-          })}
-        </div>
+        <GlowCard
+          customSize
+          glowColor="orange"
+          className="w-full p-5 sm:p-6 rounded-2xl bg-[#17171C]/90 border border-[#2C2D35] shadow-xl mb-14"
+        >
+          <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {metrics.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.label} className="flex flex-col items-center justify-center text-center p-3">
+                  <Icon className={`w-6 h-6 mb-2 ${item.accent}`} aria-hidden="true" />
+                  <span className="text-2xl sm:text-3xl font-extrabold text-[#F4F5F7] tracking-tight">{item.value}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#F4F5F7] mt-1">{item.label}</span>
+                  <span className="text-xs text-[#8A909A] mt-0.5">{item.sub}</span>
+                </div>
+              );
+            })}
+          </div>
+        </GlowCard>
 
         <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 text-left">
           {PILLARS.map((pillar) => {
             const Icon = pillar.icon;
             return (
-              <div key={pillar.title} className="p-6 rounded-2xl bg-[#17171C] hover:bg-[#23232A] border border-[#2C2D35] flex flex-col justify-between transition-colors group">
+              <GlowCard
+                key={pillar.title}
+                customSize
+                glowColor="orange"
+                className="p-6 rounded-2xl bg-[#17171C]/90 hover:bg-[#23232A]/90 border border-[#2C2D35] flex flex-col justify-between transition-colors group"
+              >
                 <div>
                   <div className="w-11 h-11 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] flex items-center justify-center text-[#F95716] mb-4 group-hover:border-[#F95716]/50 transition-colors">
                     <Icon className="w-5 h-5" aria-hidden="true" />
@@ -149,7 +161,7 @@ export function Hero({ activeMembers }: HeroProps) {
                   <p className="text-sm text-[#8A909A] leading-relaxed">{pillar.description}</p>
                 </div>
                 <span className="mt-5 inline-flex items-center text-[11px] font-bold uppercase tracking-widest text-[#FFB300]">{pillar.tag}</span>
-              </div>
+              </GlowCard>
             );
           })}
         </div>

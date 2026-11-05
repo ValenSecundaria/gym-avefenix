@@ -24,6 +24,9 @@ import { MembersSection } from "./MembersSection";
 import { MemberEditModal } from "./MemberEditModal";
 import { PlansAdminSection } from "./PlansAdminSection";
 import { GymPhoneSettings } from "./gym-phone-settings";
+import { ProfessorAccountsSettings } from "./ProfessorAccountsSettings";
+import { TeacherAttendanceSection } from "./teacher-attendance/teacher-attendance-section";
+import { PROFESOR_HOME, roleOf } from "@/lib/auth/auth-constants";
 import { enqueuePendingMember, PendingDniError } from "@/lib/offline/pending-members-store";
 import { usePendingMembers } from "@/lib/offline/use-pending-members";
 import type { MemberSyncSummary } from "@/lib/offline/member-sync";
@@ -83,7 +86,7 @@ function isEditableElement(el: Element | null): boolean {
   return el instanceof HTMLElement && el.isContentEditable;
 }
 
-export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "METRICS" | "SETTINGS";
+export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "TEACHER_ATTENDANCE" | "METRICS" | "SETTINGS";
 
 interface AdminDashboardClientProps {
   initialStats: DashboardStats;
@@ -118,7 +121,7 @@ export function AdminDashboardClient({
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [membersReloadKey, setMembersReloadKey] = useState(0);
   const { theme, toggleTheme } = useAdminTheme(initialTheme);
-  const { status: authStatus, refreshSession } = useAuthSession();
+  const { status: authStatus, refreshSession, user } = useAuthSession();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
@@ -144,8 +147,11 @@ export function AdminDashboardClient({
     // El teclado numérico es exclusivo de la pantalla de ingreso: aunque el mouse esté
     // usando este panel, cada tecla del numpad se reenvía al Check-In. Si no se está
     // escribiendo en un campo del panel, también se reenvían Borrar, Enter y los números comunes.
+    // Mientras hay una ventana abierta (alta de socio, cobro, edición...) no se reenvía nada:
+    // el teclado numérico escribe en el formulario (DNI, teléfono, montos) y al cerrarla vuelve al ingreso.
     const onKeyDown = (e: KeyboardEvent) => {
       if (Date.now() - lastCheckInAliveRef.current > CHECKIN_ALIVE_TIMEOUT_MS) return;
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       const typingInPanel = isEditableElement(document.activeElement);
       // Escape queda para el panel (cerrar ventanas y menús).
       if (!typingInPanel && e.key === "Escape") return;
@@ -169,14 +175,22 @@ export function AdminDashboardClient({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // Sin planes a la venta no hay alta posible: el botón se desactiva hasta crear uno.
+  const canCreateMember = plans.length > 0;
   const openNewMember = useCallback(() => {
+    if (!canCreateMember) return;
     setNewMemberFormKey((k) => k + 1);
     setIsNewMemberOpen(true);
-  }, []);
+  }, [canCreateMember]);
 
   useEffect(() => {
     if (authStatus === "UNAUTHENTICATED") {
       window.location.replace("/login");
+      return;
+    }
+    // Sin conexión el proxy no corre: la cuenta de profesor podría llegar acá desde la caché.
+    if (authStatus === "AUTHENTICATED" && roleOf(user) === "PROFESOR") {
+      window.location.replace(PROFESOR_HOME);
       return;
     }
     const handlePageShow = (e: PageTransitionEvent) => {
@@ -188,7 +202,7 @@ export function AdminDashboardClient({
     };
     window.addEventListener("pageshow", handlePageShow);
     return () => window.removeEventListener("pageshow", handlePageShow);
-  }, [authStatus, refreshSession]);
+  }, [authStatus, refreshSession, user]);
 
   // Las Server Actions se ejecutan en fila: si una actualización quedó esperando (red lenta),
   // no se encolan más cada 15 s, porque trabarían todo lo demás del panel detrás de ellas.
@@ -308,7 +322,11 @@ export function AdminDashboardClient({
       };
       saveMembersToCache([cached]).catch(() => { });
       gymBroadcast.postMessage({ type: "MEMBER_UPDATED", member: cached });
-      showToast(`Socio ${v.fullName} registrado y habilitado con éxito.`);
+      showToast(
+        v.planId
+          ? `Socio ${v.fullName} registrado y habilitado con éxito.`
+          : `Socio ${v.fullName} registrado sin plan: cobrale desde Deudores para habilitarlo.`
+      );
       await refreshAllData();
     }
     return { success: res.success, error: res.error };
@@ -358,6 +376,7 @@ export function AdminDashboardClient({
         onOpenMobile={() => setMobileMenuOpen(true)}
         onCloseMobile={closeMobileMenu}
         onOpenNewMember={openNewMember}
+        canCreateMember={canCreateMember}
       />
 
       <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 pb-28 lg:pb-8">
@@ -372,6 +391,7 @@ export function AdminDashboardClient({
             onGoToTab={goToTab}
             checkInScreenOnline={checkInScreenOnline}
             onOpenCheckInScreen={() => void dispatchScreens()}
+            canCreateMember={canCreateMember}
           />
 
           <PendingMembersBanner
@@ -397,7 +417,7 @@ export function AdminDashboardClient({
                 <h2 className="text-xl sm:text-2xl font-extrabold text-fx-text">{section.label}</h2>
               </div>
 
-              <div className={`relative w-full lg:w-80 ${activeTab === "METRICS" || activeTab === "PLANS" || activeTab === "SETTINGS" ? "hidden" : ""}`}>
+              <div className={`relative w-full lg:w-80 ${activeTab === "METRICS" || activeTab === "PLANS" || activeTab === "SETTINGS" || activeTab === "TEACHER_ATTENDANCE" ? "hidden" : ""}`}>
                 <Search className="w-5 h-5 text-fx-muted absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
                   type="search"
@@ -443,6 +463,7 @@ export function AdminDashboardClient({
                 }}
               />
             )}
+            {activeTab === "TEACHER_ATTENDANCE" && <TeacherAttendanceSection />}
             {activeTab === "METRICS" && (
               <>
                 {/* Los gráficos no entran bien en el celular: ahí no se muestran. */}
@@ -455,14 +476,19 @@ export function AdminDashboardClient({
                 </div>
               </>
             )}
-            {activeTab === "SETTINGS" && <GymPhoneSettings />}
+            {activeTab === "SETTINGS" && (
+              <div className="flex flex-col gap-10">
+                <GymPhoneSettings />
+                <ProfessorAccountsSettings />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <NewMemberModal
         key={newMemberFormKey}
-        isOpen={isNewMemberOpen}
+        isOpen={isNewMemberOpen && canCreateMember}
         onClose={() => setIsNewMemberOpen(false)}
         plans={plans}
         onSubmitMember={handleCreateMember}

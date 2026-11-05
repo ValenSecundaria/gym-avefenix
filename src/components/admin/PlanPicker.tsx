@@ -35,9 +35,11 @@ interface PlanPickerProps {
   plans: PlanOption[];
   selectedPlanId: string;
   onSelect: (planId: string) => void;
+  /** Cuenta de profesor: no ve montos. */
+  hidePrices?: boolean;
 }
 
-export function PlanPicker({ plans, selectedPlanId, onSelect }: PlanPickerProps) {
+export function PlanPicker({ plans, selectedPlanId, onSelect, hidePrices = false }: PlanPickerProps) {
   const groups = groupPlansByDiscipline(plans);
   const [filter, setFilter] = useState<string>("ALL");
   const visible = filter === "ALL" ? plans : plans.filter((p) => (p.disciplineId ?? "none") === filter);
@@ -89,7 +91,8 @@ export function PlanPicker({ plans, selectedPlanId, onSelect }: PlanPickerProps)
               <span className="text-xs font-bold leading-tight">{p.name}</span>
               <span className={`text-[11px] ${active ? "text-white/85" : "text-fx-muted"}`}>
                 {filter === "ALL" && p.disciplineName ? `${p.disciplineName} • ` : ""}
-                {planDetail(p)} • {formatCurrencyARS(p.price)}
+                {planDetail(p)}
+                {!hidePrices && ` • ${formatCurrencyARS(p.price)}`}
               </span>
             </button>
           );

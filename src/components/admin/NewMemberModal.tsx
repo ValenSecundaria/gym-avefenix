@@ -23,13 +23,15 @@ interface NewMemberModalProps {
   onClose: () => void;
   plans: PlanOption[];
   onSubmitMember: (data: NewMemberFormValues) => Promise<{ success: boolean; error?: string }>;
+  /** Cuenta de profesor: no ve montos (se cobra el precio del plan). */
+  hidePrices?: boolean;
 }
 
 const INPUT_CLS =
   "w-full min-h-[48px] px-4 rounded-xl bg-fx-base border border-fx-border focus:border-fx-orange focus:outline-none text-sm text-fx-text";
 const LABEL_CLS = "block text-xs font-bold uppercase tracking-wider text-fx-muted mb-1.5";
 
-export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMemberModalProps) {
+export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember, hidePrices = false }: NewMemberModalProps) {
   const [fullName, setFullName] = useState("");
   const [dni, setDni] = useState("");
   const [phone, setPhone] = useState("");
@@ -41,6 +43,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
+  // Sin planes a la venta no hay alta posible (el botón "Nuevo socio" queda desactivado).
   const selectedPlan = plans.find((p) => p.id === planId) ?? plans[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +60,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
         fullName: fullName.trim(),
         dni: cleanDni,
         phone: phone.trim(),
-        planId: selectedPlan.id,
+        planId: selectedPlan?.id ?? "",
         paymentMethod,
         photoBase64,
         notes: notes.trim() || undefined,
@@ -120,13 +123,15 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
 
             <div>
               <span className={LABEL_CLS}>Plan Seleccionado *</span>
-              <PlanPicker plans={plans} selectedPlanId={selectedPlan?.id ?? ""} onSelect={setPlanId} />
+              <PlanPicker plans={plans} selectedPlanId={selectedPlan?.id ?? ""} onSelect={setPlanId} hidePrices={hidePrices} />
             </div>
 
             <div className="p-4 rounded-xl bg-fx-base border border-fx-border flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-fx-muted uppercase tracking-wider font-bold">Método de Cobro Inicial</span>
-                <span className="font-mono text-lg text-fx-orange font-extrabold">{selectedPlan ? formatCurrencyARS(selectedPlan.price) : "$0"}</span>
+                {!hidePrices && (
+                  <span className="font-mono text-lg text-fx-orange font-extrabold">{selectedPlan ? formatCurrencyARS(selectedPlan.price) : "$0"}</span>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {(["EFECTIVO", "TRANSFERENCIA"] as PaymentMethodType[]).map((m) => (
@@ -144,7 +149,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember }: NewMe
               </button>
               <button type="submit" disabled={isSubmitting} className="min-h-[50px] px-7 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-bold text-sm inline-flex items-center gap-2 shadow-[0_4px_20px_rgba(249,87,22,0.4)] disabled:opacity-50 cursor-pointer">
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                <span>✓ Guardar y Habilitar Socio</span>
+                <span>{selectedPlan ? "✓ Guardar y Habilitar Socio" : "✓ Guardar Socio"}</span>
               </button>
             </div>
           </div>

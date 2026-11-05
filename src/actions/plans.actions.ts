@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { hasActionSession } from "@/lib/auth/require-session";
-import { planWithDiscipline, sellablePlanWhere, toPlanOption } from "@/lib/plans";
-import { ensureDefaultPlansExist } from "@/actions/members.actions";
+import { hasAdminSession } from "@/lib/auth/require-session";
+import { currentMembershipWhere, planWithDiscipline, toPlanOption } from "@/lib/plans";
+import { ensureDefaultDisciplinesExist } from "@/actions/members.actions";
 import {
   disciplineSchema,
   planRulesFor,
@@ -17,7 +17,9 @@ import type { ActionResponse, PlanCatalog } from "@/types";
 
 // -------------------------------------------------------------
 // ABM DE PLANES Y DISCIPLINAS
-// Los planes no se borran si tienen membresías (el historial de pagos los referencia): se desactivan.
+// Un plan con socios al día no se puede borrar. Si solo tiene historial (socios vencidos, pagos viejos)
+// se borra "a medias": desaparece de todos lados pero el historial lo sigue nombrando.
+// Puede quedar el gimnasio sin planes: en ese caso no se pueden dar altas hasta crear uno.
 // -------------------------------------------------------------
 
 const NO_SESSION_ERROR = "Tu sesión expiró. Volvé a iniciar sesión.";
@@ -29,18 +31,22 @@ function isUniqueConstraintError(error: unknown): boolean {
 
 export async function getPlanCatalog(): Promise<ActionResponse<PlanCatalog>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
-    await ensureDefaultPlansExist();
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
+    await ensureDefaultDisciplinesExist();
     const now = new Date();
     const [disciplines, plans, currentByPlan] = await Promise.all([
-      prisma.discipline.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { plans: true } } } }),
+      prisma.discipline.findMany({
+        orderBy: { name: "asc" },
+        include: { _count: { select: { plans: { where: { deletedAt: null } } } } },
+      }),
       prisma.plan.findMany({
+        where: { deletedAt: null },
         include: { ...planWithDiscipline, _count: { select: { memberships: true } } },
         orderBy: [{ isActive: "desc" }, { price: "desc" }],
       }),
       prisma.membership.groupBy({
         by: ["planId"],
-        where: { status: "ACTIVA", validUntil: { gte: now }, member: { isActive: true } },
+        where: currentMembershipWhere(now),
         _count: { _all: true },
       }),
     ]);
@@ -66,7 +72,7 @@ export async function getPlanCatalog(): Promise<ActionResponse<PlanCatalog>> {
 
 export async function savePlan(input: PlanInput): Promise<ActionResponse<{ name: string }>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const parsed = planSchema.safeParse(input);
     if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message || "Datos del plan inválidos" };
     const { id, name, disciplineId, category, allowedDaysPerWeek, price } = parsed.data;
@@ -77,7 +83,7 @@ export async function savePlan(input: PlanInput): Promise<ActionResponse<{ name:
     // El cambio de precio o de tipo rige para los próximos cobros; las membresías ya pagadas no cambian.
     const data = { name, disciplineId, category, price, ...planRulesFor(category, allowedDaysPerWeek) };
     if (id) {
-      const exists = await prisma.plan.findUnique({ where: { id }, select: { id: true } });
+      const exists = await prisma.plan.findFirst({ where: { id, deletedAt: null }, select: { id: true } });
       if (!exists) return { success: false, error: "El plan ya no existe" };
       await prisma.plan.update({ where: { id }, data });
     } else {
@@ -94,15 +100,11 @@ export async function savePlan(input: PlanInput): Promise<ActionResponse<{ name:
 
 export async function setPlanActive(planId: string, isActive: boolean): Promise<ActionResponse<{ name: string }>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const id = idSchema.safeParse(planId);
     if (!id.success || typeof isActive !== "boolean") return { success: false, error: "Plan inválido" };
 
-    if (!isActive) {
-      const remaining = await prisma.plan.count({ where: { ...sellablePlanWhere, id: { not: id.data } } });
-      if (remaining === 0) return { success: false, error: "Tiene que quedar al menos un plan activo para poder dar altas" };
-    }
-    const plan = await prisma.plan.update({ where: { id: id.data }, data: { isActive }, select: { name: true } });
+    const plan = await prisma.plan.update({ where: { id: id.data, deletedAt: null }, data: { isActive }, select: { name: true } });
     revalidatePath("/admin");
     return { success: true, data: plan };
   } catch (error) {
@@ -113,23 +115,30 @@ export async function setPlanActive(planId: string, isActive: boolean): Promise<
 
 export async function deletePlan(planId: string): Promise<ActionResponse<{ name: string }>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const id = idSchema.safeParse(planId);
     if (!id.success) return { success: false, error: "Plan inválido" };
 
-    const plan = await prisma.plan.findUnique({
-      where: { id: id.data },
-      select: { name: true, isActive: true, _count: { select: { memberships: true } } },
+    const plan = await prisma.plan.findFirst({
+      where: { id: id.data, deletedAt: null },
+      select: { name: true, _count: { select: { memberships: true } } },
     });
     if (!plan) return { success: false, error: "El plan ya no existe" };
-    if (plan._count.memberships > 0) {
-      return { success: false, error: `${plan.name} ya se usó en ${plan._count.memberships} cobros: desactivalo en lugar de borrarlo` };
+
+    const currentMembers = await prisma.membership.count({ where: { planId: id.data, ...currentMembershipWhere(new Date()) } });
+    if (currentMembers > 0) {
+      return {
+        success: false,
+        error: `${plan.name} tiene ${currentMembers} ${currentMembers === 1 ? "socio activo" : "socios activos"}: no se puede borrar mientras alguien tenga la cuota al día en este plan`,
+      };
     }
-    if (plan.isActive) {
-      const remaining = await prisma.plan.count({ where: { ...sellablePlanWhere, id: { not: id.data } } });
-      if (remaining === 0) return { success: false, error: "Tiene que quedar al menos un plan activo para poder dar altas" };
+
+    // Sin historial se borra del todo; con historial se oculta (los pagos y membresías viejas lo referencian).
+    if (plan._count.memberships === 0) {
+      await prisma.plan.delete({ where: { id: id.data } });
+    } else {
+      await prisma.plan.update({ where: { id: id.data }, data: { deletedAt: new Date(), isActive: false } });
     }
-    await prisma.plan.delete({ where: { id: id.data } });
     revalidatePath("/admin");
     return { success: true, data: { name: plan.name } };
   } catch (error) {
@@ -140,7 +149,7 @@ export async function deletePlan(planId: string): Promise<ActionResponse<{ name:
 
 export async function saveDiscipline(input: DisciplineInput): Promise<ActionResponse<{ name: string }>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const parsed = disciplineSchema.safeParse(input);
     if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message || "Disciplina inválida" };
     const { id, name } = parsed.data;
@@ -171,17 +180,11 @@ export async function setDisciplineActive(
   isActive: boolean
 ): Promise<ActionResponse<{ name: string }>> {
   try {
-    if (!(await hasActionSession())) return { success: false, error: NO_SESSION_ERROR };
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const id = idSchema.safeParse(disciplineId);
     if (!id.success || typeof isActive !== "boolean") return { success: false, error: "Disciplina inválida" };
 
-    // Al desactivarla, sus planes dejan de ofrecerse; no puede quedar el gimnasio sin planes a la venta.
-    if (!isActive) {
-      const remaining = await prisma.plan.count({
-        where: { isActive: true, OR: [{ disciplineId: null }, { discipline: { isActive: true, id: { not: id.data } } }] },
-      });
-      if (remaining === 0) return { success: false, error: "Tiene que quedar al menos un plan activo para poder dar altas" };
-    }
+    // Al desactivarla, sus planes dejan de ofrecerse (en altas, cobros y en la web).
     const discipline = await prisma.discipline.update({ where: { id: id.data }, data: { isActive }, select: { name: true } });
     revalidatePath("/admin");
     return { success: true, data: discipline };

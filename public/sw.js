@@ -1,9 +1,8 @@
 /* Service Worker — Gimnasio Ave Fénix
- * - Assets estáticos (JS/CSS/fuentes/imágenes/íconos): Stale-While-Revalidate.
+ * - Assets estáticos (JS/CSS/fuentes/imágenes/íconos): Stale-While-Revalidate en producción.
  * - Páginas (navegaciones HTML): red primero con respaldo en caché si se corta internet.
- *   (Servir HTML "stale" primero rompería las redirecciones de sesión y mostraría datos viejos
- *   del panel en vivo; por eso las páginas sólo salen de caché cuando no hay red.)
  * - Requests RSC, Server Actions (POST) y HMR nunca se interceptan.
+ * - En localhost/desarrollo nunca intercepta para no romper Turbopack/Next.js HMR.
  */
 const VERSION = "v1";
 const STATIC_CACHE = `avefenix-static-${VERSION}`;
@@ -47,6 +46,10 @@ async function precache(cacheName, urls) {
 }
 
 self.addEventListener("install", (event) => {
+  if (self.location.hostname === "localhost" || self.location.hostname === "127.0.0.1") {
+    self.registration.unregister();
+    return;
+  }
   event.waitUntil(
     Promise.all([precache(PAGES_CACHE, PRECACHE_PAGES), precache(STATIC_CACHE, PRECACHE_ASSETS)]).then(() =>
       self.skipWaiting()
@@ -55,6 +58,13 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
+  if (self.location.hostname === "localhost" || self.location.hostname === "127.0.0.1") {
+    self.registration.unregister();
+    event.waitUntil(
+      caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+    );
+    return;
+  }
   event.waitUntil(
     caches
       .keys()
@@ -64,9 +74,19 @@ self.addEventListener("activate", (event) => {
 });
 
 function isBypassed(request, url) {
+  // En desarrollo (localhost/127.0.0.1), no interceptar nada para evitar desincronización de chunks de Next.js / Turbopack
+  if (url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname.endsWith(".local")) {
+    return true;
+  }
   if (request.method !== "GET" || url.origin !== self.location.origin) return true;
   if (request.headers.get("RSC") || request.headers.get("Next-Action") || url.searchParams.has("_rsc")) return true;
-  return url.pathname.startsWith("/_next/webpack-hmr") || url.pathname.startsWith("/__nextjs") || url.pathname === "/sw.js";
+  return (
+    url.pathname.startsWith("/_next/webpack-hmr") ||
+    url.pathname.startsWith("/_next/turbopack-hmr") ||
+    url.pathname.startsWith("/_next/static/development/") ||
+    url.pathname.startsWith("/__nextjs") ||
+    url.pathname === "/sw.js"
+  );
 }
 
 function isStaticAsset(request, url) {

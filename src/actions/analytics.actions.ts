@@ -3,6 +3,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { GYM_TIMEZONE } from "@/lib/constants";
+import { getActionSession } from "@/lib/auth/require-session";
 import type {
   ActionResponse,
   AnalyticsPeriodDays,
@@ -88,6 +89,11 @@ export async function getAttendanceAnalytics(
   periodInput: number = 90
 ): Promise<ActionResponse<AttendanceAnalytics>> {
   try {
+    const session = await getActionSession();
+    if (!session) return { success: false, error: "Sesión vencida: volvé a iniciar sesión" };
+    // La cuenta de profesor ve asistencia y altas, nunca la plata cobrada.
+    const showMoney = session.role === "ADMIN";
+
     const periodDays = (ALLOWED_PERIODS as number[]).includes(periodInput)
       ? (periodInput as AnalyticsPeriodDays)
       : 90;
@@ -215,7 +221,7 @@ export async function getAttendanceAnalytics(
     const newMembersByMonth = new Map(newMemberRows.map((r) => [r.month, r.n]));
     const monthly: MonthlyPoint[] = months.map((month, i) => ({
       month,
-      revenue: Math.round(revenueByMonth.get(month) || 0),
+      revenue: showMoney ? Math.round(revenueByMonth.get(month) || 0) : 0,
       newMembers: newMembersByMonth.get(month) || 0,
       inProgress: i === months.length - 1,
     }));

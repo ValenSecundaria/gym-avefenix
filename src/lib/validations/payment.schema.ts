@@ -9,9 +9,11 @@ export const createPaymentSchema = z.object({
     .string()
     .trim()
     .min(1, "Debe seleccionar un plan para renovar"),
+  // Opcional: sin monto (cuenta de profesor) se cobra el precio del plan.
   amount: z.coerce
     .number()
-    .positive("El monto a cobrar debe ser mayor a cero"),
+    .positive("El monto a cobrar debe ser mayor a cero")
+    .optional(),
   method: z.enum(["EFECTIVO", "TRANSFERENCIA"]),
   notes: z
     .string()

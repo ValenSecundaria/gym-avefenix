@@ -393,9 +393,11 @@ function SectionTitle({ title, subtitle, right }: { title: string; subtitle: str
 interface MetricsPanelProps {
   stats: DashboardStats;
   onGoToTab: (tab: "LIVE_FEED" | "DEBTORS" | "ABSENT") => void;
+  /** Cuenta de profesor: sin el gráfico de plata cobrada. */
+  hideMoney?: boolean;
 }
 
-export function MetricsPanel({ stats, onGoToTab }: MetricsPanelProps) {
+export function MetricsPanel({ stats, onGoToTab, hideMoney = false }: MetricsPanelProps) {
   const [period, setPeriod] = useState<AnalyticsPeriodDays>(90);
   const [data, setData] = useState<AttendanceAnalytics | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -620,9 +622,11 @@ export function MetricsPanel({ stats, onGoToTab }: MetricsPanelProps) {
                 </div>
               </Card>
 
-              <Card title="Plata cobrada por mes" subtitle="Cuotas cobradas en los últimos 6 meses • el mes actual todavía no terminó">
-                <MonthlyRevenue points={data.monthly} />
-              </Card>
+              {!hideMoney && (
+                <Card title="Plata cobrada por mes" subtitle="Cuotas cobradas en los últimos 6 meses • el mes actual todavía no terminó">
+                  <MonthlyRevenue points={data.monthly} />
+                </Card>
+              )}
 
               <Card title="Tendencia semanal" subtitle="Visitas por semana • la última barra es esta semana (todavía en curso)">
                 <FixedWindow label="al menos las últimas 8 semanas" />
