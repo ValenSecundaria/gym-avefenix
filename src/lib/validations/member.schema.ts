@@ -45,10 +45,8 @@ export const createMemberSchema = z.object({
         .max(PHONE_MAX_DIGITS, `El teléfono no puede superar los ${PHONE_MAX_DIGITS} dígitos`)
     )
     .optional(),
-  planId: z
-    .string()
-    .trim()
-    .min(1, "Debe seleccionar un plan válido"),
+  // Vacío = alta sin plan: el socio queda registrado y se le cobra después.
+  planId: z.string().trim().max(64).optional().or(z.literal("")),
   paymentMethod: z.enum(["EFECTIVO", "TRANSFERENCIA"]),
   photoBase64: z.string().optional().nullable(),
   notes: z

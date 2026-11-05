@@ -7,6 +7,7 @@ import { Flame, Lock, User, ArrowLeft, Loader2, AlertCircle, Eye, EyeOff } from 
 import { useAuthSession } from "@/context/auth-session-context";
 import { warmCacheRoutes } from "@/lib/pwa/register-sw";
 import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
+import { ADMIN_HOME, homePathFor } from "@/lib/auth/auth-constants";
 
 export function LoginForm() {
   const router = useRouter();
@@ -53,11 +54,21 @@ export function LoginForm() {
         }
       }
 
+      // La cuenta de profesor va a su propio panel, sin pantalla de ingreso.
+      const home = homePathFor(userData);
+      if (home !== ADMIN_HOME) {
+        warmCacheRoutes([home]);
+        router.push(home);
+        router.refresh();
+        return;
+      }
+
       // 3. Precalentamiento de rutas en el Service Worker PWA
       warmCacheRoutes(["/admin", "/check-in"]);
 
-      // 4. Despliegue de pantallas (pantalla principal y monitor secundario de Check-in)
-      const dispatchRes = await dispatchScreens();
+      // 4. Despliegue de pantallas (pantalla principal y monitor secundario de Check-in).
+      // Con un solo monitor no se abre: el panel queda al frente.
+      const dispatchRes = await dispatchScreens({ skipIfSingleScreen: true });
       if (dispatchRes.popupBlocked) {
         setNeedsManualLaunch(true);
         setIsLoading(false);

@@ -60,6 +60,9 @@ export function MemberHistory({ member }: { member: MemberDetail }) {
                   <div className="text-xs text-fx-muted truncate">
                     {p.planName ?? "Sin plan"} • {p.method === "EFECTIVO" ? "Efectivo" : "Transferencia"}
                   </div>
+                  {p.registeredByName && (
+                    <div className="text-xs text-fx-muted truncate">Registró: {p.registeredByName}</div>
+                  )}
                 </div>
                 <span className="font-mono font-bold text-fx-text shrink-0">{formatCurrencyARS(p.amount)}</span>
               </li>

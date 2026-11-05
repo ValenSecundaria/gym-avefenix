@@ -8,6 +8,24 @@ export function registerServiceWorker(): void {
     return;
   }
 
+  // En entorno de desarrollo (localhost), desregistrar cualquier Service Worker existente
+  // y vaciar cachés para evitar que Turbopack/HMR sirva módulos o chunks desactualizados.
+  if (process.env.NODE_ENV !== "production") {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister();
+      }
+    });
+    if ("caches" in window) {
+      caches.keys().then((keys) => {
+        for (const key of keys) {
+          caches.delete(key);
+        }
+      });
+    }
+    return;
+  }
+
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register("/sw.js", {

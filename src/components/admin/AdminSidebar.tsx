@@ -5,6 +5,7 @@ import {
   Activity,
   AlertOctagon,
   BarChart3,
+  Clock,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
@@ -33,6 +34,7 @@ export const ADMIN_SECTIONS: {
   { tab: "ABSENT", label: "Socios ausentes", short: "Ausentes", icon: UserMinus, badge: "warning" },
   { tab: "MEMBERS", label: "Clientes", short: "Clientes", icon: Users, badge: null },
   { tab: "PLANS", label: "Planes", short: "Planes", icon: Tags, badge: null },
+  { tab: "TEACHER_ATTENDANCE", label: "Asistencia Profes", short: "Asistencia", icon: Clock, badge: null },
   { tab: "METRICS", label: "Métricas", short: "Métricas", icon: BarChart3, badge: null, desktopOnly: true },
   { tab: "SETTINGS", label: "Configuración", short: "Ajustes", icon: Settings, badge: null },
 ];
@@ -56,6 +58,8 @@ interface AdminSidebarProps {
   onOpenMobile: () => void;
   onCloseMobile: () => void;
   onOpenNewMember: () => void;
+  /** Sin planes a la venta el botón "Nuevo" queda desactivado. */
+  canCreateMember: boolean;
 }
 
 function NavList({
@@ -113,7 +117,8 @@ function MobileBottomBar({
   counts,
   onOpenMobile,
   onOpenNewMember,
-}: Pick<AdminSidebarProps, "activeTab" | "onSelect" | "counts" | "onOpenMobile" | "onOpenNewMember">) {
+  canCreateMember,
+}: Pick<AdminSidebarProps, "activeTab" | "onSelect" | "counts" | "onOpenMobile" | "onOpenNewMember" | "canCreateMember">) {
   const barSections = MOBILE_BAR_TABS.map((t) => ADMIN_SECTIONS.find((s) => s.tab === t)!);
   const inMenu = !MOBILE_BAR_TABS.includes(activeTab);
 
@@ -154,8 +159,9 @@ function MobileBottomBar({
         <button
           type="button"
           onClick={onOpenNewMember}
-          aria-label="Registrar nuevo socio"
-          className="flex-1 flex flex-col items-center justify-center gap-1 text-xs font-bold text-fx-orange cursor-pointer"
+          disabled={!canCreateMember}
+          aria-label={canCreateMember ? "Registrar nuevo socio" : "Registrar nuevo socio (primero creá un plan)"}
+          className="flex-1 flex flex-col items-center justify-center gap-1 text-xs font-bold text-fx-orange cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <span className="w-12 h-12 -mt-5 rounded-full bg-fx-orange text-white flex items-center justify-center shadow-[0_4px_16px_rgba(249,87,22,0.45)] border-4 border-fx-surface">
             <UserPlus className="w-6 h-6" />
@@ -189,6 +195,7 @@ export function AdminSidebar({
   onOpenMobile,
   onCloseMobile,
   onOpenNewMember,
+  canCreateMember,
 }: AdminSidebarProps) {
   useEffect(() => {
     if (!mobileOpen) return;
@@ -229,6 +236,7 @@ export function AdminSidebar({
         counts={counts}
         onOpenMobile={onOpenMobile}
         onOpenNewMember={onOpenNewMember}
+        canCreateMember={canCreateMember}
       />
 
       {/* Celular / tablet: menú completo que sube desde abajo */}

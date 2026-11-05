@@ -53,6 +53,7 @@ export async function authenticateUser(
       id: user.id,
       username: user.username,
       name: user.name,
+      role: user.role,
       gymPhone: user.gymPhone ?? "5492915768403",
     };
 
@@ -86,10 +87,16 @@ export async function resumeSession(sessionToken: string): Promise<ActionRespons
     if (!payload) {
       return { success: false, error: "La sesión guardada expiró. Ingresá nuevamente." };
     }
+    // La cuenta pudo borrarse (o cambiar de rol) mientras el equipo estaba sin conexión.
+    const user = await prisma.user.findUnique({ where: { id: payload.id }, select: { role: true } });
+    if (!user) {
+      return { success: false, error: "Esta cuenta ya no existe. Ingresá con otro usuario." };
+    }
     const session = await issueSessionCookies({
       id: payload.id,
       username: payload.username,
       name: payload.name,
+      role: user.role,
       gymPhone: payload.gymPhone ?? "5492915768403",
     });
     return { success: true, data: session };
@@ -124,6 +131,7 @@ export async function getSessionUser(): Promise<ActionResponse<AuthenticatedUser
         id: payload.id,
         username: payload.username,
         name: payload.name,
+        role: payload.role ?? "ADMIN",
         gymPhone: payload.gymPhone ?? "5492915768403",
       },
     };

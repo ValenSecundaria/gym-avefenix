@@ -77,7 +77,7 @@ export function Footer() {
 
   const whatsappUrl = buildWhatsAppLink(
     gymPhone,
-    "Hola Gimnasio Ave Fénix! Me gustaría recibir más información sobre horarios y planes."
+    "Hola Gimnasio Ave Fénix! Me gustaría recibir más información acerca de los horarios y planes."
   );
 
   return (
@@ -296,7 +296,7 @@ export function Footer() {
         {/* Créditos de Desarrollo */}
         <div className="pt-4 text-center">
           <p className="text-xs text-[#8A909A]/80 tracking-wide">
-            Hecho con amor por Valentin Gemetro y Francisco Uyua ❤️
+            Desarrollado por Valentin Gemetro y Francisco Uyua
           </p>
         </div>
       </div>

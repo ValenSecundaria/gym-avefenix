@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { sellablePlanWhere } from "@/lib/plans";
 import { computeRenewal } from "@/lib/membership-renewal";
+import { getActionSession } from "@/lib/auth/require-session";
 import {
   createPaymentSchema,
   type CreatePaymentInput,
@@ -26,6 +27,9 @@ export async function registerPayment(
   input: CreatePaymentInput
 ): Promise<ActionResponse<PaymentRegistrationResult>> {
   try {
+    const session = await getActionSession();
+    if (!session) return { success: false, error: "Tu sesión expiró. Volvé a iniciar sesión." };
+
     const parsed = createPaymentSchema.safeParse(input);
     if (!parsed.success) {
       return {
@@ -34,7 +38,7 @@ export async function registerPayment(
       };
     }
 
-    const { memberId, planId, amount, method, notes } = parsed.data;
+    const { memberId, planId, method, notes } = parsed.data;
 
     const [member, plan] = await Promise.all([
       prisma.member.findUnique({
@@ -64,6 +68,9 @@ export async function registerPayment(
         error: "El plan seleccionado no existe o ya no está disponible",
       };
     }
+
+    // La cuenta de profesor no ve ni elige montos: se cobra el precio del plan.
+    const amount = session.role === "ADMIN" && parsed.data.amount ? parsed.data.amount : Number(plan.price);
 
     const now = new Date();
     const currentMembership = member.memberships[0];
@@ -101,6 +108,8 @@ export async function registerPayment(
           method,
           notes: notes || `Renovación - ${plan.name}`,
           paidAt: now,
+          registeredById: session.id,
+          registeredByName: session.name,
         },
       });
 

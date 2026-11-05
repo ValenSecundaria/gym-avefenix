@@ -13,13 +13,42 @@ datasource db {
 // TABLA DE USUARIOS / ACCESO AL SISTEMA
 // -------------------------------------------------------------
 
+// ADMIN = dueña/recepción (panel completo). PROFESOR = altas, cobros y métricas, sin ver plata.
+enum UserRole {
+  ADMIN
+  PROFESOR
+  RECEPCION
+}
+
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
+  id           String        @id @default(cuid())
+  username     String        @unique
   passwordHash String
   name         String
-  gymPhone     String?  @default("5492915768403")
-  createdAt    DateTime @default(now())
+  dni          String?       @unique
+  role         UserRole      @default(ADMIN)
+  gymPhone     String?       @default("5492915768403")
+  createdAt    DateTime      @default(now())
+
+  paymentsRegistered Payment[]
+  shifts             TeacherShift[]
+}
+
+model TeacherShift {
+  id           String    @id @default(cuid())
+  userId       String
+  checkIn      DateTime  @default(now())
+  checkOut     DateTime?
+  totalMinutes Int?
+  notes        String?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([checkIn])
 }
 
 // -------------------------------------------------------------
@@ -95,6 +124,8 @@ model Plan {
   durationDays       Int           @default(30)
   price              Decimal       @db.Decimal(10, 2)
   isActive           Boolean       @default(true)
+  // Plan borrado que ya tenía historial: se oculta en todos lados, pero los pagos viejos lo siguen nombrando.
+  deletedAt          DateTime?
 
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
@@ -135,8 +166,13 @@ model Payment {
   notes        String?
   paidAt       DateTime      @default(now())
 
+  // Cuenta que registró el cobro. El nombre queda copiado por si la cuenta se borra después.
+  registeredById   String?
+  registeredByName String?
+
   member       Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
   membership   Membership?   @relation(fields: [membershipId], references: [id], onDelete: SetNull)
+  registeredBy User?         @relation(fields: [registeredById], references: [id], onDelete: SetNull)
 
   @@index([memberId])
   @@index([paidAt])

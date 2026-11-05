@@ -86,19 +86,45 @@ export async function getConnectedScreens(): Promise<{
   };
 }
 
+/** Celular o tablet: pantalla táctil sin mouse, o angosta. Ahí solo se usa el panel de administración. */
+export function isMobileDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  const touchOnly = window.matchMedia("(pointer: coarse) and (hover: none)").matches;
+  return touchOnly || window.matchMedia("(max-width: 767px)").matches;
+}
+
+/**
+ * true solo si se puede asegurar que hay un único monitor: screen.isExtended === false (Chrome/Edge, sin permiso)
+ * o la Window Management API devolvió una sola pantalla. Si no se puede saber, devuelve false.
+ */
+function isSingleScreen(supported: boolean, screens: ScreenDetailedLike[]): boolean {
+  const screenInfo = window.screen as Screen & { isExtended?: boolean };
+  if (screenInfo.isExtended === false) return true;
+  return supported && screens.length === 1;
+}
+
 /**
  * Despliega la terminal de Check-In (/check-in) en el monitor secundario.
  * Si detecta múltiples pantallas, calcula las coordenadas exactas de la pantalla externa.
+ * En el celular no se abre: la pantalla de ingreso es solo para la PC de recepción.
+ * Con skipIfSingleScreen (apertura automática al ingresar) y un solo monitor detectado, no abre nada:
+ * la ventana de ingreso taparía el panel. Se puede abrir igual desde el botón "Abrir pantalla de ingreso".
  */
-export async function dispatchScreens(): Promise<ScreenDispatchResult> {
-  if (typeof window === "undefined") {
+export async function dispatchScreens(
+  options: { skipIfSingleScreen?: boolean } = {}
+): Promise<ScreenDispatchResult> {
+  if (typeof window === "undefined" || isMobileDevice()) {
     return { success: false, hasMultipleScreens: false, secondaryOpened: false, popupBlocked: false };
   }
 
   try {
-    const { screens } = await getConnectedScreens();
+    const { supported, screens } = await getConnectedScreens();
     const secondaryScreen = screens.find((s) => s.isPrimary === false);
     const hasMultipleScreens = Boolean(secondaryScreen);
+
+    if (options.skipIfSingleScreen && !hasMultipleScreens && isSingleScreen(supported, screens)) {
+      return { success: true, hasMultipleScreens: false, secondaryOpened: false, popupBlocked: false };
+    }
 
     let windowFeatures = "menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes";
 

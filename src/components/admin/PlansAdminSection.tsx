@@ -132,6 +132,13 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
         </div>
       )}
 
+      {catalog.plans.length === 0 && (
+        <div role="status" className="flex items-center gap-2 p-3 rounded-xl bg-fx-amber/15 border border-fx-amber/50 text-sm font-bold text-fx-amber">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>No hay planes cargados: no se pueden dar altas de socios hasta crear al menos uno.</span>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-fx-base border border-fx-border">
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrar por disciplina">
           {[{ id: "ALL", name: "Todas" }, ...catalog.disciplines].map((d) => (
@@ -227,11 +234,21 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
                             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Power className="w-3.5 h-3.5" />}
                             {p.isActive ? "Desactivar" : "Activar"}
                           </button>
-                          {p.membershipsCount === 0 && (
-                            <button type="button" onClick={() => setConfirmDeleteId(p.id)} disabled={busy} aria-label={`Borrar ${p.name}`} className={`${SMALL_BTN} text-fx-red`}>
-                              <Trash2 className="w-3.5 h-3.5" /> Borrar
-                            </button>
-                          )}
+                          {/* Con socios al día en el plan no se puede borrar (solo desactivar). */}
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(p.id)}
+                            disabled={busy || p.currentMembersCount > 0}
+                            aria-label={`Borrar ${p.name}`}
+                            title={
+                              p.currentMembersCount > 0
+                                ? `No se puede borrar: ${p.currentMembersCount} ${p.currentMembersCount === 1 ? "socio activo" : "socios activos"} en este plan`
+                                : undefined
+                            }
+                            className={`${SMALL_BTN} text-fx-red`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Borrar
+                          </button>
                         </>
                       )}
                     </div>

@@ -50,7 +50,7 @@ const toInstant = (localDay, hour, minute) =>
 async function ensurePlans() {
   let plans = await prisma.plan.findMany({ where: { isActive: true } });
   if (plans.length === 0) {
-    // Mismos planes por defecto que crea la app (ensureDefaultPlansExist).
+    // Planes de ejemplo solo para la demo (la app ya no crea planes por su cuenta).
     await prisma.plan.createMany({
       data: [
         { name: "Pase Libre Mensual", category: "MENSUAL_LIBRE", allowedDaysPerWeek: null, durationDays: 30, price: 18500, isActive: true },
