@@ -41,7 +41,7 @@ function isPayload(value: unknown): value is SessionTokenPayload {
     typeof v.username === "string" &&
     typeof v.name === "string" &&
     typeof v.iat === "number" &&
-    (v.role === undefined || v.role === "ADMIN" || v.role === "PROFESOR") &&
+    (v.role === undefined || v.role === "ADMIN" || v.role === "PROFESOR" || v.role === "RECEPCION") &&
     (v.gymPhone === undefined || typeof v.gymPhone === "string")
   );
 }

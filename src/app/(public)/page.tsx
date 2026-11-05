@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import { connection } from "next/server";
 import { Navbar } from "@/components/landing/Navbar";
 import { Hero } from "@/components/landing/Hero";
+import { Files } from "@/components/landing/Files";
 import { PlansSection } from "@/components/landing/PlansSection";
 import { ScheduleSection } from "@/components/landing/ScheduleSection";
 import { Footer } from "@/components/landing/Footer";
@@ -32,6 +33,7 @@ export default function PublicLandingPage() {
         <Suspense fallback={<Hero />}>
           <HeroWithStats />
         </Suspense>
+        <Files />
         <Suspense fallback={<PlansSection />}>
           <PlansWithData />
         </Suspense>

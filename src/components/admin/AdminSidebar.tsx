@@ -5,6 +5,7 @@ import {
   Activity,
   AlertOctagon,
   BarChart3,
+  Clock,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
@@ -33,6 +34,7 @@ export const ADMIN_SECTIONS: {
   { tab: "ABSENT", label: "Socios ausentes", short: "Ausentes", icon: UserMinus, badge: "warning" },
   { tab: "MEMBERS", label: "Clientes", short: "Clientes", icon: Users, badge: null },
   { tab: "PLANS", label: "Planes", short: "Planes", icon: Tags, badge: null },
+  { tab: "TEACHER_ATTENDANCE", label: "Asistencia Profes", short: "Asistencia", icon: Clock, badge: null },
   { tab: "METRICS", label: "Métricas", short: "Métricas", icon: BarChart3, badge: null, desktopOnly: true },
   { tab: "SETTINGS", label: "Configuración", short: "Ajustes", icon: Settings, badge: null },
 ];

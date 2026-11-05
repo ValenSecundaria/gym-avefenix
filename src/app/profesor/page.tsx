@@ -37,6 +37,7 @@ async function ProfessorDashboardLoader() {
 
   return (
     <ProfessorDashboardClient
+      userId={session.id}
       initialStats={overview.stats}
       initialPlans={overview.plans}
       initialTheme={initialTheme}

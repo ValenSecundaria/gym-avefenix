@@ -5,6 +5,8 @@ import { CalendarDays, CheckCircle2, MessageCircle, Percent, Tags } from "lucide
 import { buildWhatsAppLink, formatCurrencyARS } from "@/lib/utils";
 import { useAuth } from "@/context/auth-session-context";
 import { groupPlansByDiscipline } from "@/components/admin/PlanPicker";
+import { CardCarousel } from "@/components/ui/card-carousel";
+import { GlowCard } from "@/components/ui/spotlight-card";
 import type { PlanOption } from "@/types";
 
 export interface PlansSectionProps {
@@ -31,7 +33,11 @@ function PlanCard({ plan, gymPhone }: { plan: PlanOption; gymPhone: string }) {
     `Hola Gimnasio Ave Fénix! Quiero consultar por el plan ${plan.name}${plan.disciplineName ? ` de ${plan.disciplineName}` : ""} (${formatCurrencyARS(plan.price)}).`
   );
   return (
-    <div className="flex flex-col justify-between p-7 rounded-2xl bg-[#17171C] border border-[#2C2D35] hover:border-[#F95716]/60 shadow-lg transition-all">
+    <GlowCard
+      customSize
+      glowColor="orange"
+      className="flex flex-col justify-between h-full p-7 rounded-2xl bg-[#17171C]/90 border border-[#2C2D35] hover:border-[#F95716]/60 shadow-lg transition-all"
+    >
       <div className="flex flex-col gap-5">
         <h4 className="text-xl font-extrabold text-[#F4F5F7]">{plan.name}</h4>
         <div className="flex items-baseline gap-2 py-4 border-y border-[#2C2D35]">
@@ -56,7 +62,7 @@ function PlanCard({ plan, gymPhone }: { plan: PlanOption; gymPhone: string }) {
         <MessageCircle className="w-5 h-5 shrink-0" aria-hidden="true" />
         <span>Consultar</span>
       </a>
-    </div>
+    </GlowCard>
   );
 }
 
@@ -104,24 +110,45 @@ export function PlansSection({ plans }: PlansSectionProps = {}) {
           </div>
         ) : (
           <div className="w-full flex flex-col gap-12">
-            {groups.map((g) => (
-              <div key={g.key} className="flex flex-col gap-6">
-                <h3 className="text-2xl font-extrabold text-[#F4F5F7] flex items-center gap-2.5">
-                  <CalendarDays className="w-6 h-6 text-[#F95716]" aria-hidden="true" />
-                  {g.label}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-                  {g.plans.map((p) => (
-                    <PlanCard key={p.id} plan={p} gymPhone={gymPhone} />
-                  ))}
+            {groups.map((g) => {
+              const isCarousel = g.plans.length >= 4;
+
+              return (
+                <div key={g.key} className="flex flex-col gap-6 w-full">
+                  <h3 className="text-2xl font-extrabold text-[#F4F5F7] flex items-center gap-2.5">
+                    <CalendarDays className="w-6 h-6 text-[#F95716]" aria-hidden="true" />
+                    {g.label}
+                  </h3>
+
+                  {isCarousel ? (
+                    <CardCarousel
+                      autoplayDelay={3500}
+                      showPagination={true}
+                      showNavigation={true}
+                    >
+                      {g.plans.map((p) => (
+                        <PlanCard key={p.id} plan={p} gymPhone={gymPhone} />
+                      ))}
+                    </CardCarousel>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+                      {g.plans.map((p) => (
+                        <PlanCard key={p.id} plan={p} gymPhone={gymPhone} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {/* Banner Informativo de Descuento 20% */}
-        <div className="w-full rounded-2xl bg-[#17171C] border border-[#FFB300]/30 p-6 sm:p-7 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_24px_-8px_rgba(255,179,0,0.15)]">
+        <GlowCard
+          customSize
+          glowColor="orange"
+          className="w-full rounded-2xl bg-[#17171C]/90 border border-[#FFB300]/30 p-6 sm:p-7 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_24px_-8px_rgba(255,179,0,0.15)]"
+        >
           <div className="flex items-start sm:items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-[#0B0B0C] border border-[#FFB300]/40 flex items-center justify-center text-[#FFB300] shrink-0">
               <Percent className="w-6 h-6" aria-hidden="true" />
@@ -146,7 +173,7 @@ export function PlansSection({ plans }: PlansSectionProps = {}) {
             <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>Consultar Requisitos</span>
           </a>
-        </div>
+        </GlowCard>
       </div>
     </section>
   );

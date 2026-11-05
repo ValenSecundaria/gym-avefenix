@@ -25,6 +25,7 @@ import { MemberEditModal } from "./MemberEditModal";
 import { PlansAdminSection } from "./PlansAdminSection";
 import { GymPhoneSettings } from "./gym-phone-settings";
 import { ProfessorAccountsSettings } from "./ProfessorAccountsSettings";
+import { TeacherAttendanceSection } from "./teacher-attendance/teacher-attendance-section";
 import { PROFESOR_HOME, roleOf } from "@/lib/auth/auth-constants";
 import { enqueuePendingMember, PendingDniError } from "@/lib/offline/pending-members-store";
 import { usePendingMembers } from "@/lib/offline/use-pending-members";
@@ -85,7 +86,7 @@ function isEditableElement(el: Element | null): boolean {
   return el instanceof HTMLElement && el.isContentEditable;
 }
 
-export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "METRICS" | "SETTINGS";
+export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "TEACHER_ATTENDANCE" | "METRICS" | "SETTINGS";
 
 interface AdminDashboardClientProps {
   initialStats: DashboardStats;
@@ -416,7 +417,7 @@ export function AdminDashboardClient({
                 <h2 className="text-xl sm:text-2xl font-extrabold text-fx-text">{section.label}</h2>
               </div>
 
-              <div className={`relative w-full lg:w-80 ${activeTab === "METRICS" || activeTab === "PLANS" || activeTab === "SETTINGS" ? "hidden" : ""}`}>
+              <div className={`relative w-full lg:w-80 ${activeTab === "METRICS" || activeTab === "PLANS" || activeTab === "SETTINGS" || activeTab === "TEACHER_ATTENDANCE" ? "hidden" : ""}`}>
                 <Search className="w-5 h-5 text-fx-muted absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
                   type="search"
@@ -462,6 +463,7 @@ export function AdminDashboardClient({
                 }}
               />
             )}
+            {activeTab === "TEACHER_ATTENDANCE" && <TeacherAttendanceSection />}
             {activeTab === "METRICS" && (
               <>
                 {/* Los gráficos no entran bien en el celular: ahí no se muestran. */}

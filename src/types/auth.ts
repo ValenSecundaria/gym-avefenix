@@ -1,12 +1,13 @@
 // Tipos compartidos del flujo de autenticación con sesión persistente (online/offline).
 
-/** ADMIN = panel completo. PROFESOR = altas, cobros y métricas, sin datos de plata. */
-export type UserRole = "ADMIN" | "PROFESOR";
+/** ADMIN = panel completo. PROFESOR = altas, cobros y métricas, sin datos de plata. RECEPCION = check-in y recepción. */
+export type UserRole = "ADMIN" | "PROFESOR" | "RECEPCION";
 
 export interface AuthenticatedUser {
   id: string;
   username: string;
   name: string;
+  dni?: string | null;
   /** Las sesiones firmadas antes de existir los roles no lo traen: son de administración. */
   role?: UserRole;
   gymPhone?: string;

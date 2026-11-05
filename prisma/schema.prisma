@@ -17,18 +17,38 @@ datasource db {
 enum UserRole {
   ADMIN
   PROFESOR
+  RECEPCION
 }
 
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
+  id           String        @id @default(cuid())
+  username     String        @unique
   passwordHash String
   name         String
-  role         UserRole @default(ADMIN)
-  gymPhone     String?  @default("5492915768403")
-  createdAt    DateTime @default(now())
+  dni          String?       @unique
+  role         UserRole      @default(ADMIN)
+  gymPhone     String?       @default("5492915768403")
+  createdAt    DateTime      @default(now())
 
   paymentsRegistered Payment[]
+  shifts             TeacherShift[]
+}
+
+model TeacherShift {
+  id           String    @id @default(cuid())
+  userId       String
+  checkIn      DateTime  @default(now())
+  checkOut     DateTime?
+  totalMinutes Int?
+  notes        String?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([checkIn])
 }
 
 // -------------------------------------------------------------

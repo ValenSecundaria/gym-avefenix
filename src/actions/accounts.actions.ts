@@ -6,10 +6,6 @@ import { prisma } from "@/lib/prisma";
 import { hasAdminSession } from "@/lib/auth/require-session";
 import type { ActionResponse, ProfessorAccountItem } from "@/types";
 
-// -------------------------------------------------------------
-// CUENTAS DE PROFESOR (las administra la cuenta de administración desde Configuración)
-// -------------------------------------------------------------
-
 const NO_SESSION_ERROR = "Tu sesión expiró. Volvé a iniciar sesión.";
 const BCRYPT_ROUNDS = 10;
 
@@ -27,6 +23,7 @@ const newProfessorSchema = z.object({
     .max(30, "El usuario no puede superar los 30 caracteres")
     .regex(/^[a-zA-Z0-9._-]+$/, "El usuario solo puede tener letras, números, punto, guion y guion bajo"),
   password: passwordSchema,
+  dni: z.string().trim().min(6, "DNI debe tener entre 6 y 10 dígitos").max(10).optional().or(z.literal("")),
 });
 
 const idSchema = z.string().trim().min(1).max(64);
@@ -37,7 +34,7 @@ export async function listProfessorAccounts(): Promise<ActionResponse<ProfessorA
     const users = await prisma.user.findMany({
       where: { role: "PROFESOR" },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, username: true, createdAt: true, _count: { select: { paymentsRegistered: true } } },
+      select: { id: true, name: true, username: true, dni: true, createdAt: true, _count: { select: { paymentsRegistered: true } } },
     });
     return {
       success: true,
@@ -45,6 +42,7 @@ export async function listProfessorAccounts(): Promise<ActionResponse<ProfessorA
         id: u.id,
         name: u.name,
         username: u.username,
+        dni: u.dni,
         createdAt: u.createdAt.toISOString(),
         paymentsCount: u._count.paymentsRegistered,
       })),
@@ -59,27 +57,49 @@ export async function createProfessorAccount(input: {
   name: string;
   username: string;
   password: string;
+  dni?: string;
 }): Promise<ActionResponse<{ name: string }>> {
   try {
     if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
     const parsed = newProfessorSchema.safeParse(input);
     if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message || "Datos inválidos" };
-    const { name, username, password } = parsed.data;
+    const { name, username, password, dni } = parsed.data;
 
-    // El login no distingue mayúsculas: "Juan" y "juan" serían la misma cuenta.
     const taken = await prisma.user.findFirst({
       where: { username: { equals: username, mode: "insensitive" } },
       select: { id: true },
     });
     if (taken) return { success: false, error: `Ya existe una cuenta con el usuario ${username}` };
 
+    const cleanDni = dni && dni.trim().length > 0 ? dni.trim() : null;
+    if (cleanDni) {
+      const dniTaken = await prisma.user.findUnique({ where: { dni: cleanDni } });
+      if (dniTaken) return { success: false, error: `Ya existe un usuario o profesor con el DNI ${cleanDni}` };
+    }
+
     await prisma.user.create({
-      data: { name, username, role: "PROFESOR", passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS) },
+      data: { name, username, dni: cleanDni, role: "PROFESOR", passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS) },
     });
     return { success: true, data: { name } };
   } catch (error) {
     console.error("[createProfessorAccount] Error:", error);
     return { success: false, error: "No se pudo crear la cuenta" };
+  }
+}
+
+export async function updateProfessorDni(userId: string, dni: string | null): Promise<ActionResponse<{ dni: string | null }>> {
+  try {
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
+    const cleanDni = dni && dni.trim().length > 0 ? dni.trim() : null;
+    if (cleanDni) {
+      const existing = await prisma.user.findFirst({ where: { dni: cleanDni, NOT: { id: userId } } });
+      if (existing) return { success: false, error: `El DNI ${cleanDni} ya está asignado a otro usuario.` };
+    }
+    await prisma.user.update({ where: { id: userId }, data: { dni: cleanDni } });
+    return { success: true, data: { dni: cleanDni } };
+  } catch (error) {
+    console.error("[updateProfessorDni] Error:", error);
+    return { success: false, error: "No se pudo actualizar el DNI" };
   }
 }
 
@@ -104,7 +124,6 @@ export async function resetProfessorPassword(userId: string, password: string): 
   }
 }
 
-/** Los cobros que registró conservan su nombre (registeredByName). */
 export async function deleteProfessorAccount(userId: string): Promise<ActionResponse<{ name: string }>> {
   try {
     if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };

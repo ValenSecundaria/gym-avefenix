@@ -247,8 +247,10 @@ export interface ProfessorAccountItem {
   id: string;
   name: string;
   username: string;
+  dni?: string | null;
   createdAt: string;
   paymentsCount: number;
 }
 
 export * from "./sync";
+export * from "./shifts";
