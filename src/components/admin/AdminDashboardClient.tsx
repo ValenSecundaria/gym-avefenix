@@ -19,6 +19,8 @@ import { MetricsPanel } from "./MetricsPanel";
 import { ADMIN_SECTIONS, AdminSidebar } from "./AdminSidebar";
 import { NewMemberModal, type NewMemberFormValues } from "./NewMemberModal";
 import { PaymentModal } from "./PaymentModal";
+import { QuickRenewModal, type QuickRenewTarget } from "./QuickRenewModal";
+import type { QuickRenewalResult } from "@/actions/payments.actions";
 import { PendingMembersBanner } from "./PendingMembersBanner";
 import { MembersSection } from "./MembersSection";
 import { MemberEditModal } from "./MemberEditModal";
@@ -46,7 +48,7 @@ import {
   getMemberFromCache,
   getPendingCheckIns,
 } from "@/lib/db/indexed-db";
-import { getMemberPhotoUrl } from "@/lib/utils";
+import { formatDateAR, getMemberPhotoUrl } from "@/lib/utils";
 
 // Ingresos de hoy que siguen en la cola local (todavía no subidos a la base en el lote horario).
 // La lista del servidor no los tiene: sin esto, cada refresco "borraba" los ingresos del día.
@@ -120,6 +122,7 @@ export function AdminDashboardClient({
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [membersReloadKey, setMembersReloadKey] = useState(0);
+  const [quickRenewTarget, setQuickRenewTarget] = useState<QuickRenewTarget | null>(null);
   const { theme, toggleTheme } = useAdminTheme(initialTheme);
   const { status: authStatus, refreshSession, user } = useAuthSession();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -359,6 +362,27 @@ export function AdminDashboardClient({
     return { success: res.success, error: res.error };
   };
 
+  const openQuickRenew = useCallback(
+    (m: { id: string; dni: string; fullName: string; planId: string | null; planName: string; validUntil: string | null }) => {
+      setEditingMemberId(null);
+      setQuickRenewTarget({
+        id: m.id,
+        dni: m.dni,
+        fullName: m.fullName,
+        planId: m.planId,
+        planName: m.planName,
+        validUntil: m.validUntil,
+      });
+    },
+    []
+  );
+
+  const handleQuickRenewed = (res: QuickRenewalResult, target: QuickRenewTarget) => {
+    showToast(`${target.fullName} habilitado hasta el ${formatDateAR(res.validUntil)} (${res.planName}). Cobro registrado.`);
+    setMembersReloadKey((k) => k + 1);
+    void refreshAllData();
+  };
+
   const q = searchQuery.trim();
   const match = (name: string, dni: string) => !q || matchesSearch(name, q) || dni.includes(q);
   const section = ADMIN_SECTIONS.find((s) => s.tab === activeTab) || ADMIN_SECTIONS[0];
@@ -453,6 +477,7 @@ export function AdminDashboardClient({
                 searchQuery={searchQuery}
                 reloadKey={membersReloadKey}
                 onEditMember={setEditingMemberId}
+                onQuickRenew={openQuickRenew}
               />
             )}
             {activeTab === "PLANS" && (
@@ -501,6 +526,13 @@ export function AdminDashboardClient({
           setMembersReloadKey((k) => k + 1);
           void refreshAllData();
         }}
+        onQuickRenew={openQuickRenew}
+      />
+      <QuickRenewModal
+        target={quickRenewTarget}
+        plans={plans}
+        onClose={() => setQuickRenewTarget(null)}
+        onRenewed={handleQuickRenewed}
       />
       <PaymentModal
         key={selectedDebtor?.id ?? "none"}

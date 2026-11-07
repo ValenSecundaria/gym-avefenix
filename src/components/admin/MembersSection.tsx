@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AlertCircle, ChevronLeft, ChevronRight, Loader2, MessageCircle, User, UserPen, Users } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Loader2, MessageCircle, RefreshCw, User, UserPen, Users } from "lucide-react";
 import type { MemberRowItem, MembersPage, MemberStatusFilter } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import { getMembersPage } from "@/actions/members.actions";
@@ -12,6 +12,8 @@ interface MembersSectionProps {
   /** Cambia cada vez que se edita un socio, para volver a pedir la página. */
   reloadKey: number;
   onEditMember: (memberId: string) => void;
+  /** Renovación rápida (+30 días desde hoy) con su cobro. */
+  onQuickRenew: (member: MemberRowItem) => void;
 }
 
 const STATUS_BADGE: Record<MemberRowItem["membershipStatus"], { text: string; cls: string }> = {
@@ -60,7 +62,7 @@ function FilterButton({ active, onClick, children }: { active: boolean; onClick:
   );
 }
 
-export function MembersSection({ searchQuery, reloadKey, onEditMember }: MembersSectionProps) {
+export function MembersSection({ searchQuery, reloadKey, onEditMember, onQuickRenew }: MembersSectionProps) {
   const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
   const [showInactive, setShowInactive] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MemberStatusFilter>("ALL");
@@ -214,6 +216,15 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
                       <span className="hidden sm:inline">WhatsApp</span>
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => onQuickRenew(m)}
+                    aria-label={`Renovar cuota de ${m.fullName} por 30 días desde hoy`}
+                    className="min-h-[40px] px-3 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white text-sm font-extrabold inline-flex items-center gap-2 cursor-pointer"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    <span>Renovar +30</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => onEditMember(m.id)}

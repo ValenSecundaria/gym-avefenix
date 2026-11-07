@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AlertCircle, Camera, Check, Loader2, MessageCircle, RotateCcw, Trash2, User, UserMinus, UserPen, X } from "lucide-react";
+import { AlertCircle, Camera, Check, Loader2, MessageCircle, RefreshCw, RotateCcw, Trash2, User, UserMinus, UserPen, X } from "lucide-react";
 import type { MemberDetail } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import {
@@ -21,6 +21,8 @@ interface MemberEditModalProps {
   onClose: () => void;
   /** Se llama después de guardar, dar de baja, reactivar o eliminar, con el mensaje para el aviso. */
   onChanged: (message: string) => void;
+  /** Abre la renovación rápida (+30 días) para este socio. */
+  onQuickRenew?: (member: MemberDetail) => void;
 }
 
 const INPUT_CLS =
@@ -58,13 +60,13 @@ async function refreshCachedMember(oldDni: string, data: { dni: string; fullName
   }
 }
 
-export function MemberEditModal({ memberId, onClose, onChanged }: MemberEditModalProps) {
+export function MemberEditModal({ memberId, onClose, onChanged, onQuickRenew }: MemberEditModalProps) {
   if (!memberId) return null;
   // key: al abrir otro socio el formulario arranca de cero.
-  return <MemberEditDialog key={memberId} memberId={memberId} onClose={onClose} onChanged={onChanged} />;
+  return <MemberEditDialog key={memberId} memberId={memberId} onClose={onClose} onChanged={onChanged} onQuickRenew={onQuickRenew} />;
 }
 
-function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string } & Omit<MemberEditModalProps, "memberId">) {
+function MemberEditDialog({ memberId, onClose, onChanged, onQuickRenew }: { memberId: string } & Omit<MemberEditModalProps, "memberId">) {
   const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
   const [member, setMember] = useState<MemberDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -170,7 +172,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="edit-member-title" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
       <div className="bg-fx-surface border border-fx-border w-full max-w-4xl rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-6 sm:p-8 flex flex-col gap-6 my-auto">
-        <div className="flex items-start justify-between pb-4 border-b border-fx-border">
+        <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-fx-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fx-orange to-fx-red flex items-center justify-center text-white shrink-0">
               <UserPen className="w-5 h-5" />
@@ -189,9 +191,22 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
               )}
             </div>
           </div>
-          <button type="button" onClick={onClose} disabled={isBusy} aria-label="Cerrar" className="w-10 h-10 rounded-xl bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text flex items-center justify-center cursor-pointer shrink-0">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {member && onQuickRenew && (
+              <button
+                type="button"
+                onClick={() => onQuickRenew(member)}
+                disabled={isBusy}
+                className="min-h-[40px] px-3 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white text-sm font-extrabold inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Renovar +30 días</span>
+              </button>
+            )}
+            <button type="button" onClick={onClose} disabled={isBusy} aria-label="Cerrar" className="w-10 h-10 rounded-xl bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text flex items-center justify-center cursor-pointer shrink-0">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {!member ? (
