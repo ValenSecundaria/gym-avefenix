@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { CheckCircle2, AlertTriangle, Clock, User } from "lucide-react";
+import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 import type { AccessStatusType, LiveCheckInItem } from "@/types";
 import { formatTimeAR } from "@/lib/utils";
 import { EditMemberButton } from "./EditMemberButton";
@@ -90,7 +91,7 @@ export function LiveFeedTable({ items, onEditMember }: LiveFeedTableProps) {
               <div className="flex items-center gap-3">
                 <div className="w-14 h-14 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center shrink-0">
                   {item.photoUrl ? (
-                    <img src={item.photoUrl} alt={item.fullName} className="w-full h-full object-cover" />
+                    <MemberPhotoImg memberId={item.memberId} src={item.photoUrl} alt={item.fullName} className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-6 h-6 text-fx-muted" />
                   )}
@@ -128,7 +129,7 @@ export function LiveFeedTable({ items, onEditMember }: LiveFeedTableProps) {
                   <td className="py-4 px-4">
                     <div className="w-11 h-11 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center">
                       {item.photoUrl ? (
-                        <img src={item.photoUrl} alt={item.fullName} className="w-full h-full object-cover" />
+                        <MemberPhotoImg memberId={item.memberId} src={item.photoUrl} alt={item.fullName} className="w-full h-full object-cover" />
                       ) : (
                         <User className="w-5 h-5 text-fx-muted" />
                       )}

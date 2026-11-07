@@ -15,6 +15,29 @@ import { WebcamCapture } from "./WebcamCapture";
 import { sanitizeNameInput, sanitizePhoneInput } from "@/lib/validations/member.schema";
 import { MemberHistory, MemberSummary } from "./MemberHistory";
 import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
+import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
+import { savePhotoLocally } from "@/lib/offline/photo-store";
+import { useLocalMemberPhoto } from "@/lib/offline/use-local-photos";
+
+const PHOTO_STATUS_TEXT = {
+  PENDING: { text: "Foto guardada en esta PC, pendiente de subir.", cls: "text-fx-amber" },
+  SYNCING: { text: "Subiendo foto...", cls: "text-fx-muted" },
+  SYNCED: { text: "Foto sincronizada.", cls: "text-fx-green" },
+  ERROR: { text: "No se pudo subir la foto (sigue guardada en esta PC).", cls: "text-fx-red" },
+} as const;
+
+/** Estado de sincronización de la foto local del socio (si la hay). */
+function PhotoSyncStatusLine({ memberId, serverSrc }: { memberId: string; serverSrc: string | null }) {
+  const local = useLocalMemberPhoto(memberId, serverSrc);
+  if (!local) return null;
+  const status = PHOTO_STATUS_TEXT[local.status];
+  return (
+    <p className={`text-xs font-semibold ${status.cls}`} role="status">
+      {status.text}
+      {local.status === "ERROR" && local.lastError && <span className="block font-normal text-fx-muted">{local.lastError}</span>}
+    </p>
+  );
+}
 
 interface MemberEditModalProps {
   memberId: string | null;
@@ -130,14 +153,47 @@ function MemberEditDialog({ memberId, onClose, onChanged, onQuickRenew }: { memb
     if (changingPhoto && !newPhoto) return setError("Sacá la foto nueva o cancelá el cambio de foto.");
 
     void run(async () => {
-      const res = await updateMember({
-        id: member.id,
-        fullName: fullName.trim(),
-        dni: cleanDni,
-        phone: phone.trim(),
-        notes: notes.trim(),
-        photoBase64: newPhoto,
-      });
+      // La foto nueva se guarda primero en esta PC y se sube aparte: no se pierde aunque no haya internet.
+      let photoStoredLocally = false;
+      if (newPhoto) {
+        try {
+          await savePhotoLocally({ photo: newPhoto, dni: member.dni, memberId: member.id });
+          photoStoredLocally = true;
+          // Ya quedó guardada: si el resto falla y se vuelve a guardar, no se duplica la foto.
+          setChangingPhoto(false);
+          setNewPhoto(null);
+        } catch {
+          // IndexedDB no disponible: la foto viaja con los datos, como antes.
+        }
+      }
+
+      const dataChanged =
+        fullName.trim() !== member.fullName ||
+        cleanDni !== member.dni ||
+        phone.trim() !== sanitizePhoneInput(member.phone ?? "") ||
+        notes.trim() !== (member.notes ?? "");
+
+      if (photoStoredLocally && !dataChanged) {
+        return { success: true, message: `Foto de ${member.fullName} guardada. Se sube sola en segundo plano.` };
+      }
+
+      let res;
+      try {
+        res = await updateMember({
+          id: member.id,
+          fullName: fullName.trim(),
+          dni: cleanDni,
+          phone: phone.trim(),
+          notes: notes.trim(),
+          photoBase64: photoStoredLocally ? null : newPhoto,
+        });
+      } catch (error) {
+        if (!photoStoredLocally) throw error;
+        return {
+          success: false,
+          error: "Sin conexión: los datos no se guardaron, pero la foto nueva quedó guardada en esta PC y se sube sola al volver internet.",
+        };
+      }
       if (res.success && res.data) await refreshCachedMember(member.dni, res.data);
       return { ...res, message: `Datos de ${fullName.trim()} actualizados.` };
     });
@@ -243,7 +299,7 @@ function MemberEditDialog({ memberId, onClose, onChanged, onQuickRenew }: { memb
                   </span>
                   <div className="w-full aspect-4/3 rounded-xl bg-fx-base border border-fx-border overflow-hidden flex items-center justify-center">
                     {member.photoUrl ? (
-                      <img src={member.photoUrl} alt={member.fullName} className="w-full h-full object-cover" />
+                      <MemberPhotoImg memberId={member.id} src={member.photoUrl} alt={member.fullName} className="w-full h-full object-cover" />
                     ) : (
                       <User className="w-12 h-12 text-fx-muted" />
                     )}
@@ -257,6 +313,7 @@ function MemberEditDialog({ memberId, onClose, onChanged, onQuickRenew }: { memb
               <p className="text-xs text-fx-muted">
                 {member.checkInsCount} ingresos y {member.paymentsCount} pagos registrados.
               </p>
+              <PhotoSyncStatusLine memberId={member.id} serverSrc={member.photoUrl} />
             </div>
 
             <div className="md:col-span-7 flex flex-col gap-4">

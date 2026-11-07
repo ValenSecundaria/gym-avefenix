@@ -27,7 +27,9 @@ function formatDuration(totalMinutes?: number | null): string {
 }
 
 export function TeacherResultCard({ result }: TeacherResultCardProps) {
-  const isCheckIn = result.action === "CHECK_IN";
+  // "Ya en turno" (DNI repetido enseguida) se muestra como turno activo: no se registró otra entrada.
+  const alreadyActive = result.action === "ALREADY_ACTIVE";
+  const isCheckIn = result.action === "CHECK_IN" || alreadyActive;
   const inTime = formatTime(result.shift.checkIn);
   const outTime = result.shift.checkOut ? formatTime(result.shift.checkOut) : null;
 
@@ -52,7 +54,9 @@ export function TeacherResultCard({ result }: TeacherResultCardProps) {
         }`}
       >
         {isCheckIn ? <CheckCircle2 className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
-        <span>{isCheckIn ? "¡Hola Profe! Ingreso Registrado" : "¡Jornada Finalizada!"}</span>
+        <span>
+          {alreadyActive ? "Ya estás en turno" : isCheckIn ? "¡Hola Profe! Ingreso Registrado" : "¡Jornada Finalizada!"}
+        </span>
       </div>
 
       <h2 className="text-3xl sm:text-4xl font-black text-[#F4F5F7] tracking-tight mb-2">
@@ -87,6 +91,12 @@ export function TeacherResultCard({ result }: TeacherResultCardProps) {
           )}
         </div>
       </div>
+
+      {alreadyActive && (
+        <div className="mt-4 text-xs font-semibold text-[#8A909A]">
+          No se registró otra entrada. Para marcar la salida, ingresá tu DNI al terminar.
+        </div>
+      )}
 
       {!isCheckIn && outTime && (
         <div className="mt-4 text-xs font-semibold text-[#8A909A]">

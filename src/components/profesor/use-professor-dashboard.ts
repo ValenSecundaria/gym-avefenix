@@ -8,6 +8,7 @@ import { getStaffMembersPage } from "@/actions/staff.actions";
 import { createMember } from "@/actions/members.actions";
 import { registerPayment } from "@/actions/payments.actions";
 import type { NewMemberFormValues } from "@/components/admin/NewMemberModal";
+import { attachStashedPhotoToMember, discardStashedPhoto, stashNewMemberPhoto } from "@/lib/offline/new-member-photo";
 
 export function useProfessorDashboard(initialStats: DashboardStats, initialPlans: PlanOption[], authStatus: string, user: any) {
   const [stats, setStats] = useState(initialStats);
@@ -69,14 +70,20 @@ export function useProfessorDashboard(initialStats: DashboardStats, initialPlans
   }, []);
 
   const handleCreateMember = async (v: NewMemberFormValues) => {
+    // La foto se guarda primero en el dispositivo y se sube aparte (ver lib/offline/photo-sync).
+    const stash = await stashNewMemberPhoto(v.photoBase64, v.dni);
     try {
-      const res = await createMember({ ...v, photoBase64: v.photoBase64 || undefined });
-      if (res.success) {
+      const res = await createMember({ ...v, photoBase64: stash.inlinePhoto });
+      if (res.success && res.data) {
+        await attachStashedPhotoToMember(stash, res.data.id, res.data.dni);
         setToast(`Socio ${v.fullName} registrado y habilitado.`);
         void refreshAll();
+      } else {
+        await discardStashedPhoto(stash);
       }
       return { success: res.success, error: res.error };
     } catch {
+      await discardStashedPhoto(stash);
       return { success: false, error: "Sin conexión: el alta no se guardó." };
     }
   };

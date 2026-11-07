@@ -2,16 +2,14 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Camera, RefreshCw, Upload, CheckCircle2 } from "lucide-react";
+import { listCameras, openNextCamera, openPreferredCamera } from "@/lib/camera";
 
 interface WebcamCaptureProps {
   photoDataUrl?: string | null;
   onPhotoCapture: (base64DataUrl: string | null) => void;
 }
 
-const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
-  video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
-  audio: false,
-};
+// La cámara se abre con openPreferredCamera: la USB externa del mostrador antes que la integrada.
 
 // "denied" = el permiso se rechazó antes: no se vuelve a pedir solo (no se puede saltear el cartel
 // del navegador; con "granted" la cámara se enciende directo, sin preguntar).
@@ -33,6 +31,18 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
   const [capturedUrl, setCapturedUrl] = useState<string | null>(photoDataUrl);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraLabel, setCameraLabel] = useState("");
+  const [cameraCount, setCameraCount] = useState(0);
+
+  // Conecta un stream nuevo y anota qué cámara quedó y cuántas hay (para el botón "Cambiar cámara").
+  const attachStream = useCallback((stream: MediaStream) => {
+    streamRef.current = stream;
+    if (videoRef.current) videoRef.current.srcObject = stream;
+    setCameraLabel(stream.getVideoTracks()[0]?.label ?? "");
+    setCameraActive(true);
+    setCameraError(null);
+    void listCameras().then((cams) => setCameraCount(cams.length));
+  }, []);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -50,15 +60,23 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
     }
     try {
       stopCamera();
-      const stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
-      streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      setCameraActive(true);
+      attachStream(await openPreferredCamera());
     } catch {
       setCameraError("Sin acceso a cámara. Podés subir una foto desde tu PC.");
       setCameraActive(false);
     }
-  }, [stopCamera]);
+  }, [stopCamera, attachStream]);
+
+  const switchCamera = useCallback(async () => {
+    const currentId = streamRef.current?.getVideoTracks()[0]?.getSettings().deviceId;
+    try {
+      stopCamera();
+      const next = await openNextCamera(currentId);
+      attachStream(next ?? (await openPreferredCamera()));
+    } catch {
+      setCameraError("No se pudo abrir esa cámara. Probá de nuevo o subí una foto.");
+    }
+  }, [stopCamera, attachStream]);
 
   // Al abrir el alta la cámara se enciende sola. Si el permiso está rechazado o no hay cámara,
   // no pasa nada: queda la opción de subir una foto o seguir sin foto.
@@ -75,15 +93,12 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
           return;
         }
         try {
-          const stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
+          const stream = await openPreferredCamera();
           if (!active) {
             stream.getTracks().forEach((t) => t.stop());
             return;
           }
-          streamRef.current = stream;
-          if (videoRef.current) videoRef.current.srcObject = stream;
-          setCameraActive(true);
-          setCameraError(null);
+          attachStream(stream);
         } catch {
           if (!active) return;
           setCameraError("Sin acceso a cámara. Podés subir una foto desde tu PC.");
@@ -95,7 +110,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
       active = false;
       stopCamera();
     };
-  }, [photoDataUrl, stopCamera]);
+  }, [photoDataUrl, stopCamera, attachStream]);
 
   // El <video> se monta recién cuando la cámara ya está activa: hay que conectarle el stream al montarse.
   const attachVideo = useCallback((el: HTMLVideoElement | null) => {
@@ -203,8 +218,16 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
       <div className="flex items-center justify-between px-1 text-xs">
         <span className="text-fx-green font-bold inline-flex items-center gap-1">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          {cameraActive ? "Cámara Frontal HD Activa" : "Modo Archivo / Captura"}
+          <span className="truncate max-w-[180px]" title={cameraLabel}>
+            {cameraActive ? cameraLabel || "Cámara activa" : "Modo Archivo / Captura"}
+          </span>
         </span>
+        {cameraActive && cameraCount > 1 && (
+          <button type="button" onClick={() => void switchCamera()} className="text-fx-muted hover:text-fx-orange underline inline-flex items-center gap-1 cursor-pointer">
+            <Camera className="w-3.5 h-3.5" />
+            <span>Cambiar cámara</span>
+          </button>
+        )}
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} className="hidden" />
         <button type="button" onClick={() => fileInputRef.current?.click()} className="text-fx-muted hover:text-fx-orange underline inline-flex items-center gap-1 cursor-pointer">
           <Upload className="w-3.5 h-3.5" />

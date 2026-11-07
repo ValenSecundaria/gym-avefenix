@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { AlertCircle, ChevronLeft, ChevronRight, Loader2, MessageCircle, RefreshCw, User, UserPen, Users } from "lucide-react";
+import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 import type { MemberRowItem, MembersPage, MemberStatusFilter } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import { getMembersPage } from "@/actions/members.actions";
@@ -172,7 +173,7 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember, onQuickRe
                   className="flex-1 min-w-0 text-left flex items-center gap-3 sm:gap-4 cursor-pointer"
                 >
                   <div className="w-11 h-11 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center shrink-0">
-                    {m.photoUrl ? <img src={m.photoUrl} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-fx-muted" />}
+                    {m.photoUrl ? <MemberPhotoImg memberId={m.id} src={m.photoUrl} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-fx-muted" />}
                   </div>
                   <div className="min-w-0">
                     <div className="font-bold text-base text-fx-text">{m.fullName}</div>

@@ -79,3 +79,22 @@ Restaurar el último dump en un PostgreSQL local (el mismo instalador del paso 1
 ## Verificado
 
 Probado el 19/10/2026 contra una base de prueba local: backup → restauración en base nueva → mismos conteos (20 socios / 20 membresías / 20 pagos / 3 planes / 1 usuario), fotos restauradas, restauración con `-Clean` sin duplicar, y cancelación si no se escribe `RESTAURAR`. **No se probó todavía contra la base real de Neon.**
+
+## Capa 3 — Automatización en la nube (GitHub Actions + carpeta sincronizada)
+
+### Base de datos: backup semanal con GitHub Actions
+`.github/workflows/backup-db.yml` corre todos los lunes a las 03:00 (hora argentina) y también a mano (*Actions → Backup semanal de la base → Run workflow*). Hace `pg_dump` de Neon, lo comprime (`.sql.gz`) y lo sube a un bucket **privado** de Supabase Storage. Guarda los últimos 12.
+
+Configuración (una sola vez):
+1. En Supabase: *Storage → New bucket* → `db-backups`, **sin** marcar "Public bucket".
+2. En GitHub: *Settings → Secrets and variables → Actions → New repository secret*: `DATABASE_URL`, `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`.
+3. Correrlo una vez a mano y revisar que aparezca el archivo en el bucket.
+
+Restaurar un `.sql.gz`: descargarlo desde Supabase y `gunzip -c archivo.sql.gz | psql "postgresql://...nueva..."`.
+
+### Fotos: zip a OneDrive / Google Drive
+`scripts\backup\backup-photos.ps1` comprime la carpeta de fotos y la deja en una carpeta sincronizada (por defecto `OneDrive\AveFenix-Backups\fotos`, o `G:\Mi unidad\AveFenix-Backups\fotos` si hay Google Drive para escritorio). Guarda los últimos 14.
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\backup\backup-photos.ps1 -Register -At 03:30
+```
+Si las fotos ya se guardan en Supabase Storage (ver `docs/SERVIDOR-LOCAL-Y-FOTOS.md`), este zip es una segunda copia.

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { MessageCircle, CalendarClock, UserCheck, User } from "lucide-react";
+import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 import type { AbsentMemberItem } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
@@ -58,7 +59,7 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-fx-amber/15 border border-fx-amber/40 overflow-hidden flex items-center justify-center text-fx-amber shrink-0">
                   {member.photoUrl ? (
-                    <img src={member.photoUrl} alt={member.fullName} className="w-full h-full object-cover" />
+                    <MemberPhotoImg memberId={member.id} src={member.photoUrl} alt={member.fullName} className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-5 h-5" />
                   )}

@@ -1,4 +1,5 @@
-export type ShiftActionType = "CHECK_IN" | "CHECK_OUT";
+// ALREADY_ACTIVE: el profesor ya tenía un turno abierto y no se tocó nada (sin entradas duplicadas).
+export type ShiftActionType = "CHECK_IN" | "CHECK_OUT" | "ALREADY_ACTIVE";
 
 export interface TeacherShiftItem {
   id: string;

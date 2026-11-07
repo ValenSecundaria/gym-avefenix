@@ -12,6 +12,10 @@ import { TeacherShiftToggleCard } from "./TeacherShiftToggleCard";
 import { StaffClientsTable } from "./StaffClientsTable";
 import { ProfessorHeader } from "./ProfessorHeader";
 import { useProfessorDashboard } from "./use-professor-dashboard";
+import { useCheckInKeyForwarding } from "@/hooks/use-checkin-key-forwarding";
+import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
+import { usePhotoSync } from "@/lib/offline/use-local-photos";
+import { PendingPhotosNotice } from "@/components/admin/PendingPhotosNotice";
 
 interface Props {
   userId?: string;
@@ -32,6 +36,10 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
   const d = useProfessorDashboard(initialStats, initialPlans, authStatus, user);
   const canCreate = d.plans.length > 0;
   const effectiveUserId = userId || user?.id || "";
+  // Pantalla de ingreso en el otro monitor: el numpad escribe allá (igual que en el panel de administración).
+  const checkInScreenOnline = useCheckInKeyForwarding();
+  // Sube en segundo plano las fotos de socios guardadas en este dispositivo.
+  usePhotoSync();
 
   return (
     <div data-theme={theme} className="min-h-screen bg-fx-base text-fx-text">
@@ -47,9 +55,13 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
             setIsNewMemberOpen(true);
           }}
           canCreateMember={canCreate}
+          checkInScreenOnline={checkInScreenOnline}
+          onOpenCheckInScreen={() => void dispatchScreens()}
         />
 
         {effectiveUserId && <TeacherShiftToggleCard userId={effectiveUserId} />}
+
+        <PendingPhotosNotice />
 
         {!canCreate && (
           <div role="status" className="flex items-center gap-2.5 p-4 rounded-2xl bg-fx-amber/15 border border-fx-amber/50 text-sm font-bold text-fx-amber">
