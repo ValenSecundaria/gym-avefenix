@@ -477,7 +477,7 @@ export async function updateMember(input: UpdateMemberInput): Promise<ActionResp
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message || "Datos del socio inválidos" };
     }
-    const { id, fullName, dni, phone, notes, photoBase64 } = parsed.data;
+    const { id, fullName, dni, phone, notes, photoBase64, planId } = parsed.data;
 
     if (!resolveSafePhotoPath(dni)) return { success: false, error: "Identificador inválido" };
 
@@ -494,6 +494,19 @@ export async function updateMember(input: UpdateMemberInput): Promise<ActionResp
 
     let updated;
     try {
+      if (planId) {
+        const latestMembership = await prisma.membership.findFirst({
+          where: { memberId: id },
+          orderBy: { validUntil: "desc" },
+        });
+        if (latestMembership && latestMembership.planId !== planId) {
+          await prisma.membership.update({
+            where: { id: latestMembership.id },
+            data: { planId },
+          });
+        }
+      }
+
       updated = await prisma.member.update({
         where: { id },
         data: {

@@ -26,6 +26,7 @@ import { MembersSection } from "./MembersSection";
 import { MemberEditModal } from "./MemberEditModal";
 import { PlansAdminSection } from "./PlansAdminSection";
 import { GymPhoneSettings } from "./gym-phone-settings";
+import { SystemTutorialsCard } from "./SystemTutorialsCard";
 import { WhatsAppModeSettings } from "./WhatsAppModeSettings";
 import { ProfessorAccountsSettings } from "./ProfessorAccountsSettings";
 import { TeacherAttendanceSection } from "./teacher-attendance/teacher-attendance-section";
@@ -480,7 +481,10 @@ export function AdminDashboardClient({
             )}
             {activeTab === "SETTINGS" && (
               <div className="flex flex-col gap-10">
-                <GymPhoneSettings />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                  <GymPhoneSettings />
+                  <SystemTutorialsCard />
+                </div>
                 <WhatsAppModeSettings />
                 <ProfessorAccountsSettings />
               </div>
@@ -498,6 +502,7 @@ export function AdminDashboardClient({
       />
       <MemberEditModal
         memberId={editingMemberId}
+        plans={plans}
         onClose={() => setEditingMemberId(null)}
         onChanged={(msg) => {
           showToast(msg);

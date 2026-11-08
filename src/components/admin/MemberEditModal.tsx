@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { AlertCircle, Camera, Check, Loader2, MessageCircle, RefreshCw, RotateCcw, Trash2, User, UserMinus, UserPen, X } from "lucide-react";
-import type { MemberDetail } from "@/types";
+import type { MemberDetail, PlanOption } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import {
   deleteMemberPermanently,
@@ -40,6 +40,7 @@ function PhotoSyncStatusLine({ memberId, serverSrc }: { memberId: string; server
 }
 
 interface MemberEditModalProps {
+  plans?: PlanOption[];
   memberId: string | null;
   onClose: () => void;
   /** Se llama después de guardar, dar de baja, reactivar o eliminar, con el mensaje para el aviso. */
@@ -72,24 +73,24 @@ async function forgetCachedMember(dni: string) {
 }
 
 // Mantiene la caché al día tras editar nombre, foto o DNI (la clave de la caché es el DNI).
-async function refreshCachedMember(oldDni: string, data: { dni: string; fullName: string; photoFilename: string | null }) {
+async function refreshCachedMember(oldDni: string, data: { dni: string; fullName: string; photoFilename: string | null; planName?: string }) {
   try {
     const cached = await getMemberFromCache(oldDni);
     if (!cached) return;
     if (oldDni !== data.dni) await removeMembersFromCache([oldDni]);
-    await saveMembersToCache([{ ...cached, ...data }]);
+    await saveMembersToCache([{ ...cached, ...data, planName: data.planName ?? cached.planName }]);
   } catch {
     // ver forgetCachedMember
   }
 }
 
-export function MemberEditModal({ memberId, onClose, onChanged, onQuickRenew }: MemberEditModalProps) {
+export function MemberEditModal({ memberId, plans = [], onClose, onChanged, onQuickRenew }: MemberEditModalProps) {
   if (!memberId) return null;
   // key: al abrir otro socio el formulario arranca de cero.
-  return <MemberEditDialog key={memberId} memberId={memberId} onClose={onClose} onChanged={onChanged} onQuickRenew={onQuickRenew} />;
+  return <MemberEditDialog key={memberId} memberId={memberId} plans={plans} onClose={onClose} onChanged={onChanged} onQuickRenew={onQuickRenew} />;
 }
 
-function MemberEditDialog({ memberId, onClose, onChanged, onQuickRenew }: { memberId: string } & Omit<MemberEditModalProps, "memberId">) {
+function MemberEditDialog({ memberId, plans = [], onClose, onChanged, onQuickRenew }: { memberId: string } & Omit<MemberEditModalProps, "memberId">) {
   const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
   const [member, setMember] = useState<MemberDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -97,6 +98,7 @@ function MemberEditDialog({ memberId, onClose, onChanged, onQuickRenew }: { memb
   const [dni, setDni] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [selectedPlanId, setSelectedPlanId] = useState("");
   const [changingPhoto, setChangingPhoto] = useState(false);
   const [newPhoto, setNewPhoto] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -115,6 +117,7 @@ function MemberEditDialog({ memberId, onClose, onChanged, onQuickRenew }: { memb
         setDni(res.data.dni);
         setPhone(sanitizePhoneInput(res.data.phone ?? ""));
         setNotes(res.data.notes ?? "");
+        setSelectedPlanId(res.data.planId ?? "");
       })
       .catch(() => !cancelled && setLoadError("Sin conexión: no se pudo cargar el socio."));
     return () => {
@@ -171,7 +174,8 @@ function MemberEditDialog({ memberId, onClose, onChanged, onQuickRenew }: { memb
         fullName.trim() !== member.fullName ||
         cleanDni !== member.dni ||
         phone.trim() !== sanitizePhoneInput(member.phone ?? "") ||
-        notes.trim() !== (member.notes ?? "");
+        notes.trim() !== (member.notes ?? "") ||
+        selectedPlanId !== (member.planId ?? "");
 
       if (photoStoredLocally && !dataChanged) {
         return { success: true, message: `Foto de ${member.fullName} guardada. Se sube sola en segundo plano.` };
@@ -185,6 +189,7 @@ function MemberEditDialog({ memberId, onClose, onChanged, onQuickRenew }: { memb
           dni: cleanDni,
           phone: phone.trim(),
           notes: notes.trim(),
+          planId: selectedPlanId || undefined,
           photoBase64: photoStoredLocally ? null : newPhoto,
         });
       } catch (error) {
@@ -340,6 +345,22 @@ function MemberEditDialog({ memberId, onClose, onChanged, onQuickRenew }: { memb
               <div>
                 <label htmlFor="edit-notes" className={LABEL_CLS}>Observaciones</label>
                 <textarea id="edit-notes" rows={3} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej: Abonó en dos partes, presenta apto médico..." className={`${INPUT_CLS} py-3 resize-y`} />
+              </div>
+              <div>
+                <label htmlFor="edit-plan" className={LABEL_CLS}>Plan Asignado</label>
+                <select
+                  id="edit-plan"
+                  value={selectedPlanId}
+                  onChange={(e) => setSelectedPlanId(e.target.value)}
+                  className={`${INPUT_CLS} cursor-pointer`}
+                >
+                  <option value="">Sin plan asignado</option>
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} {p.disciplineName ? `(${p.disciplineName})` : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-fx-border">
