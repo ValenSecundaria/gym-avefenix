@@ -48,7 +48,7 @@ import { getTodayCheckIns } from "@/actions/checkin.actions";
 import { useAdminTheme, type AdminTheme } from "@/lib/use-admin-theme";
 import { gymBroadcast } from "@/lib/screens/broadcast-channel";
 import { useCheckInKeyForwarding } from "@/hooks/use-checkin-key-forwarding";
-import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
+import { dispatchScreens, closeSecondaryScreen, closeCurrentScreen } from "@/lib/screens/screen-dispatcher";
 import { useAuthSession } from "@/context/auth-session-context";
 import { matchesSearch } from "@/lib/text";
 import { useBatchSync } from "@/hooks/use-batch-sync";
@@ -204,19 +204,27 @@ export function AdminDashboardClient({
   }, [reloadLocalCheckIns]);
 
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      gymBroadcast.postMessage({ type: "CLOSE_ALL_SCREENS" });
+      closeSecondaryScreen();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     const kickoffId = window.setTimeout(() => void reloadLocalCheckIns(), 0);
     const interval = window.setInterval(refreshAllData, 15000);
     const unsubscribe = gymBroadcast.subscribe((msg) => {
       if (msg.type === "CHECKIN_LOGGED" && msg.checkIn) {
-        // El ingreso ya quedó en la cola local (IndexedDB compartida con la pantalla de Check-in).
+        // El ingreso ya qued� en la cola local (IndexedDB compartida con la pantalla de Check-in).
         void reloadLocalCheckIns();
       } else if (msg.type === "REFRESH_DASHBOARD") {
         refreshAllData();
-      } else if (msg.type === "SESSION_LOGOUT") {
-        window.location.replace("/login");
+      } else if (msg.type === "CLOSE_ALL_SCREENS" || msg.type === "SESSION_LOGOUT") {
+        closeSecondaryScreen();
+        closeCurrentScreen();
       }
     });
     return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
       window.clearTimeout(kickoffId);
       window.clearInterval(interval);
       unsubscribe();
@@ -425,6 +433,7 @@ export function AdminDashboardClient({
               <LiveFeedTable
                 items={checkIns.filter((c) => match(c.fullName, c.dni))}
                 onEditMember={setEditingMemberId}
+                onSuccessSync={showToast}
               />
             )}
             {activeTab === "DEBTORS" && (

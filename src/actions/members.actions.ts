@@ -110,7 +110,6 @@ async function createMemberRecord(
           fullName,
           phone: phone || null,
           photoFilename,
-          photoUpdatedAt: photoFilename ? new Date() : null,
           notes: notes || null,
           isActive: true,
         },
@@ -502,7 +501,7 @@ export async function updateMember(input: UpdateMemberInput): Promise<ActionResp
           dni,
           phone: phone || null,
           notes: notes || null,
-          ...(newPhotoFilename ? { photoFilename: newPhotoFilename, photoUpdatedAt: new Date() } : {}),
+          ...(newPhotoFilename ? { photoFilename: newPhotoFilename } : {}),
         },
         include: memberWithLatestMembership,
       });

@@ -55,7 +55,7 @@ export async function uploadMemberPhoto(formData: FormData): Promise<ActionRespo
 
     const member = await prisma.member.findUnique({
       where: { id: memberId },
-      select: { id: true, dni: true, photoFilename: true, photoUpdatedAt: true },
+      select: { id: true, dni: true, photoFilename: true, },
     });
     if (!member) return { success: true, data: { status: "member_missing", message: "El socio ya no existe" } };
 
@@ -74,7 +74,7 @@ export async function uploadMemberPhoto(formData: FormData): Promise<ActionRespo
     const stored = await storeMemberPhoto(photoFilename, webp);
 
     // Solo reemplaza si esta foto es más nueva que la actual (una foto vieja que se subió tarde no pisa).
-    const currentMs = member.photoUpdatedAt?.getTime() ?? timestampFromFilename(member.photoFilename);
+    const currentMs = timestampFromFilename(member.photoFilename);
     let status: MemberPhotoUploadStatus = "superseded";
     if (member.photoFilename === photoFilename) {
       status = "applied";
@@ -82,10 +82,9 @@ export async function uploadMemberPhoto(formData: FormData): Promise<ActionRespo
       const capturedDate = new Date(capturedAt);
       const updated = await prisma.member.updateMany({
         where: {
-          id: member.id,
-          OR: [{ photoUpdatedAt: null }, { photoUpdatedAt: { lt: capturedDate } }],
+          id: member.id
         },
-        data: { photoFilename, photoUpdatedAt: capturedDate },
+        data: { photoFilename },
       });
       status = updated.count > 0 ? "applied" : "superseded";
     }

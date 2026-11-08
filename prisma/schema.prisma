@@ -90,8 +90,7 @@ model Member {
   photoFilename  String?
   // Momento en que se sacó la foto actual (en el dispositivo). Una foto sacada sin internet que se sube
   // tarde no reemplaza a una más nueva cargada mientras tanto.
-  photoUpdatedAt DateTime?
-  isActive       Boolean       @default(true)
+isActive       Boolean       @default(true)
   notes          String?
   lastNotifiedAt DateTime?
 

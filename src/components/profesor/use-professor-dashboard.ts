@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { DashboardStats, PaymentMethodType, PlanOption, StaffMemberItem, StaffMembersPage, StaffMemberStatus } from "@/types";
 import { ADMIN_HOME, roleOf } from "@/lib/auth/auth-constants";
+import { gymBroadcast } from "@/lib/screens/broadcast-channel";
+import { closeSecondaryScreen, closeCurrentScreen } from "@/lib/screens/screen-dispatcher";
 import { getStaffOverview } from "@/actions/dashboard.actions";
 import { getStaffMembersPage } from "@/actions/staff.actions";
 import { createMember } from "@/actions/members.actions";
@@ -25,9 +27,33 @@ export function useProfessorDashboard(initialStats: DashboardStats, initialPlans
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (authStatus === "UNAUTHENTICATED") window.location.replace("/login");
-    else if (authStatus === "AUTHENTICATED" && roleOf(user) === "ADMIN") window.location.replace(ADMIN_HOME);
+    if (authStatus === "UNAUTHENTICATED") {
+      closeSecondaryScreen();
+      window.location.replace("/login");
+    } else if (authStatus === "AUTHENTICATED" && roleOf(user) === "ADMIN") {
+      window.location.replace(ADMIN_HOME);
+    }
   }, [authStatus, user]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      gymBroadcast.postMessage({ type: "CLOSE_ALL_SCREENS" });
+      closeSecondaryScreen();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    const unsubscribe = gymBroadcast.subscribe((msg) => {
+      if (msg.type === "CLOSE_ALL_SCREENS" || msg.type === "SESSION_LOGOUT") {
+        closeSecondaryScreen();
+        closeCurrentScreen();
+      }
+    });
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -70,7 +96,6 @@ export function useProfessorDashboard(initialStats: DashboardStats, initialPlans
   }, []);
 
   const handleCreateMember = async (v: NewMemberFormValues) => {
-    // La foto se guarda primero en el dispositivo y se sube aparte (ver lib/offline/photo-sync).
     const stash = await stashNewMemberPhoto(v.photoBase64, v.dni);
     try {
       const res = await createMember({ ...v, photoBase64: stash.inlinePhoto });
@@ -102,6 +127,7 @@ export function useProfessorDashboard(initialStats: DashboardStats, initialPlans
     plans,
     isRefreshing,
     toast,
+    setToast,
     searchInput,
     setSearchInput,
     statusFilter,

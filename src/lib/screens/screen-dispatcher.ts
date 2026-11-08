@@ -140,6 +140,49 @@ function isSingleScreen(supported: boolean, screens: ScreenDetailedLike[]): bool
  * Con skipIfSingleScreen (apertura automática al ingresar) y un solo monitor detectado, no abre nada:
  * la ventana de ingreso taparía el panel. Se puede abrir igual desde el botón "Abrir pantalla de ingreso".
  */
+
+let registeredSecondaryWindow: WindowProxy | null = null;
+
+export function registerSecondaryWindow(win: WindowProxy | null): void {
+  registeredSecondaryWindow = win;
+}
+
+export function getSecondaryWindow(): WindowProxy | null {
+  if (registeredSecondaryWindow && !registeredSecondaryWindow.closed) {
+    return registeredSecondaryWindow;
+  }
+  return null;
+}
+
+export function closeSecondaryScreen(): void {
+  try {
+    if (registeredSecondaryWindow && !registeredSecondaryWindow.closed) {
+      registeredSecondaryWindow.close();
+    }
+  } catch (err) {
+    console.warn("[ScreenDispatcher] No se pudo cerrar la ventana secundaria por referencia directa:", err);
+  }
+  registeredSecondaryWindow = null;
+}
+
+export function closeCurrentScreen(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.close();
+  } catch {
+    // ignore
+  }
+  // Si window.close() fue bloqueado por el navegador (ej: no abierta por script),
+  // como fallback visual seguro redirigimos a login o cerramos interacci�n.
+  if (!window.closed) {
+    setTimeout(() => {
+      if (!window.closed) {
+        window.location.replace("/login");
+      }
+    }, 150);
+  }
+}
+
 export async function dispatchScreens(
   options: { skipIfSingleScreen?: boolean } = {}
 ): Promise<ScreenDispatchResult> {
@@ -169,6 +212,9 @@ export async function dispatchScreens(
     }
 
     const secondaryWindow = window.open("/check-in", "CheckInWindow", windowFeatures);
+    if (secondaryWindow) {
+      registerSecondaryWindow(secondaryWindow);
+    }
 
     if (!secondaryWindow || secondaryWindow.closed || typeof secondaryWindow.closed === "undefined") {
       return {
