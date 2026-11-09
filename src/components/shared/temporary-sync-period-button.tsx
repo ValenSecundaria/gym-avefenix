@@ -5,6 +5,8 @@ import { Clock, Loader2 } from "lucide-react";
 import { syncInitialMemberPeriodAction } from "@/actions/transition-sync.actions";
 import { saveMembersToCache } from "@/lib/db/indexed-db";
 import { gymBroadcast } from "@/lib/screens/broadcast-channel";
+import { syncPeriodValidUntil } from "@/lib/sync-period-date";
+import { formatDateAR } from "@/lib/utils";
 
 // TODO [TEMPORARY-TRANSITION]: Eliminar este botón al finalizar el primer mes
 interface Props {
@@ -17,18 +19,26 @@ interface Props {
 export function TemporarySyncPeriodButton({ memberId, fullName, onSuccess, className = "" }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Fecha que va a quedar (se calcula al abrir la confirmación, no durante el render).
+  const [previewDate, setPreviewDate] = useState("");
+
+  const open = () => {
+    setPreviewDate(formatDateAR(syncPeriodValidUntil(new Date()).toISOString()));
+    setIsOpen(true);
+  };
 
   const handleConfirm = async () => {
+    if (loading) return;
     setLoading(true);
     try {
-      const res = await syncInitialMemberPeriodAction({ memberId, daysToAdd: 30 });
+      const res = await syncInitialMemberPeriodAction({ memberId });
       if (res.success && res.data) {
         if (res.data.cached) {
           await saveMembersToCache([res.data.cached]).catch(() => {});
           gymBroadcast.postMessage({ type: "MEMBER_UPDATED", member: res.data.cached });
         }
         gymBroadcast.postMessage({ type: "REFRESH_DASHBOARD" });
-        onSuccess?.(`✓ Se extendió 30 días la cuota de ${fullName} sin cobro en caja.`);
+        onSuccess?.(`✓ ${fullName} regularizado: vence el ${formatDateAR(res.data.validUntil)} (30 días desde hoy, sin cobro).`);
         setIsOpen(false);
       } else {
         alert(res.error || "No se pudo extender el período.");
@@ -44,12 +54,12 @@ export function TemporarySyncPeriodButton({ memberId, fullName, onSuccess, class
     <>
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
-        title="Regularizar cuota sin cobro (+30 días)"
+        onClick={open}
+        title="Regularizar cuota sin cobro (vence en 30 días desde hoy)"
         className={`min-h-[44px] px-3 rounded-xl bg-fx-surface hover:bg-fx-hover border border-fx-border text-xs sm:text-sm font-bold text-fx-text inline-flex items-center gap-1.5 transition-colors cursor-pointer ${className}`}
       >
         <Clock className="w-4 h-4 text-fx-orange shrink-0" />
-        <span className="truncate">⏱️ Regularizar (+30 Días)</span>
+        <span className="truncate">⏱️ Regularizar (30 días desde hoy)</span>
       </button>
 
       {isOpen && (
@@ -61,13 +71,15 @@ export function TemporarySyncPeriodButton({ memberId, fullName, onSuccess, class
           <div className="bg-fx-surface border border-fx-border w-full max-w-md rounded-2xl p-6 shadow-2xl flex flex-col gap-4 text-left">
             <div className="flex items-center gap-2 text-fx-orange font-bold text-base">
               <Clock className="w-5 h-5 shrink-0" />
-              <span>Extender Período sin Cobro</span>
+              <span>Regularizar cuota sin cobro</span>
             </div>
             <p className="text-sm text-fx-text leading-relaxed">
-              ¿Confirmar extensión de 30 días a <strong className="text-white">{fullName}</strong> sin cobro en caja?
+              El vencimiento de <strong className="text-white">{fullName}</strong> va a quedar el{" "}
+              <strong className="text-fx-orange">{previewDate}</strong> (30 días desde hoy).
             </p>
             <p className="text-xs text-fx-muted">
-              Se extenderá la fecha de vencimiento y el socio quedará <strong>HABILITADO</strong> en el molinete de forma inmediata.
+              No se suman los días que le quedaban: la cuota se cuenta solo desde hoy. No se registra ningún cobro en caja y el
+              socio queda <strong>HABILITADO</strong> en el molinete.
             </p>
             <div className="flex items-center justify-end gap-2.5 pt-2">
               <button
@@ -85,7 +97,7 @@ export function TemporarySyncPeriodButton({ memberId, fullName, onSuccess, class
                 className="min-h-[44px] px-4 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-[0_4px_16px_rgba(249,87,22,0.35)] cursor-pointer disabled:opacity-50"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                <span>Confirmar (+30 días)</span>
+                <span>Confirmar (vence {previewDate})</span>
               </button>
             </div>
           </div>
