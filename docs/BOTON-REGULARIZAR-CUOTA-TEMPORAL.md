@@ -15,6 +15,8 @@
      - En la pestaña **"Clientes"** (`StaffClientsTable`), al lado del botón *"Registrar pago"*.
    - **Panel de Administración (`/admin`):**
      - En la tabla de **"Ingresos de Hoy"** (`LiveFeedTable`), tanto en versión escritorio como móvil.
+     - En la sección **"Clientes"** (`MembersSection`), reemplazando al antiguo botón "Renovar +30" (que cobraba el plan).
+     - En la ficha **"Ver / editar"** del socio (`MemberEditModal`), reemplazando al antiguo "Renovar +30 días".
 2. **Acción al Presionarlo:**
    - Se abre un modal de confirmación táctil:
      > *"¿Confirmar extensión de 30 días a [Nombre Socio] sin cobro en caja?"*
@@ -39,6 +41,12 @@
 | **Modificado** | [`src/components/profesor/StaffClientsTable.tsx`](file:///c:/Users/gemet/OneDrive/Documentos/Programación/avefenix-gym/gym-avefenix/src/components/profesor/StaffClientsTable.tsx) | 115 | Integra el botón de regularización en el listado de clientes del profesor. |
 | **Modificado** | [`src/components/admin/LiveFeedTable.tsx`](file:///c:/Users/gemet/OneDrive/Documentos/Programación/avefenix-gym/gym-avefenix/src/components/admin/LiveFeedTable.tsx) | 168 | Integra el botón de regularización en la tabla de ingresos del panel de administración. |
 | **Modificado** | [`src/actions/checkin.actions.ts`](file:///c:/Users/gemet/OneDrive/Documentos/Programación/avefenix-gym/gym-avefenix/src/actions/checkin.actions.ts) | 43 | Permite que las cuentas con rol `PROFESOR` consulten `getTodayCheckIns()` (antes solo `ADMIN`). |
+| **Modificado** | [`src/components/admin/MembersSection.tsx`](file:///c:/Users/gemet/OneDrive/Documentos/Programación/avefenix-gym/gym-avefenix/src/components/admin/MembersSection.tsx) | — | El botón "Renovar +30" (con cobro) se reemplazó por `TemporarySyncPeriodButton`. Prop nueva: `onSynced`. |
+| **Modificado** | [`src/components/admin/MemberEditModal.tsx`](file:///c:/Users/gemet/OneDrive/Documentos/Programación/avefenix-gym/gym-avefenix/src/components/admin/MemberEditModal.tsx) | — | El botón "Renovar +30 días" de la ficha se reemplazó por `TemporarySyncPeriodButton` (al confirmar cierra la ficha y refresca). |
+| **Modificado** | [`src/components/admin/AdminDashboardClient.tsx`](file:///c:/Users/gemet/OneDrive/Documentos/Programación/avefenix-gym/gym-avefenix/src/components/admin/AdminDashboardClient.tsx) | — | Se quitó el `QuickRenewModal` (renovación con cobro) y se agregó `handleMemberSynced` (toast + recarga). |
+
+> [!NOTE]
+> `QuickRenewModal.tsx` y la acción `quickRenewMembership` siguen en el código pero **ya no se usan** en ninguna pantalla. Los cobros de cuotas se hacen únicamente desde **Deudores → Cobrar** (`PaymentModal`).
 
 ---
 
@@ -74,6 +82,8 @@ Si solo quieres ocultar el botón para que nadie lo pueda usar:
    - En [`src/components/admin/LiveFeedTable.tsx`](file:///c:/Users/gemet/OneDrive/Documentos/Programación/avefenix-gym/gym-avefenix/src/components/admin/LiveFeedTable.tsx): borrar el `<TemporarySyncPeriodButton ... />` y su `import`.
    - En [`src/components/profesor/StaffClientsTable.tsx`](file:///c:/Users/gemet/OneDrive/Documentos/Programación/avefenix-gym/gym-avefenix/src/components/profesor/StaffClientsTable.tsx): borrar el `<TemporarySyncPeriodButton ... />` y su `import`.
    - En [`src/components/profesor/TeacherLiveFeedTable.tsx`](file:///c:/Users/gemet/OneDrive/Documentos/Programación/avefenix-gym/gym-avefenix/src/components/profesor/TeacherLiveFeedTable.tsx): quitar el botón de la fila de check-in (o conservar la tabla de ingresos para los profesores sin el botón).
+   - En `src/components/admin/MembersSection.tsx`: borrar el botón, su `import` y la prop `onSynced` (y quitar `onSynced={handleMemberSynced}` + `handleMemberSynced` en `AdminDashboardClient.tsx`).
+   - En `src/components/admin/MemberEditModal.tsx`: borrar el botón del encabezado de la ficha y su `import`.
 2. **Borrar los archivos temporales:**
    - Eliminar `src/components/shared/temporary-sync-period-button.tsx`.
    - Eliminar `src/actions/transition-sync.actions.ts`.
