@@ -21,7 +21,8 @@
    - Se abre un modal de confirmación táctil:
      > *"¿Confirmar extensión de 30 días a [Nombre Socio] sin cobro en caja?"*
 3. **Efectos al Confirmar:**
-   - **Fecha nueva:** `Math.max(validUntil, hoy) + 30 días`. Si ya estaba vencida, arranca desde hoy + 30 días. Si aún vencía dentro de 3 días, suma 30 días a ese vencimiento.
+   - **Fecha nueva:** SIEMPRE `hoy + 30 días`. **No** se suman los días que le quedaban al socio (si vencía en 10 días, igual queda en hoy + 30). Apretarlo varias veces el mismo día deja la misma fecha: no regala meses.
+   - **Confirmación:** el modal muestra la fecha exacta en la que va a quedar el vencimiento antes de confirmar.
    - **Estado:** La membresía pasa a `ACTIVA` y el socio queda `isActive = true`.
    - **Caja intacta:** **Cero impacto en caja**. No se crea ningún registro en la tabla `Payment`.
    - **Apertura inmediata del molinete:** Emite eventos en tiempo real (`BroadcastChannel('gym_channel')`) y actualiza la base local IndexedDB (`saveMembersToCache`). Si el socio está frente al molinete o monitor público, pasa inmediatamente a estado **HABILITADO**.
