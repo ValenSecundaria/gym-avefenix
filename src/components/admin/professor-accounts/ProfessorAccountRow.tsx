@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Check, KeyRound, Loader2, Trash2, X, CreditCard, Edit3 } from "lucide-react";
 import type { ProfessorAccountItem } from "@/types";
 import { resetProfessorPassword, deleteProfessorAccount, updateProfessorDni } from "@/actions/accounts.actions";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 const SMALL_BTN = "min-h-[36px] px-3 rounded-lg border border-fx-border bg-fx-surface hover:bg-fx-hover text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-40";
 
@@ -117,14 +118,16 @@ export function ProfessorAccountRow({ account, onChanged, onError }: Props) {
 
       {passwordDraft !== null && (
         <form onSubmit={handlePassword} className="flex flex-wrap items-center gap-2 pt-1">
-          <input
-            type="password"
-            autoFocus
-            value={passwordDraft}
-            onChange={(e) => setPasswordDraft(e.target.value)}
-            placeholder="Nueva contraseña (mín 6)"
-            className="flex-1 min-w-[160px] min-h-[36px] px-3 rounded-lg bg-fx-base border border-fx-border text-xs text-fx-text"
-          />
+          <div className="flex-1 min-w-[160px] flex">
+            <PasswordInput
+              autoFocus
+              autoComplete="new-password"
+              value={passwordDraft}
+              onChange={(e) => setPasswordDraft(e.target.value)}
+              placeholder="Nueva contraseña (mín 6)"
+              className="w-full min-h-[36px] px-3 rounded-lg bg-fx-base border border-fx-border text-xs text-fx-text"
+            />
+          </div>
           <button type="button" onClick={() => setPasswordDraft(null)} className={SMALL_BTN}>Cancelar</button>
           <button type="submit" disabled={busy || passwordDraft.length < 6} className="min-h-[36px] px-3 rounded-lg bg-fx-orange text-white text-xs font-bold">
             Guardar

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { User, Check, AlertCircle, Clock } from "lucide-react";
 import type { CheckInVerificationResult } from "@/types";
 import { StatusBanner } from "./StatusBanner";
+import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 
 interface MemberResultCardProps {
   result: CheckInVerificationResult;
@@ -47,7 +48,8 @@ export function MemberResultCard({ result }: MemberResultCardProps) {
           className={`w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden border-4 border-[#2C2D35] bg-[#23232A] flex items-center justify-center shadow-2xl ${ringClass}`}
         >
           {showPhoto && result.photoUrl ? (
-            <img
+            <MemberPhotoImg
+              memberId={result.memberId}
               src={result.photoUrl}
               alt={`Foto de ${result.fullName}`}
               className="w-full h-full object-cover object-top"

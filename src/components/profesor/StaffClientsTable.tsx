@@ -2,6 +2,7 @@
 
 import React from "react";
 import { AlertCircle, ChevronLeft, ChevronRight, CreditCard, Loader2 } from "lucide-react";
+import { TemporarySyncPeriodButton } from "@/components/shared/temporary-sync-period-button";
 import type { StaffMemberItem, StaffMembersPage, StaffMemberStatus } from "@/types";
 
 type StatusFilter = StaffMemberStatus | "ALL";
@@ -30,6 +31,7 @@ interface Props {
   listError: string | null;
   onGoToPage: (page: number) => void;
   onPayMember: (m: StaffMemberItem) => void;
+  onSuccessSync?: (msg: string) => void;
   canCreateMember: boolean;
 }
 
@@ -42,6 +44,7 @@ export function StaffClientsTable({
   onGoToPage,
   onPayMember,
   canCreateMember,
+  onSuccessSync,
 }: Props) {
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
@@ -89,6 +92,7 @@ export function StaffClientsTable({
                   </div>
                   <div className="flex items-center gap-2.5">
                     <span className={`px-2.5 py-1 rounded-md border text-xs font-bold ${badge.cls}`}>{badge.text}</span>
+                    <TemporarySyncPeriodButton memberId={m.id} fullName={m.fullName} onSuccess={onSuccessSync} />
                     <button
                       type="button"
                       onClick={() => onPayMember(m)}

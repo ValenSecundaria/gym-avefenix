@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { MessageCircle, CreditCard, CheckCircle2, Wallet, User } from "lucide-react";
+import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 import type { DebtorMemberItem } from "@/types";
 import { formatCurrencyARS, formatDateAR } from "@/lib/utils";
 import { EditMemberButton } from "./EditMemberButton";
@@ -61,7 +62,7 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-fx-red/20 border border-fx-red/50 overflow-hidden flex items-center justify-center text-fx-red shrink-0">
                   {debtor.photoUrl ? (
-                    <img src={debtor.photoUrl} alt={debtor.fullName} className="w-full h-full object-cover" />
+                    <MemberPhotoImg memberId={debtor.id} src={debtor.photoUrl} alt={debtor.fullName} className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-5 h-5" />
                   )}

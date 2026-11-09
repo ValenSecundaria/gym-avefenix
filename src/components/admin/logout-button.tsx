@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Loader2, LogOut } from "lucide-react";
 import { useAuthSession } from "@/context/auth-session-context";
 import { gymBroadcast } from "@/lib/screens/broadcast-channel";
+import { closeSecondaryScreen, closeCurrentScreen } from "@/lib/screens/screen-dispatcher";
 import { getPendingCheckIns, removeSyncedCheckIns } from "@/lib/db/indexed-db";
 import { syncBatchCheckInsAction } from "@/actions/sync.actions";
 
@@ -50,7 +51,9 @@ export function LogoutButton({
 
       // 2. Notificar inmediatamente por BroadcastChannel para sincronizar pantallas
       gymBroadcast.postMessage({ type: "RESET_CHECKIN" });
+      gymBroadcast.postMessage({ type: "CLOSE_ALL_SCREENS" });
       gymBroadcast.postMessage({ type: "SESSION_LOGOUT" });
+      closeSecondaryScreen();
 
       // 3. Destruir sesión en el contexto, Server Action de cookies e IndexedDB/storage
       await logout();
@@ -68,7 +71,7 @@ export function LogoutButton({
     } finally {
       // 5. Redirección segura reemplazando el historial para impedir volver con botón Atrás
       if (typeof window !== "undefined") {
-        window.location.replace("/login");
+        closeCurrentScreen();
       }
     }
   };

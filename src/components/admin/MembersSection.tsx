@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AlertCircle, ChevronLeft, ChevronRight, Loader2, MessageCircle, User, UserPen, Users } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Loader2, MessageCircle, RefreshCw, User, UserPen, Users } from "lucide-react";
+import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 import type { MemberRowItem, MembersPage, MemberStatusFilter } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import { getMembersPage } from "@/actions/members.actions";
@@ -12,6 +13,8 @@ interface MembersSectionProps {
   /** Cambia cada vez que se edita un socio, para volver a pedir la página. */
   reloadKey: number;
   onEditMember: (memberId: string) => void;
+  /** Renovación rápida (+30 días desde hoy) con su cobro. */
+  onQuickRenew: (member: MemberRowItem) => void;
 }
 
 const STATUS_BADGE: Record<MemberRowItem["membershipStatus"], { text: string; cls: string }> = {
@@ -60,7 +63,7 @@ function FilterButton({ active, onClick, children }: { active: boolean; onClick:
   );
 }
 
-export function MembersSection({ searchQuery, reloadKey, onEditMember }: MembersSectionProps) {
+export function MembersSection({ searchQuery, reloadKey, onEditMember, onQuickRenew }: MembersSectionProps) {
   const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
   const [showInactive, setShowInactive] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MemberStatusFilter>("ALL");
@@ -170,7 +173,7 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
                   className="flex-1 min-w-0 text-left flex items-center gap-3 sm:gap-4 cursor-pointer"
                 >
                   <div className="w-11 h-11 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center shrink-0">
-                    {m.photoUrl ? <img src={m.photoUrl} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-fx-muted" />}
+                    {m.photoUrl ? <MemberPhotoImg memberId={m.id} src={m.photoUrl} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-fx-muted" />}
                   </div>
                   <div className="min-w-0">
                     <div className="font-bold text-base text-fx-text">{m.fullName}</div>
@@ -214,6 +217,15 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
                       <span className="hidden sm:inline">WhatsApp</span>
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => onQuickRenew(m)}
+                    aria-label={`Renovar cuota de ${m.fullName} por 30 días desde hoy`}
+                    className="min-h-[40px] px-3 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white text-sm font-extrabold inline-flex items-center gap-2 cursor-pointer"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    <span>Renovar +30</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => onEditMember(m.id)}

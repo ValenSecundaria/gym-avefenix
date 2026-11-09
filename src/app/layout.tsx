@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { AuthSessionProvider } from "@/context/auth-session-context";
+import { getSiteUrl } from "@/lib/site-url";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,6 +21,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: getSiteUrl(),
+  applicationName: "Gimnasio Ave Fénix",
   title: "Gimnasio Ave Fénix | Sistema de Gestión y Acceso",
   description:
     "Plataforma integral de entrenamiento, control de acceso en tiempo real y administración de socios del Gimnasio Ave Fénix.",

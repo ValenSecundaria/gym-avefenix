@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import type { DashboardStats, PaymentMethodType, PlanOption, StaffMemberItem, StaffMembersPage, StaffMemberStatus } from "@/types";
 import { ADMIN_HOME, roleOf } from "@/lib/auth/auth-constants";
+import { gymBroadcast } from "@/lib/screens/broadcast-channel";
+import { closeSecondaryScreen, closeCurrentScreen } from "@/lib/screens/screen-dispatcher";
 import { getStaffOverview } from "@/actions/dashboard.actions";
 import { getStaffMembersPage } from "@/actions/staff.actions";
 import { createMember } from "@/actions/members.actions";
 import { registerPayment } from "@/actions/payments.actions";
 import type { NewMemberFormValues } from "@/components/admin/NewMemberModal";
+import { attachStashedPhotoToMember, discardStashedPhoto, stashNewMemberPhoto } from "@/lib/offline/new-member-photo";
 
 export function useProfessorDashboard(initialStats: DashboardStats, initialPlans: PlanOption[], authStatus: string, user: any) {
   const [stats, setStats] = useState(initialStats);
@@ -24,9 +27,33 @@ export function useProfessorDashboard(initialStats: DashboardStats, initialPlans
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (authStatus === "UNAUTHENTICATED") window.location.replace("/login");
-    else if (authStatus === "AUTHENTICATED" && roleOf(user) === "ADMIN") window.location.replace(ADMIN_HOME);
+    if (authStatus === "UNAUTHENTICATED") {
+      closeSecondaryScreen();
+      window.location.replace("/login");
+    } else if (authStatus === "AUTHENTICATED" && roleOf(user) === "ADMIN") {
+      window.location.replace(ADMIN_HOME);
+    }
   }, [authStatus, user]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      gymBroadcast.postMessage({ type: "CLOSE_ALL_SCREENS" });
+      closeSecondaryScreen();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    const unsubscribe = gymBroadcast.subscribe((msg) => {
+      if (msg.type === "CLOSE_ALL_SCREENS" || msg.type === "SESSION_LOGOUT") {
+        closeSecondaryScreen();
+        closeCurrentScreen();
+      }
+    });
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -69,14 +96,19 @@ export function useProfessorDashboard(initialStats: DashboardStats, initialPlans
   }, []);
 
   const handleCreateMember = async (v: NewMemberFormValues) => {
+    const stash = await stashNewMemberPhoto(v.photoBase64, v.dni);
     try {
-      const res = await createMember({ ...v, photoBase64: v.photoBase64 || undefined });
-      if (res.success) {
+      const res = await createMember({ ...v, photoBase64: stash.inlinePhoto });
+      if (res.success && res.data) {
+        await attachStashedPhotoToMember(stash, res.data.id, res.data.dni);
         setToast(`Socio ${v.fullName} registrado y habilitado.`);
         void refreshAll();
+      } else {
+        await discardStashedPhoto(stash);
       }
       return { success: res.success, error: res.error };
     } catch {
+      await discardStashedPhoto(stash);
       return { success: false, error: "Sin conexión: el alta no se guardó." };
     }
   };
@@ -95,6 +127,7 @@ export function useProfessorDashboard(initialStats: DashboardStats, initialPlans
     plans,
     isRefreshing,
     toast,
+    setToast,
     searchInput,
     setSearchInput,
     statusFilter,

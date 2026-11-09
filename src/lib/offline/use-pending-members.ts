@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listPendingMembers, removePendingMembers, subscribePendingMembers, type PendingMember } from "./pending-members-store";
 import { syncPendingMembersNow, type MemberSyncSummary } from "./member-sync";
+import { deletePhotosOfPendingClient } from "./photo-store";
 
 const RETRY_INTERVAL_MS = 20_000;
 
@@ -57,7 +58,11 @@ export function usePendingMembers(onSynced?: (summary: MemberSyncSummary) => voi
     };
   }, [reload, syncNow]);
 
-  const discard = useCallback((clientId: string) => removePendingMembers([clientId]), []);
+  // Descartar un alta a mano también descarta su foto (no hay socio al que asociarla).
+  const discard = useCallback(async (clientId: string) => {
+    await removePendingMembers([clientId]);
+    await deletePhotosOfPendingClient(clientId).catch(() => {});
+  }, []);
 
   return { pending, isSyncing, syncNow, discard };
 }

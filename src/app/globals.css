@@ -89,3 +89,61 @@ body {
 body:has([data-theme="light"]) {
   background-color: #F4F5F7;
 }
+
+/* -------------------------------------------------------------
+   Celulares: colores fijos, sin depender del modo oscuro del sistema.
+   - color-scheme "only dark": Chrome Android / Samsung Internet no aplican su "oscurecer
+     páginas automáticamente" (invertía naranjas y fondos) y los controles nativos (select,
+     fecha, scroll) se dibujan oscuros. El panel en modo claro pide controles claros.
+   - Autocompletado del navegador: fondo amarillo/blanco sobre los campos oscuros del login y
+     los formularios; se lo deja con los colores fijos de la marca.
+   - iOS: sin agrandado automático de texto al girar ni destello gris al tocar.
+   ------------------------------------------------------------- */
+html {
+  color-scheme: only dark;
+  background-color: #0B0B0C;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-theme="light"] {
+  color-scheme: only light;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #F4F5F7;
+  caret-color: #F4F5F7;
+  -webkit-box-shadow: 0 0 0 1000px #0B0B0C inset;
+  box-shadow: 0 0 0 1000px #0B0B0C inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+[data-theme="light"] input:-webkit-autofill,
+[data-theme="light"] input:-webkit-autofill:hover,
+[data-theme="light"] input:-webkit-autofill:focus,
+[data-theme="light"] textarea:-webkit-autofill,
+[data-theme="light"] select:-webkit-autofill {
+  -webkit-text-fill-color: #16171C;
+  caret-color: #16171C;
+  -webkit-box-shadow: 0 0 0 1000px #F4F5F7 inset;
+  box-shadow: 0 0 0 1000px #F4F5F7 inset;
+}
+
+/* Navegadores sin color-mix() (Safari < 16.2, Chrome < 111): las clases con opacidad sobre
+   colores del tema (bg-fx-orange/15, border-fx-green/40...) quedaban transparentes.
+   Se les da un color fijo aproximado para que los badges y avisos sigan viéndose. */
+@supports not (color: color-mix(in srgb, red 50%, transparent)) {
+  [class^="bg-fx-orange/"], [class*=" bg-fx-orange/"] { background-color: rgba(249, 87, 22, 0.15); }
+  [class^="bg-fx-green/"], [class*=" bg-fx-green/"] { background-color: rgba(16, 185, 129, 0.15); }
+  [class^="bg-fx-red/"], [class*=" bg-fx-red/"] { background-color: rgba(217, 38, 20, 0.15); }
+  [class^="bg-fx-amber/"], [class*=" bg-fx-amber/"] { background-color: rgba(255, 179, 0, 0.15); }
+  [class^="border-fx-orange/"], [class*=" border-fx-orange/"] { border-color: rgba(249, 87, 22, 0.5); }
+  [class^="border-fx-green/"], [class*=" border-fx-green/"] { border-color: rgba(16, 185, 129, 0.5); }
+  [class^="border-fx-red/"], [class*=" border-fx-red/"] { border-color: rgba(217, 38, 20, 0.5); }
+  [class^="border-fx-amber/"], [class*=" border-fx-amber/"] { border-color: rgba(255, 179, 0, 0.5); }
+}

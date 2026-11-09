@@ -10,6 +10,7 @@ import {
   updatePendingMembers,
   type PendingMember,
 } from "./pending-members-store";
+import { linkPhotosToMember } from "./photo-store";
 
 const MAX_ITEMS_PER_REQUEST = 25;
 // Las Server Actions aceptan 1 MB por request: se deja margen para fotos en base64.
@@ -77,6 +78,15 @@ async function runSync(): Promise<MemberSyncSummary> {
       const item = byId.get(r.clientId);
       if (!item) continue;
       if (r.status === "created" || r.status === "already_synced") {
+        // Las fotos guardadas con esta alta pasan al socio real (y se suben en segundo plano).
+        // Se hace ANTES de sacar el alta de la cola: si se corta acá, el reenvío vuelve como already_synced.
+        if (r.memberId) {
+          try {
+            await linkPhotosToMember(item.clientId, r.memberId, item.input.dni);
+          } catch {
+            // IndexedDB no disponible: no hay fotos locales que asociar.
+          }
+        }
         toRemove.push(item.clientId);
         if (r.status === "created") summary.created++;
         else summary.alreadySynced++;

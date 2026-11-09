@@ -12,6 +12,7 @@ export type GymBroadcastMessage =
   | { type: "REFRESH_DASHBOARD" }
   | { type: "RESET_CHECKIN" }
   | { type: "SESSION_LOGOUT" }
+  | { type: "CLOSE_ALL_SCREENS" }
   | { type: "REQUEST_FULLSCREEN" }
   // Teclas del teclado numérico capturadas en otra ventana y reenviadas al Check-In.
   | { type: "CHECKIN_KEY"; key: CheckInKey }

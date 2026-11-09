@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, MessageCircle, Send, Phone, User } from "lucide-react";
-import { buildWhatsAppLink } from "@/lib/utils";
+import { openWhatsApp } from "@/lib/whatsapp-preference";
 
 export interface WhatsAppMessageTarget {
   fullName: string;
@@ -45,8 +45,7 @@ function WhatsAppEditDialog({ target, onClose }: { target: WhatsAppMessageTarget
     const trimmedMessage = message.trim();
     if (!trimmedMessage) return;
 
-    const url = buildWhatsAppLink(target.phone, trimmedMessage);
-    window.open(url, "_blank", "noopener,noreferrer");
+    openWhatsApp(target.phone, trimmedMessage);
     onClose();
   };
 
