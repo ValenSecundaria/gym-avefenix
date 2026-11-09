@@ -7,7 +7,6 @@ import {
   MapPin,
   MessageCircle,
   Clock,
-  QrCode,
   ShieldCheck,
   Flame,
   ExternalLink,
@@ -115,19 +114,12 @@ export function Footer() {
                 href={MAPS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#0B0B0C] hover:bg-[#23232A] text-[#F4F5F7] border border-[#2C2D35] hover:border-[#FFB300]/50 text-xs sm:text-sm font-semibold transition-colors"
+                className="w-full min-h-[48px] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#0B0B0C] hover:bg-[#23232A] text-[#F4F5F7] border border-[#2C2D35] hover:border-[#FFB300]/50 text-xs sm:text-sm font-semibold transition-colors"
               >
                 <MapPin className="w-4 h-4 text-[#FFB300] shrink-0" aria-hidden="true" />
-                <span>Cómo Llegar</span>
+                <span>Cómo Llegar en Google Maps</span>
                 <ExternalLink className="w-3.5 h-3.5 text-[#8A909A]" aria-hidden="true" />
               </a>
-              <Link
-                href="/check-in"
-                className="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#0B0B0C] hover:bg-[#23232A] text-[#F4F5F7] border border-[#2C2D35] hover:border-[#F95716]/50 text-xs sm:text-sm font-semibold transition-colors"
-              >
-                <QrCode className="w-4 h-4 text-[#F95716] shrink-0" aria-hidden="true" />
-                <span>Check-In</span>
-              </Link>
             </div>
           </div>
         </div>
@@ -257,13 +249,6 @@ export function Footer() {
             <span className="text-xs font-bold uppercase tracking-wider text-[#FFB300] mb-1">
               Sistema de Gestión
             </span>
-            <Link
-              href="/check-in"
-              className="inline-flex items-center gap-2 text-[#8A909A] hover:text-[#F95716] transition-colors"
-            >
-              <QrCode className="w-4 h-4 text-[#F95716]" aria-hidden="true" />
-              Terminal de Ingreso (Socios)
-            </Link>
             <Link
               href="/login"
               className="inline-flex items-center gap-2 text-[#8A909A] hover:text-[#F95716] transition-colors"

@@ -39,7 +39,7 @@ export function GymPhoneSettings() {
   };
 
   return (
-    <div className="max-w-xl mx-auto w-full py-4 space-y-6">
+    <div className="w-full py-4 space-y-6">
       <div>
         <h3 className="text-xl font-extrabold text-fx-text flex items-center gap-2">
           <Phone className="w-5 h-5 text-fx-orange" />

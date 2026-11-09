@@ -89,7 +89,7 @@ export function ManualShiftModal({ isOpen, onClose, onSaved, professors, activeT
                 const inGym = activeSet.has(p.id);
                 return (
                   <option key={p.id} value={p.id} disabled={inGym}>
-                    {p.name} {p.dni ? `(DNI: ${p.dni})` : ""} {inGym ? "• [Ya en el gimnasio]" : ""}
+                    {p.name} {p.dni ? `(DNI: ${p.dni})` : ""} {inGym ? "• En turno (solo se puede marcar la salida)" : ""}
                   </option>
                 );
               })}

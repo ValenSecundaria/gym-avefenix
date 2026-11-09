@@ -5,6 +5,7 @@ import { CheckInMonitorClient } from "@/components/check-in/CheckInMonitorClient
 export const metadata: Metadata = {
   title: "Terminal de Check-In | Gimnasio Ave Fénix",
   description: "Monitor público de validación de ingreso de socios por DNI.",
+  robots: { index: false, follow: false },
 };
 
 export default function CheckInPage() {

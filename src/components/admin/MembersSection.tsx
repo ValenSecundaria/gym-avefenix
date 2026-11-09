@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { AlertCircle, ChevronLeft, ChevronRight, Loader2, MessageCircle, User, UserPen, Users } from "lucide-react";
+import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
+// TODO [TEMPORARY-TRANSITION]: botón de regularización sin cobro (mismo que el panel de profesores).
+import { TemporarySyncPeriodButton } from "@/components/shared/temporary-sync-period-button";
 import type { MemberRowItem, MembersPage, MemberStatusFilter } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import { getMembersPage } from "@/actions/members.actions";
@@ -12,6 +15,8 @@ interface MembersSectionProps {
   /** Cambia cada vez que se edita un socio, para volver a pedir la página. */
   reloadKey: number;
   onEditMember: (memberId: string) => void;
+  /** Regularización +30 días SIN cobro (no registra Payment ni toca la caja). */
+  onSynced: (message: string) => void;
 }
 
 const STATUS_BADGE: Record<MemberRowItem["membershipStatus"], { text: string; cls: string }> = {
@@ -60,7 +65,7 @@ function FilterButton({ active, onClick, children }: { active: boolean; onClick:
   );
 }
 
-export function MembersSection({ searchQuery, reloadKey, onEditMember }: MembersSectionProps) {
+export function MembersSection({ searchQuery, reloadKey, onEditMember, onSynced }: MembersSectionProps) {
   const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
   const [showInactive, setShowInactive] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MemberStatusFilter>("ALL");
@@ -170,7 +175,7 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
                   className="flex-1 min-w-0 text-left flex items-center gap-3 sm:gap-4 cursor-pointer"
                 >
                   <div className="w-11 h-11 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center shrink-0">
-                    {m.photoUrl ? <img src={m.photoUrl} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-fx-muted" />}
+                    {m.photoUrl ? <MemberPhotoImg memberId={m.id} src={m.photoUrl} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-fx-muted" />}
                   </div>
                   <div className="min-w-0">
                     <div className="font-bold text-base text-fx-text">{m.fullName}</div>
@@ -214,6 +219,7 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember }: Members
                       <span className="hidden sm:inline">WhatsApp</span>
                     </button>
                   )}
+                  <TemporarySyncPeriodButton memberId={m.id} fullName={m.fullName} onSuccess={onSynced} className="min-h-[40px]" />
                   <button
                     type="button"
                     onClick={() => onEditMember(m.id)}

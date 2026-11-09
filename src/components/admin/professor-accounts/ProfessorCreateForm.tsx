@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { createProfessorAccount } from "@/actions/accounts.actions";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 const INPUT_CLS =
   "w-full min-h-[44px] px-3.5 rounded-xl bg-fx-base border border-fx-border focus:border-fx-orange focus:outline-none text-sm text-fx-text";
@@ -78,8 +79,8 @@ export function ProfessorCreateForm({ onCreated, onCancel, onError }: Props) {
         </div>
         <div>
           <label className={LABEL_CLS}>Contraseña</label>
-          <input
-            type="password"
+          <PasswordInput
+            autoComplete="new-password"
             value={draft.password}
             onChange={(e) => setDraft({ ...draft, password: e.target.value })}
             maxLength={72}

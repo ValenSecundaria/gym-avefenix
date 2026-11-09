@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { AlertCircle, Camera, Check, Loader2, MessageCircle, RotateCcw, Trash2, User, UserMinus, UserPen, X } from "lucide-react";
-import type { MemberDetail } from "@/types";
+import type { MemberDetail, PlanOption } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import {
   deleteMemberPermanently,
@@ -15,8 +15,34 @@ import { WebcamCapture } from "./WebcamCapture";
 import { sanitizeNameInput, sanitizePhoneInput } from "@/lib/validations/member.schema";
 import { MemberHistory, MemberSummary } from "./MemberHistory";
 import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
+import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
+import { savePhotoLocally } from "@/lib/offline/photo-store";
+import { useLocalMemberPhoto } from "@/lib/offline/use-local-photos";
+// TODO [TEMPORARY-TRANSITION]: botón de regularización sin cobro (mismo que el panel de profesores).
+import { TemporarySyncPeriodButton } from "@/components/shared/temporary-sync-period-button";
+
+const PHOTO_STATUS_TEXT = {
+  PENDING: { text: "Foto guardada en esta PC, pendiente de subir.", cls: "text-fx-amber" },
+  SYNCING: { text: "Subiendo foto...", cls: "text-fx-muted" },
+  SYNCED: { text: "Foto sincronizada.", cls: "text-fx-green" },
+  ERROR: { text: "No se pudo subir la foto (sigue guardada en esta PC).", cls: "text-fx-red" },
+} as const;
+
+/** Estado de sincronización de la foto local del socio (si la hay). */
+function PhotoSyncStatusLine({ memberId, serverSrc }: { memberId: string; serverSrc: string | null }) {
+  const local = useLocalMemberPhoto(memberId, serverSrc);
+  if (!local) return null;
+  const status = PHOTO_STATUS_TEXT[local.status];
+  return (
+    <p className={`text-xs font-semibold ${status.cls}`} role="status">
+      {status.text}
+      {local.status === "ERROR" && local.lastError && <span className="block font-normal text-fx-muted">{local.lastError}</span>}
+    </p>
+  );
+}
 
 interface MemberEditModalProps {
+  plans?: PlanOption[];
   memberId: string | null;
   onClose: () => void;
   /** Se llama después de guardar, dar de baja, reactivar o eliminar, con el mensaje para el aviso. */
@@ -47,24 +73,24 @@ async function forgetCachedMember(dni: string) {
 }
 
 // Mantiene la caché al día tras editar nombre, foto o DNI (la clave de la caché es el DNI).
-async function refreshCachedMember(oldDni: string, data: { dni: string; fullName: string; photoFilename: string | null }) {
+async function refreshCachedMember(oldDni: string, data: { dni: string; fullName: string; photoFilename: string | null; planName?: string }) {
   try {
     const cached = await getMemberFromCache(oldDni);
     if (!cached) return;
     if (oldDni !== data.dni) await removeMembersFromCache([oldDni]);
-    await saveMembersToCache([{ ...cached, ...data }]);
+    await saveMembersToCache([{ ...cached, ...data, planName: data.planName ?? cached.planName }]);
   } catch {
     // ver forgetCachedMember
   }
 }
 
-export function MemberEditModal({ memberId, onClose, onChanged }: MemberEditModalProps) {
+export function MemberEditModal({ memberId, plans = [], onClose, onChanged }: MemberEditModalProps) {
   if (!memberId) return null;
   // key: al abrir otro socio el formulario arranca de cero.
-  return <MemberEditDialog key={memberId} memberId={memberId} onClose={onClose} onChanged={onChanged} />;
+  return <MemberEditDialog key={memberId} memberId={memberId} plans={plans} onClose={onClose} onChanged={onChanged} />;
 }
 
-function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string } & Omit<MemberEditModalProps, "memberId">) {
+function MemberEditDialog({ memberId, plans = [], onClose, onChanged }: { memberId: string } & Omit<MemberEditModalProps, "memberId">) {
   const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
   const [member, setMember] = useState<MemberDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -72,6 +98,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
   const [dni, setDni] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [selectedPlanId, setSelectedPlanId] = useState("");
   const [changingPhoto, setChangingPhoto] = useState(false);
   const [newPhoto, setNewPhoto] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -90,6 +117,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
         setDni(res.data.dni);
         setPhone(sanitizePhoneInput(res.data.phone ?? ""));
         setNotes(res.data.notes ?? "");
+        setSelectedPlanId(res.data.planId ?? "");
       })
       .catch(() => !cancelled && setLoadError("Sin conexión: no se pudo cargar el socio."));
     return () => {
@@ -128,14 +156,49 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
     if (changingPhoto && !newPhoto) return setError("Sacá la foto nueva o cancelá el cambio de foto.");
 
     void run(async () => {
-      const res = await updateMember({
-        id: member.id,
-        fullName: fullName.trim(),
-        dni: cleanDni,
-        phone: phone.trim(),
-        notes: notes.trim(),
-        photoBase64: newPhoto,
-      });
+      // La foto nueva se guarda primero en esta PC y se sube aparte: no se pierde aunque no haya internet.
+      let photoStoredLocally = false;
+      if (newPhoto) {
+        try {
+          await savePhotoLocally({ photo: newPhoto, dni: member.dni, memberId: member.id });
+          photoStoredLocally = true;
+          // Ya quedó guardada: si el resto falla y se vuelve a guardar, no se duplica la foto.
+          setChangingPhoto(false);
+          setNewPhoto(null);
+        } catch {
+          // IndexedDB no disponible: la foto viaja con los datos, como antes.
+        }
+      }
+
+      const dataChanged =
+        fullName.trim() !== member.fullName ||
+        cleanDni !== member.dni ||
+        phone.trim() !== sanitizePhoneInput(member.phone ?? "") ||
+        notes.trim() !== (member.notes ?? "") ||
+        selectedPlanId !== (member.planId ?? "");
+
+      if (photoStoredLocally && !dataChanged) {
+        return { success: true, message: `Foto de ${member.fullName} guardada. Se sube sola en segundo plano.` };
+      }
+
+      let res;
+      try {
+        res = await updateMember({
+          id: member.id,
+          fullName: fullName.trim(),
+          dni: cleanDni,
+          phone: phone.trim(),
+          notes: notes.trim(),
+          planId: selectedPlanId || undefined,
+          photoBase64: photoStoredLocally ? null : newPhoto,
+        });
+      } catch (error) {
+        if (!photoStoredLocally) throw error;
+        return {
+          success: false,
+          error: "Sin conexión: los datos no se guardaron, pero la foto nueva quedó guardada en esta PC y se sube sola al volver internet.",
+        };
+      }
       if (res.success && res.data) await refreshCachedMember(member.dni, res.data);
       return { ...res, message: `Datos de ${fullName.trim()} actualizados.` };
     });
@@ -170,7 +233,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="edit-member-title" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
       <div className="bg-fx-surface border border-fx-border w-full max-w-4xl rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-6 sm:p-8 flex flex-col gap-6 my-auto">
-        <div className="flex items-start justify-between pb-4 border-b border-fx-border">
+        <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-fx-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fx-orange to-fx-red flex items-center justify-center text-white shrink-0">
               <UserPen className="w-5 h-5" />
@@ -189,9 +252,22 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
               )}
             </div>
           </div>
-          <button type="button" onClick={onClose} disabled={isBusy} aria-label="Cerrar" className="w-10 h-10 rounded-xl bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text flex items-center justify-center cursor-pointer shrink-0">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {member && !isBusy && (
+              <TemporarySyncPeriodButton
+                memberId={member.id}
+                fullName={member.fullName}
+                className="min-h-[40px]"
+                onSuccess={(msg) => {
+                  onChanged(msg);
+                  onClose();
+                }}
+              />
+            )}
+            <button type="button" onClick={onClose} disabled={isBusy} aria-label="Cerrar" className="w-10 h-10 rounded-xl bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text flex items-center justify-center cursor-pointer shrink-0">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {!member ? (
@@ -228,7 +304,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
                   </span>
                   <div className="w-full aspect-4/3 rounded-xl bg-fx-base border border-fx-border overflow-hidden flex items-center justify-center">
                     {member.photoUrl ? (
-                      <img src={member.photoUrl} alt={member.fullName} className="w-full h-full object-cover" />
+                      <MemberPhotoImg memberId={member.id} src={member.photoUrl} alt={member.fullName} className="w-full h-full object-cover" />
                     ) : (
                       <User className="w-12 h-12 text-fx-muted" />
                     )}
@@ -242,6 +318,7 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
               <p className="text-xs text-fx-muted">
                 {member.checkInsCount} ingresos y {member.paymentsCount} pagos registrados.
               </p>
+              <PhotoSyncStatusLine memberId={member.id} serverSrc={member.photoUrl} />
             </div>
 
             <div className="md:col-span-7 flex flex-col gap-4">
@@ -268,6 +345,22 @@ function MemberEditDialog({ memberId, onClose, onChanged }: { memberId: string }
               <div>
                 <label htmlFor="edit-notes" className={LABEL_CLS}>Observaciones</label>
                 <textarea id="edit-notes" rows={3} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej: Abonó en dos partes, presenta apto médico..." className={`${INPUT_CLS} py-3 resize-y`} />
+              </div>
+              <div>
+                <label htmlFor="edit-plan" className={LABEL_CLS}>Plan Asignado</label>
+                <select
+                  id="edit-plan"
+                  value={selectedPlanId}
+                  onChange={(e) => setSelectedPlanId(e.target.value)}
+                  className={`${INPUT_CLS} cursor-pointer`}
+                >
+                  <option value="">Sin plan asignado</option>
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} {p.disciplineName ? `(${p.disciplineName})` : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-fx-border">

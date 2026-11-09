@@ -37,6 +37,23 @@ export async function getTeacherShiftsAction(filter: {
   }
 }
 
+/** Turnos abiertos ahora (de cualquier fecha): quién está "En turno", aunque haya entrado otro mes. */
+export async function getActiveShiftsAction(): Promise<ActionResponse<TeacherShiftItem[]>> {
+  try {
+    if (!(await hasAdminSession())) return { success: false, error: "Sesión expirada" };
+    await autoCloseExpiredShifts();
+    const shifts = await prisma.teacherShift.findMany({
+      where: { checkOut: null },
+      orderBy: { checkIn: "asc" },
+      include: { user: { select: { name: true, dni: true } } },
+    });
+    return { success: true, data: shifts.map(formatShift) };
+  } catch (error) {
+    console.error("[getActiveShiftsAction] Error:", error);
+    return { success: false, error: "No se pudieron obtener los turnos en curso" };
+  }
+}
+
 const manualShiftSchema = z.object({
   userId: z.string().trim().min(1, "Seleccioná un profesor"),
   checkIn: z.string().datetime({ message: "Fecha/hora de entrada inválida" }),
@@ -60,13 +77,6 @@ export async function manualShiftAction(input: {
       return { success: false, error: "El horario de ingreso no puede ser posterior a la hora actual" };
     }
 
-    const active = await prisma.teacherShift.findFirst({
-      where: { userId: parsed.data.userId, checkOut: null },
-    });
-    if (active) {
-      return { success: false, error: "El profesor ya tiene un turno en curso en el gimnasio" };
-    }
-
     let outDate: Date | null = null;
     let totalMinutes: number | null = null;
 
@@ -76,17 +86,27 @@ export async function manualShiftAction(input: {
       totalMinutes = Math.round((outDate.getTime() - inDate.getTime()) / 60000);
     }
 
-    const shift = await prisma.teacherShift.create({
-      data: {
-        userId: parsed.data.userId,
-        checkIn: inDate,
-        checkOut: outDate,
-        totalMinutes,
-        notes: parsed.data.notes || null,
-      },
-      include: { user: { select: { name: true, dni: true } } },
+    const userId = parsed.data.userId;
+    const shift = await prisma.$transaction(async (tx) => {
+      // Mismo candado que el fichaje del profesor: no puede quedar con dos turnos abiertos.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${userId}))`;
+      const active = await tx.teacherShift.findFirst({ where: { userId, checkOut: null } });
+      if (active) return null;
+      return tx.teacherShift.create({
+        data: {
+          userId,
+          checkIn: inDate,
+          checkOut: outDate,
+          totalMinutes,
+          notes: parsed.data.notes || null,
+        },
+        include: { user: { select: { name: true, dni: true } } },
+      });
     });
 
+    if (!shift) {
+      return { success: false, error: "El profesor ya está en turno: solo se le puede marcar la salida" };
+    }
     return { success: true, data: formatShift(shift) };
   } catch (error) {
     console.error("[manualShiftAction] Error:", error);

@@ -34,7 +34,15 @@ export function formatTimeAR(dateInput: Date | string | null | undefined): strin
   }).format(d);
 }
 
-export function buildWhatsAppLink(phone: string | null | undefined, message: string): string {
+/**
+ * Cómo se abre WhatsApp:
+ * - AUTO: wa.me (el sistema elige: app en el celular, página intermedia en la PC). Es el de la web pública.
+ * - WEB: WhatsApp Web en el navegador (web.whatsapp.com).
+ * - APP: WhatsApp Desktop instalado en Windows (protocolo whatsapp://).
+ */
+export type WhatsAppMode = "AUTO" | "WEB" | "APP";
+
+export function buildWhatsAppLink(phone: string | null | undefined, message: string, mode: WhatsAppMode = "AUTO"): string {
   const cleanPhone = (phone || "").replace(/\D/g, "");
   const normalizedPhone = cleanPhone.startsWith("54")
     ? cleanPhone
@@ -42,6 +50,12 @@ export function buildWhatsAppLink(phone: string | null | undefined, message: str
       ? `549${cleanPhone}`
       : "";
   const encodedMsg = encodeURIComponent(message);
+  if (mode === "WEB") {
+    return `https://web.whatsapp.com/send?${normalizedPhone ? `phone=${normalizedPhone}&` : ""}text=${encodedMsg}`;
+  }
+  if (mode === "APP") {
+    return `whatsapp://send?${normalizedPhone ? `phone=${normalizedPhone}&` : ""}text=${encodedMsg}`;
+  }
   return normalizedPhone
     ? `https://wa.me/${normalizedPhone}?text=${encodedMsg}`
     : `https://wa.me/?text=${encodedMsg}`;

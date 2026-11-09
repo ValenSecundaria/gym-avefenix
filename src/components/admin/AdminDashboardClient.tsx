@@ -24,19 +24,30 @@ import { MembersSection } from "./MembersSection";
 import { MemberEditModal } from "./MemberEditModal";
 import { PlansAdminSection } from "./PlansAdminSection";
 import { GymPhoneSettings } from "./gym-phone-settings";
+import { SystemTutorialsCard } from "./SystemTutorialsCard";
+import { WhatsAppModeSettings } from "./WhatsAppModeSettings";
 import { ProfessorAccountsSettings } from "./ProfessorAccountsSettings";
 import { TeacherAttendanceSection } from "./teacher-attendance/teacher-attendance-section";
 import { PROFESOR_HOME, roleOf } from "@/lib/auth/auth-constants";
 import { enqueuePendingMember, PendingDniError } from "@/lib/offline/pending-members-store";
 import { usePendingMembers } from "@/lib/offline/use-pending-members";
+import { usePhotoSync } from "@/lib/offline/use-local-photos";
+import {
+  attachStashedPhotoToMember,
+  attachStashedPhotoToPendingMember,
+  discardStashedPhoto,
+  stashNewMemberPhoto,
+} from "@/lib/offline/new-member-photo";
+import { PendingPhotosNotice } from "./PendingPhotosNotice";
 import type { MemberSyncSummary } from "@/lib/offline/member-sync";
 import { createMember } from "@/actions/members.actions";
 import { registerPayment } from "@/actions/payments.actions";
 import { getDashboardOverview } from "@/actions/dashboard.actions";
 import { getTodayCheckIns } from "@/actions/checkin.actions";
 import { useAdminTheme, type AdminTheme } from "@/lib/use-admin-theme";
-import { gymBroadcast, toCheckInKey } from "@/lib/screens/broadcast-channel";
-import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
+import { gymBroadcast } from "@/lib/screens/broadcast-channel";
+import { useCheckInKeyForwarding } from "@/hooks/use-checkin-key-forwarding";
+import { dispatchScreens, closeSecondaryScreen, closeCurrentScreen } from "@/lib/screens/screen-dispatcher";
 import { useAuthSession } from "@/context/auth-session-context";
 import { matchesSearch } from "@/lib/text";
 import { useBatchSync } from "@/hooks/use-batch-sync";
@@ -71,19 +82,6 @@ async function getTodayLocalCheckIns(): Promise<LiveCheckInItem[]> {
     });
   }
   return items;
-}
-
-/** Si la pantalla de ingreso no da señales en este tiempo, se considera cerrada. */
-const CHECKIN_ALIVE_TIMEOUT_MS = 6000;
-
-const NON_TEXT_INPUT_TYPES = new Set(["button", "submit", "reset", "checkbox", "radio", "range", "color", "file", "image"]);
-
-/** Hay un campo del panel donde se está escribiendo (buscador, alta, montos...). */
-function isEditableElement(el: Element | null): boolean {
-  if (!el) return false;
-  if (el instanceof HTMLInputElement) return !NON_TEXT_INPUT_TYPES.has(el.type);
-  if (el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) return true;
-  return el instanceof HTMLElement && el.isContentEditable;
 }
 
 export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "TEACHER_ATTENDANCE" | "METRICS" | "SETTINGS";
@@ -128,47 +126,11 @@ export function AdminDashboardClient({
 
   // Sigue enviando los ingresos por lote en segundo plano; ya no se muestra en pantalla.
   useBatchSync();
+  // Sube en segundo plano las fotos de socios guardadas en esta PC (también las sacadas sin internet).
+  usePhotoSync();
 
-  // Pantalla de ingreso (Check-In): se sabe que está abierta por su latido.
-  const [checkInScreenOnline, setCheckInScreenOnline] = useState(false);
-  const lastCheckInAliveRef = useRef(0);
-
-  useEffect(() => {
-    const unsubscribe = gymBroadcast.subscribe((msg) => {
-      if (msg.type === "CHECKIN_ALIVE") {
-        lastCheckInAliveRef.current = Date.now();
-        setCheckInScreenOnline(true);
-      }
-    });
-    const watchdog = window.setInterval(() => {
-      if (Date.now() - lastCheckInAliveRef.current > CHECKIN_ALIVE_TIMEOUT_MS) setCheckInScreenOnline(false);
-    }, 2000);
-
-    // El teclado numérico es exclusivo de la pantalla de ingreso: aunque el mouse esté
-    // usando este panel, cada tecla del numpad se reenvía al Check-In. Si no se está
-    // escribiendo en un campo del panel, también se reenvían Borrar, Enter y los números comunes.
-    // Mientras hay una ventana abierta (alta de socio, cobro, edición...) no se reenvía nada:
-    // el teclado numérico escribe en el formulario (DNI, teléfono, montos) y al cerrarla vuelve al ingreso.
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (Date.now() - lastCheckInAliveRef.current > CHECKIN_ALIVE_TIMEOUT_MS) return;
-      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
-      const typingInPanel = isEditableElement(document.activeElement);
-      // Escape queda para el panel (cerrar ventanas y menús).
-      if (!typingInPanel && e.key === "Escape") return;
-      const key = toCheckInKey(e, typingInPanel);
-      if (!key) return;
-      e.preventDefault();
-      e.stopPropagation();
-      gymBroadcast.postMessage({ type: "CHECKIN_KEY", key });
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-
-    return () => {
-      unsubscribe();
-      window.clearInterval(watchdog);
-      window.removeEventListener("keydown", onKeyDown, true);
-    };
-  }, []);
+  // Pantalla de ingreso (Check-In) en el otro monitor: estado y reenvío del teclado numérico.
+  const checkInScreenOnline = useCheckInKeyForwarding();
 
   const goToTab = useCallback((tab: AdminTab) => {
     setActiveTab(tab);
@@ -240,19 +202,27 @@ export function AdminDashboardClient({
   }, [reloadLocalCheckIns]);
 
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      gymBroadcast.postMessage({ type: "CLOSE_ALL_SCREENS" });
+      closeSecondaryScreen();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     const kickoffId = window.setTimeout(() => void reloadLocalCheckIns(), 0);
     const interval = window.setInterval(refreshAllData, 15000);
     const unsubscribe = gymBroadcast.subscribe((msg) => {
       if (msg.type === "CHECKIN_LOGGED" && msg.checkIn) {
-        // El ingreso ya quedó en la cola local (IndexedDB compartida con la pantalla de Check-in).
+        // El ingreso ya qued� en la cola local (IndexedDB compartida con la pantalla de Check-in).
         void reloadLocalCheckIns();
       } else if (msg.type === "REFRESH_DASHBOARD") {
         refreshAllData();
-      } else if (msg.type === "SESSION_LOGOUT") {
-        window.location.replace("/login");
+      } else if (msg.type === "CLOSE_ALL_SCREENS" || msg.type === "SESSION_LOGOUT") {
+        closeSecondaryScreen();
+        closeCurrentScreen();
       }
     });
     return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
       window.clearTimeout(kickoffId);
       window.clearInterval(interval);
       unsubscribe();
@@ -284,14 +254,18 @@ export function AdminDashboardClient({
   const pendingMembers = usePendingMembers(handleMembersSynced);
 
   const handleCreateMember = async (v: NewMemberFormValues) => {
-    const input = { ...v, photoBase64: v.photoBase64 || undefined };
+    // La foto se guarda primero en esta PC y se sube aparte (ver lib/offline/photo-sync).
+    const stash = await stashNewMemberPhoto(v.photoBase64, v.dni);
+    const input = { ...v, photoBase64: stash.inlinePhoto };
 
     const saveOffline = async () => {
       try {
-        await enqueuePendingMember(input);
+        const pending = await enqueuePendingMember(input);
+        await attachStashedPhotoToPendingMember(stash, pending.clientId);
         showToast(`Sin conexión: ${v.fullName} quedó guardado en esta PC y se subirá solo al volver internet.`);
         return { success: true };
       } catch (error) {
+        await discardStashedPhoto(stash);
         return {
           success: false,
           error: error instanceof PendingDniError ? error.message : "No se pudo guardar el alta en esta PC.",
@@ -307,8 +281,10 @@ export function AdminDashboardClient({
     } catch {
       return saveOffline();
     }
+    if (!res.success) await discardStashedPhoto(stash);
     if (res.success && res.data) {
       const createdItem = res.data;
+      await attachStashedPhotoToMember(stash, createdItem.id, createdItem.dni);
       const cached: CachedMember = {
         id: createdItem.id,
         dni: createdItem.dni,
@@ -359,6 +335,13 @@ export function AdminDashboardClient({
     return { success: res.success, error: res.error };
   };
 
+  // TODO [TEMPORARY-TRANSITION]: regularización +30 días sin cobro (no registra Payment ni toca la caja).
+  const handleMemberSynced = (message: string) => {
+    showToast(message);
+    setMembersReloadKey((k) => k + 1);
+    void refreshAllData();
+  };
+
   const q = searchQuery.trim();
   const match = (name: string, dni: string) => !q || matchesSearch(name, q) || dni.includes(q);
   const section = ADMIN_SECTIONS.find((s) => s.tab === activeTab) || ADMIN_SECTIONS[0];
@@ -400,6 +383,7 @@ export function AdminDashboardClient({
             onSyncNow={() => void pendingMembers.syncNow()}
             onDiscard={(clientId) => void pendingMembers.discard(clientId)}
           />
+          <PendingPhotosNotice />
 
           {feedbackBanner && (
             <div className="flex items-center gap-2.5 p-4 rounded-2xl bg-fx-green/15 border border-fx-green text-sm font-bold text-fx-green">
@@ -433,6 +417,7 @@ export function AdminDashboardClient({
               <LiveFeedTable
                 items={checkIns.filter((c) => match(c.fullName, c.dni))}
                 onEditMember={setEditingMemberId}
+                onSuccessSync={showToast}
               />
             )}
             {activeTab === "DEBTORS" && (
@@ -453,6 +438,7 @@ export function AdminDashboardClient({
                 searchQuery={searchQuery}
                 reloadKey={membersReloadKey}
                 onEditMember={setEditingMemberId}
+                onSynced={handleMemberSynced}
               />
             )}
             {activeTab === "PLANS" && (
@@ -478,7 +464,11 @@ export function AdminDashboardClient({
             )}
             {activeTab === "SETTINGS" && (
               <div className="flex flex-col gap-10">
-                <GymPhoneSettings />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                  <GymPhoneSettings />
+                  <SystemTutorialsCard />
+                </div>
+                <WhatsAppModeSettings />
                 <ProfessorAccountsSettings />
               </div>
             )}
@@ -495,6 +485,7 @@ export function AdminDashboardClient({
       />
       <MemberEditModal
         memberId={editingMemberId}
+        plans={plans}
         onClose={() => setEditingMemberId(null)}
         onChanged={(msg) => {
           showToast(msg);

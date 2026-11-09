@@ -172,6 +172,8 @@ export interface MemberListItem {
   photoFilename: string | null;
   photoUrl: string | null;
   isActive: boolean;
+  /** Plan de la última membresía (null si nunca tuvo). */
+  planId: string | null;
   planName: string;
   membershipStatus: MembershipStatusType | "SIN_MEMBRESIA";
   validUntil: string | null;

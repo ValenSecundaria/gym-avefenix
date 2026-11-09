@@ -58,7 +58,7 @@ export async function getPlans(): Promise<ActionResponse<PlanOption[]>> {
 
 type CreateMemberRecordResult =
   | { kind: "created"; data: MemberListItem }
-  | { kind: "duplicate"; existingFullName: string }
+  | { kind: "duplicate"; existingFullName: string; existingId: string }
   | { kind: "inactive"; existingFullName: string }
   | { kind: "invalid"; error: string };
 
@@ -88,7 +88,7 @@ async function createMemberRecord(
   const existing = await prisma.member.findUnique({ where: { dni } });
   if (existing) {
     return existing.isActive
-      ? { kind: "duplicate", existingFullName: existing.fullName }
+      ? { kind: "duplicate", existingFullName: existing.fullName, existingId: existing.id }
       : { kind: "inactive", existingFullName: existing.fullName };
   }
 
@@ -105,7 +105,14 @@ async function createMemberRecord(
   try {
     created = await prisma.$transaction(async (tx) => {
       const member = await tx.member.create({
-        data: { dni, fullName, phone: phone || null, photoFilename, notes: notes || null, isActive: true },
+        data: {
+          dni,
+          fullName,
+          phone: phone || null,
+          photoFilename,
+          notes: notes || null,
+          isActive: true,
+        },
       });
       if (!plan) return { member, membership: null };
       const validUntil = new Date(startDate.getTime() + plan.durationDays * 24 * 60 * 60 * 1000);
@@ -129,7 +136,8 @@ async function createMemberRecord(
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       const winner = await prisma.member.findUnique({ where: { dni } });
-      return { kind: "duplicate", existingFullName: winner?.fullName ?? fullName };
+      if (!winner) throw error;
+      return { kind: "duplicate", existingFullName: winner.fullName, existingId: winner.id };
     }
     throw error;
   }
@@ -144,6 +152,7 @@ async function createMemberRecord(
       photoFilename: created.member.photoFilename,
       photoUrl: getMemberPhotoUrl(created.member.dni, created.member.photoFilename),
       isActive: created.member.isActive,
+      planId: created.membership ? (plan?.id ?? null) : null,
       planName: plan?.name ?? "Sin plan",
       membershipStatus: created.membership ? "ACTIVA" : "SIN_MEMBRESIA",
       validUntil: created.membership ? created.membership.validUntil.toISOString() : null,
@@ -200,6 +209,8 @@ export interface PendingMemberSyncResult {
   clientId: string;
   status: PendingMemberSyncStatus;
   message?: string;
+  /** Socio en la base (created / already_synced): las fotos guardadas en el dispositivo se asocian a este id. */
+  memberId?: string;
 }
 
 export async function syncPendingMembers(
@@ -240,7 +251,7 @@ export async function syncPendingMembers(
       const result = await createMemberRecord(item.input, new Date(startMs), session);
       if (result.kind === "created") {
         anyCreated = true;
-        results.push({ clientId, status: "created" });
+        results.push({ clientId, status: "created", memberId: result.data.id });
       } else if (result.kind === "invalid") {
         results.push({ clientId, status: "invalid", message: result.error });
       } else if (result.kind === "inactive") {
@@ -250,7 +261,7 @@ export async function syncPendingMembers(
           message: `El DNI ${dni} es de ${result.existingFullName}, dado de baja: reactivalo desde Clientes`,
         });
       } else if (normalizeSearchText(result.existingFullName) === normalizeSearchText(item.input.fullName)) {
-        results.push({ clientId, status: "already_synced" });
+        results.push({ clientId, status: "already_synced", memberId: result.existingId });
       } else {
         results.push({
           clientId,
@@ -293,6 +304,7 @@ function toMemberListItem(m: MemberWithLatestMembership, now: Date): MemberListI
     photoFilename: m.photoFilename,
     photoUrl: getMemberPhotoUrl(m.dni, m.photoFilename),
     isActive: m.isActive,
+    planId: latest?.planId ?? null,
     planName: latest?.plan.name || "Sin plan",
     membershipStatus: status,
     validUntil: latest ? latest.validUntil.toISOString() : null,
@@ -465,7 +477,7 @@ export async function updateMember(input: UpdateMemberInput): Promise<ActionResp
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message || "Datos del socio inválidos" };
     }
-    const { id, fullName, dni, phone, notes, photoBase64 } = parsed.data;
+    const { id, fullName, dni, phone, notes, photoBase64, planId } = parsed.data;
 
     if (!resolveSafePhotoPath(dni)) return { success: false, error: "Identificador inválido" };
 
@@ -482,6 +494,19 @@ export async function updateMember(input: UpdateMemberInput): Promise<ActionResp
 
     let updated;
     try {
+      if (planId) {
+        const latestMembership = await prisma.membership.findFirst({
+          where: { memberId: id },
+          orderBy: { validUntil: "desc" },
+        });
+        if (latestMembership && latestMembership.planId !== planId) {
+          await prisma.membership.update({
+            where: { id: latestMembership.id },
+            data: { planId },
+          });
+        }
+      }
+
       updated = await prisma.member.update({
         where: { id },
         data: {
@@ -501,7 +526,7 @@ export async function updateMember(input: UpdateMemberInput): Promise<ActionResp
       throw error;
     }
 
-    if (newPhotoFilename) await deleteMemberPhotoFromDisk(current.photoFilename);
+    // La foto anterior no se borra: queda guardada (al reemplazar una foto nunca se elimina la vieja).
 
     revalidatePath("/admin");
     return { success: true, data: toMemberListItem(updated, new Date()) };
