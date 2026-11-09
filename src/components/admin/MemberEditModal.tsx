@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AlertCircle, Camera, Check, Loader2, MessageCircle, RefreshCw, RotateCcw, Trash2, User, UserMinus, UserPen, X } from "lucide-react";
+import { AlertCircle, Camera, Check, Loader2, MessageCircle, RotateCcw, Trash2, User, UserMinus, UserPen, X } from "lucide-react";
 import type { MemberDetail, PlanOption } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import {
@@ -18,6 +18,8 @@ import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditMod
 import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 import { savePhotoLocally } from "@/lib/offline/photo-store";
 import { useLocalMemberPhoto } from "@/lib/offline/use-local-photos";
+// TODO [TEMPORARY-TRANSITION]: botón de regularización sin cobro (mismo que el panel de profesores).
+import { TemporarySyncPeriodButton } from "@/components/shared/temporary-sync-period-button";
 
 const PHOTO_STATUS_TEXT = {
   PENDING: { text: "Foto guardada en esta PC, pendiente de subir.", cls: "text-fx-amber" },
@@ -45,8 +47,6 @@ interface MemberEditModalProps {
   onClose: () => void;
   /** Se llama después de guardar, dar de baja, reactivar o eliminar, con el mensaje para el aviso. */
   onChanged: (message: string) => void;
-  /** Abre la renovación rápida (+30 días) para este socio. */
-  onQuickRenew?: (member: MemberDetail) => void;
 }
 
 const INPUT_CLS =
@@ -84,13 +84,13 @@ async function refreshCachedMember(oldDni: string, data: { dni: string; fullName
   }
 }
 
-export function MemberEditModal({ memberId, plans = [], onClose, onChanged, onQuickRenew }: MemberEditModalProps) {
+export function MemberEditModal({ memberId, plans = [], onClose, onChanged }: MemberEditModalProps) {
   if (!memberId) return null;
   // key: al abrir otro socio el formulario arranca de cero.
-  return <MemberEditDialog key={memberId} memberId={memberId} plans={plans} onClose={onClose} onChanged={onChanged} onQuickRenew={onQuickRenew} />;
+  return <MemberEditDialog key={memberId} memberId={memberId} plans={plans} onClose={onClose} onChanged={onChanged} />;
 }
 
-function MemberEditDialog({ memberId, plans = [], onClose, onChanged, onQuickRenew }: { memberId: string } & Omit<MemberEditModalProps, "memberId">) {
+function MemberEditDialog({ memberId, plans = [], onClose, onChanged }: { memberId: string } & Omit<MemberEditModalProps, "memberId">) {
   const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
   const [member, setMember] = useState<MemberDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -253,16 +253,16 @@ function MemberEditDialog({ memberId, plans = [], onClose, onChanged, onQuickRen
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {member && onQuickRenew && (
-              <button
-                type="button"
-                onClick={() => onQuickRenew(member)}
-                disabled={isBusy}
-                className="min-h-[40px] px-3 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white text-sm font-extrabold inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                <RefreshCw className="w-4 h-4" />
-                <span>Renovar +30 días</span>
-              </button>
+            {member && !isBusy && (
+              <TemporarySyncPeriodButton
+                memberId={member.id}
+                fullName={member.fullName}
+                className="min-h-[40px]"
+                onSuccess={(msg) => {
+                  onChanged(msg);
+                  onClose();
+                }}
+              />
             )}
             <button type="button" onClick={onClose} disabled={isBusy} aria-label="Cerrar" className="w-10 h-10 rounded-xl bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text flex items-center justify-center cursor-pointer shrink-0">
               <X className="w-5 h-5" />
