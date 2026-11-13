@@ -1,88 +1,46 @@
-# Backup semanal de la base de Neon: pg_dump comprimido (.sql.gz) subido a un bucket PRIVADO de
-# Supabase Storage. Se conservan los últimos KEEP_BACKUPS archivos.
-#
-# Secrets del repositorio (Settings → Secrets and variables → Actions):
-#   DATABASE_URL               conexión de Neon (se usa la directa, sin "-pooler")
-#   SUPABASE_URL               https://xxxx.supabase.co
-#   SUPABASE_SERVICE_ROLE_KEY  clave service_role de Supabase
-# Variable opcional (Settings → Variables): BACKUP_BUCKET (por defecto "db-backups"; crearlo como privado).
-#
-# El volcado tiene datos personales de socios: nunca se guarda como artifact de GitHub.
-name: Backup semanal de la base
+name: Backup Semanal Base de Datos (Neon -> Cloudflare R2)
 
 on:
+  # Permite ejecutar el backup manualmente en cualquier momento desde la pestaña Actions
+  workflow_dispatch:
+  # Se ejecuta automáticamente 1 vez por semana: todos los domingos a las 04:00 UTC (01:00 AM Argentina)
   schedule:
-    - cron: "0 6 * * 1" # lunes 06:00 UTC = 03:00 en Argentina
-  workflow_dispatch: {}
-
-permissions:
-  contents: read
+    - cron: '0 2 * * 0'
 
 jobs:
-  backup:
+  backup-postgres:
+    name: Extraer Dump y Subir a R2
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      BUCKET: ${{ vars.BACKUP_BUCKET || 'db-backups' }}
-      KEEP_BACKUPS: "12"
+
     steps:
-      - name: Verificar secrets
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Instalar cliente PostgreSQL (pg_dump) y AWS CLI
         run: |
-          for v in DATABASE_URL SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
-            if [ -z "${!v}" ]; then echo "::error::Falta el secret $v"; exit 1; fi
-          done
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client awscli
 
-      - name: Instalar pg_dump 17
-        run: |
-          sudo apt-get install -y -q postgresql-common
-          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-          sudo apt-get install -y -q postgresql-client-17
-
-      - name: Volcar la base
+      - name: Generar respaldo comprimido desde Neon
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          set -o pipefail
-          DIRECT_URL="${DATABASE_URL/-pooler./.}"
-          FILE="gym-avefenix-$(date -u +%Y%m%d-%H%M).sql.gz"
-          /usr/lib/postgresql/17/bin/pg_dump --no-owner --no-privileges "$DIRECT_URL" | gzip -9 > "$FILE"
-          test -s "$FILE"
-          echo "FILE=$FILE" >> "$GITHUB_ENV"
-          echo "Backup generado: $FILE ($(du -h "$FILE" | cut -f1))"
-
-      - name: Subir a Supabase Storage
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          curl --fail-with-body -sS -X POST \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
-            -H "Content-Type: application/gzip" \
-            --data-binary "@$FILE" \
-            "${SUPABASE_URL%/}/storage/v1/object/$BUCKET/$FILE"
-          echo
-          echo "Subido a $BUCKET/$FILE"
-
-      - name: Borrar backups viejos
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          BASE="${SUPABASE_URL%/}/storage/v1/object"
-          AUTH=(-H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY")
-          OLD=$(curl --fail-with-body -sS -X POST "${AUTH[@]}" -H "Content-Type: application/json" \
-            -d '{"prefix":"","limit":1000,"sortBy":{"column":"name","order":"desc"}}' \
-            "$BASE/list/$BUCKET" | jq -c "[.[] | select(.name | startswith(\"gym-avefenix-\")) | .name] | .[$KEEP_BACKUPS:]")
-          if [ "$OLD" != "[]" ]; then
-            curl --fail-with-body -sS -X DELETE "${AUTH[@]}" -H "Content-Type: application/json" \
-              -d "{\"prefixes\":$OLD}" "$BASE/$BUCKET"
-            echo
-            echo "Borrados: $OLD"
-          else
-            echo "Nada para borrar."
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M")
+          BACKUP_FILE="backup_gym_${TIMESTAMP}.sql.gz"
+          echo "BACKUP_FILE=${BACKUP_FILE}" >> $GITHUB_ENV
+          
+          pg_dump "$DATABASE_URL" --no-owner --no-acl | gzip > "$BACKUP_FILE"
+          
+          # Verificar que el archivo pesa más de 0 bytes
+          if [ ! -s "$BACKUP_FILE" ]; then
+            echo "Error: El archivo de backup está vacío."
+            exit 1
           fi
+          ls -lh "$BACKUP_FILE"
+
+      - name: Subir archivo a Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: |
+          aws s3 cp "$BACKUP_FILE" "s3://${R2_BUCKET_NAME}/${BACKUP_FILE}" --endpoint-url "$R2_ENDPOINT"
