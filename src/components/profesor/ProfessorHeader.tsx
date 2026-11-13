@@ -4,6 +4,7 @@ import React from "react";
 import { Flame, MonitorCheck, MonitorX, Moon, RefreshCw, Sun, UserPlus } from "lucide-react";
 import { LogoutButton } from "@/components/admin/logout-button";
 import { NO_PLANS_HINT } from "@/components/admin/HeaderStats";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 const ICON_BTN =
   "min-h-[48px] min-w-[48px] px-3 rounded-xl bg-fx-base hover:bg-fx-hover border border-fx-border text-sm font-bold text-fx-muted hover:text-fx-text inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50";
@@ -42,7 +43,7 @@ export function ProfessorHeader({
         </div>
         <div className="min-w-0">
           <h1 className="text-xl font-extrabold text-fx-text tracking-tight">
-            Ave Fénix <span className="text-fx-orange">• Profesores</span>
+            {GYM_BRAND_CONFIG.identity.shortName} <span className="text-fx-orange">• Profesores</span>
           </h1>
           <p className="text-sm text-fx-muted truncate">Hola, {displayName}</p>
         </div>

@@ -1,42 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0B0B0C;
-  --foreground: #F4F5F7;
-  --fenix-dark: #0B0B0C;
-  --fenix-surface: #17171C;
-  --fenix-surface-hover: #23232A;
-  --fenix-border: #2C2D35;
-  --fenix-orange: #F95716;
-  --fenix-red: #D92614;
-  --fenix-gold: #FFB300;
-  --fenix-steel: #8A909A;
-  --fenix-light: #F4F5F7;
-  --fenix-success: #10B981;
-  --fenix-whatsapp: #25D366;
+  /* Brand Tokens White-Label (Valores HEX explícitos para soporte móvil) */
+  --brand-bg: #0B0B0C;
+  --brand-surface: #17171C;
+  --brand-surface-hover: #23232A;
+  --brand-border: #2C2D35;
+  --brand-primary: #F95716;
+  --brand-alert: #D92614;
+  --brand-warning: #FFB300;
+  --brand-text-primary: #F4F5F7;
+  --brand-text-secondary: #8A909A;
+  --brand-success: #10B981;
+  --brand-whatsapp: #25D366;
+
+  /* Aliases de compatibilidad */
+  --background: var(--brand-bg);
+  --foreground: var(--brand-text-primary);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-fenix-dark: #0B0B0C;
-  --color-fenix-surface: #17171C;
-  --color-fenix-surfaceHover: #23232A;
-  --color-fenix-border: #2C2D35;
-  --color-fenix-orange: #F95716;
-  --color-fenix-red: #D92614;
-  --color-fenix-gold: #FFB300;
-  --color-fenix-steel: #8A909A;
-  --color-fenix-light: #F4F5F7;
-  --color-fenix-success: #10B981;
-  --color-fenix-whatsapp: #25D366;
+  --color-brand-bg: var(--brand-bg);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-surfaceHover: var(--brand-surface-hover);
+  --color-brand-border: var(--brand-border);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-alert: var(--brand-alert);
+  --color-brand-warning: var(--brand-warning);
+  --color-brand-textPrimary: var(--brand-text-primary);
+  --color-brand-textSecondary: var(--brand-text-secondary);
+  --color-brand-success: var(--brand-success);
+  --color-brand-whatsapp: var(--brand-whatsapp);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background-color: #0B0B0C;
-  color: #F4F5F7;
+  background-color: var(--brand-bg);
+  color: var(--brand-text-primary);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
@@ -45,19 +48,18 @@ body {
    Los componentes de /admin usan solo estas variables (--fx-*).
    ------------------------------------------------------------- */
 :root {
-  --fx-base: #0B0B0C;
-  --fx-surface: #17171C;
-  --fx-hover: #23232A;
-  --fx-border: #2C2D35;
-  --fx-text: #F4F5F7;
-  --fx-muted: #8A909A;
-  --fx-orange: #F95716;
-  --fx-red: #D92614;
-  --fx-amber: #FFB300;
-  --fx-green: #10B981;
+  --fx-base: var(--brand-bg);
+  --fx-surface: var(--brand-surface);
+  --fx-hover: var(--brand-surface-hover);
+  --fx-border: var(--brand-border);
+  --fx-text: var(--brand-text-primary);
+  --fx-muted: var(--brand-text-secondary);
+  --fx-orange: var(--brand-primary);
+  --fx-red: var(--brand-alert);
+  --fx-amber: var(--brand-warning);
+  --fx-green: var(--brand-success);
 }
 
-/* Colores de acento oscurecidos en claro para que el texto mantenga contraste sobre blanco. */
 [data-theme="light"] {
   --fx-base: #F4F5F7;
   --fx-surface: #FFFFFF;
@@ -71,8 +73,6 @@ body {
   --fx-green: #05875F;
 }
 
-/* Expone las variables como colores de Tailwind (bg-fx-orange, text-fx-text/60, ...).
-   "inline" hace que cada clase lea la variable en su lugar, así el tema claro las pisa. */
 @theme inline {
   --color-fx-base: var(--fx-base);
   --color-fx-surface: var(--fx-surface);
@@ -90,18 +90,10 @@ body:has([data-theme="light"]) {
   background-color: #F4F5F7;
 }
 
-/* -------------------------------------------------------------
-   Celulares: colores fijos, sin depender del modo oscuro del sistema.
-   - color-scheme "only dark": Chrome Android / Samsung Internet no aplican su "oscurecer
-     páginas automáticamente" (invertía naranjas y fondos) y los controles nativos (select,
-     fecha, scroll) se dibujan oscuros. El panel en modo claro pide controles claros.
-   - Autocompletado del navegador: fondo amarillo/blanco sobre los campos oscuros del login y
-     los formularios; se lo deja con los colores fijos de la marca.
-   - iOS: sin agrandado automático de texto al girar ni destello gris al tocar.
-   ------------------------------------------------------------- */
+/* Celulares: color-scheme dark fijo y prevención de desajustes */
 html {
   color-scheme: only dark;
-  background-color: #0B0B0C;
+  background-color: var(--brand-bg);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
@@ -116,10 +108,10 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
-  -webkit-text-fill-color: #F4F5F7;
-  caret-color: #F4F5F7;
-  -webkit-box-shadow: 0 0 0 1000px #0B0B0C inset;
-  box-shadow: 0 0 0 1000px #0B0B0C inset;
+  -webkit-text-fill-color: var(--brand-text-primary);
+  caret-color: var(--brand-text-primary);
+  -webkit-box-shadow: 0 0 0 1000px var(--brand-bg) inset;
+  box-shadow: 0 0 0 1000px var(--brand-bg) inset;
   transition: background-color 9999s ease-out 0s;
 }
 
@@ -134,9 +126,7 @@ select:-webkit-autofill {
   box-shadow: 0 0 0 1000px #F4F5F7 inset;
 }
 
-/* Navegadores sin color-mix() (Safari < 16.2, Chrome < 111): las clases con opacidad sobre
-   colores del tema (bg-fx-orange/15, border-fx-green/40...) quedaban transparentes.
-   Se les da un color fijo aproximado para que los badges y avisos sigan viéndose. */
+/* Fallback para navegadores sin color-mix() */
 @supports not (color: color-mix(in srgb, red 50%, transparent)) {
   [class^="bg-fx-orange/"], [class*=" bg-fx-orange/"] { background-color: rgba(249, 87, 22, 0.15); }
   [class^="bg-fx-green/"], [class*=" bg-fx-green/"] { background-color: rgba(16, 185, 129, 0.15); }

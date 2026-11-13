@@ -5,6 +5,7 @@ import type { DebtorMemberItem } from "@/types";
 import { formatCurrencyARS, formatDateAR } from "@/lib/utils";
 import { EditMemberButton } from "./EditMemberButton";
 import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 interface DebtorsTableProps {
   debtors: DebtorMemberItem[];
@@ -52,7 +53,11 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
       {/* Lista de Deudores */}
       <div className="flex flex-col gap-3">
         {debtors.map((debtor) => {
-          const waMessage = `¡Hola ${debtor.fullName}! Te escribimos de Gimnasio Ave Fénix para recordarte que tu cuota del plan ${debtor.planName} venció el ${formatDateAR(debtor.validUntil)}. ¡Te esperamos en recepción para renovarla!`;
+          const waMessage = GYM_BRAND_CONFIG.messages.expiredPlan({
+            memberName: debtor.fullName,
+            planName: debtor.planName,
+            validUntil: formatDateAR(debtor.validUntil),
+          });
 
           return (
             <div

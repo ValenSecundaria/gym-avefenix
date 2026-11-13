@@ -4,10 +4,11 @@ import React, { useState } from "react";
 import { Phone, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/auth-session-context";
 import { updateGymPhoneAction } from "@/actions/settings.actions";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 export function GymPhoneSettings() {
   const { user, updateCurrentGymPhone } = useAuth();
-  const userPhone = user?.gymPhone ?? "5492915768403";
+  const userPhone = user?.gymPhone ?? GYM_BRAND_CONFIG.contact.defaultWhatsapp;
   const [phone, setPhone] = useState(userPhone);
   const [prevUserPhone, setPrevUserPhone] = useState(userPhone);
   const [isSaving, setIsSaving] = useState(false);
@@ -65,14 +66,14 @@ export function GymPhoneSettings() {
               inputMode="numeric"
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/[^\d]/g, ""))}
-              placeholder="5492915768403"
+              placeholder={GYM_BRAND_CONFIG.contact.defaultWhatsapp}
               disabled={isSaving}
               required
               className="w-full min-h-[48px] pl-8 pr-4 rounded-xl bg-fx-base border border-fx-border focus:border-fx-orange focus:outline-none text-sm text-fx-text font-mono transition-colors disabled:opacity-50"
             />
           </div>
           <span className="text-xs text-fx-muted">
-            Ejemplo Bahía Blanca / White: 5492915768403 (Prefijo 549 + código de área + número).
+            Ejemplo: {GYM_BRAND_CONFIG.contact.defaultWhatsapp} (Prefijo de país + código de área + número).
           </span>
         </div>
 

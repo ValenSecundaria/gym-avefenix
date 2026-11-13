@@ -1,6 +1,7 @@
 // Firma/verificación HMAC-SHA256 del token de sesión con Web Crypto.
 // Compatible con Server Actions y con proxy.ts (sin dependencias de Node).
 import type { AuthenticatedUser, SessionTokenPayload } from "@/types/auth";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -54,7 +55,7 @@ export async function signSessionToken(user: AuthenticatedUser, issuedAt = Date.
     username: user.username,
     name: user.name,
     role: user.role ?? "ADMIN",
-    gymPhone: user.gymPhone ?? "5492915768403",
+    gymPhone: user.gymPhone ?? GYM_BRAND_CONFIG.contact.defaultWhatsapp,
     iat: issuedAt,
   };
   const body = toBase64Url(encoder.encode(JSON.stringify(payload)));

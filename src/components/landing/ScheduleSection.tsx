@@ -1,68 +1,19 @@
 "use client";
 
 import React from "react";
-import {
-  Clock,
-  Dumbbell,
-  Flame,
-  HeartPulse,
-  Zap,
-  QrCode,
-  Info,
-  Sparkles,
-  ArrowRight,
-} from "lucide-react";
+import { Clock, QrCode, Info, Sparkles, ArrowRight } from "lucide-react";
 import { buildWhatsAppLink } from "@/lib/utils";
 import { useAuth } from "@/context/auth-session-context";
 import { GlowCard } from "@/components/ui/spotlight-card";
-
-const MODALITIES = [
-  {
-    name: "Sala de Musculación",
-    schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
-    level: "Fuerza e Hipertrofia",
-    description: "Zona completa de peso libre, mancuernas, racks y maquinaria biomecánica guiada para sobrecarga progresiva con profesores capacitados en sala.",
-    icon: Dumbbell,
-    accent: "text-[#F95716]",
-  },
-  {
-    name: "Entrenamiento Funcional",
-    schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
-    level: "Acondicionamiento Físico",
-    description: "Circuitos metabólicos y ejercicios multiarticulares orientados a potencia, agilidad, coordinación, core y resistencia cardiovascular.",
-    icon: Flame,
-    accent: "text-[#FFB300]",
-  },
-  {
-    name: "Cardio",
-    schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
-    level: "Salud y Resistencia",
-    description: "Cintas de alto rendimiento, bicicletas y sector aeróbico para maximizar la resistencia pulmonar y el gasto calórico.",
-    icon: HeartPulse,
-    accent: "text-[#10B981]",
-  },
-  {
-    name: "Entrenamiento Híbrido",
-    schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
-    level: "Alto Rendimiento",
-    description: "La sinergia ideal entre la fuerza y sobrecarga de la musculación con la intensidad metabólica del funcional para atletas integrales.",
-    icon: Zap,
-    accent: "text-[#F95716]",
-  },
-];
-
-const HOURS = [
-  { day: "Lunes a Viernes", time: "08:00 a 22:00 hs", note: "Horario corrido", color: "text-[#F95716]" },
-  { day: "Sábados", time: "10:00 a 14:00 hs", note: "Turno matutino", color: "text-[#FFB300]" },
-  { day: "Domingos", time: "Cerrado", note: "Descanso total", color: "text-[#D92614]" },
-];
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
+import { MODALITIES } from "./modalities-data";
 
 export function ScheduleSection() {
   const { user } = useAuth();
-  const gymPhone = user?.gymPhone || "5492915768403";
+  const gymPhone = user?.gymPhone || GYM_BRAND_CONFIG.contact.defaultWhatsapp;
   const waNovedadesLink = buildWhatsAppLink(
     gymPhone,
-    "Hola Gimnasio Ave Fénix! Quiero consultar por las nuevas disciplinas y horarios."
+    `Hola ${GYM_BRAND_CONFIG.identity.name}! Quiero consultar por las nuevas disciplinas y horarios.`
   );
 
   return (
@@ -70,19 +21,15 @@ export function ScheduleSection() {
       <div className="max-w-7xl mx-auto flex flex-col gap-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#F95716]">
-              Disciplinas y Turnos
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#F4F5F7] tracking-tight mt-1">
-              Horarios y Modalidades
-            </h2>
+            <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#F95716]">Disciplinas y Turnos</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#F4F5F7] tracking-tight mt-1">Horarios y Modalidades</h2>
           </div>
           <p className="text-sm sm:text-base text-[#8A909A] max-w-md">
-            Entrená a tu ritmo en horario corrido de 08:00 a 22:00 hs en la semana y sábados de 10:00 a 14:00 hs.
+            Entrená a tu ritmo en horario corrido durante la semana y los fines de semana.
           </p>
         </div>
 
-        {/* Grilla de Disciplinas Oficiales */}
+        {/* Grilla de Disciplinas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {MODALITIES.map((mod) => {
             const Icon = mod.icon;
@@ -105,9 +52,7 @@ export function ScheduleSection() {
                   <h3 className="text-lg font-bold text-[#F4F5F7] mb-2">{mod.name}</h3>
                   <p className="text-sm text-[#8A909A] leading-relaxed mb-4">{mod.description}</p>
                 </div>
-                <div className="pt-3 border-t border-[#2C2D35] text-xs font-semibold text-[#FFB300]">
-                  {mod.schedule}
-                </div>
+                <div className="pt-3 border-t border-[#2C2D35] text-xs font-semibold text-[#FFB300]">{mod.schedule}</div>
               </GlowCard>
             );
           })}
@@ -143,11 +88,7 @@ export function ScheduleSection() {
         </div>
 
         {/* Tarjeta de Horarios de Apertura y Terminal */}
-        <GlowCard
-          customSize
-          glowColor="orange"
-          className="rounded-2xl bg-[#17171C]/90 border border-[#2C2D35] p-6 sm:p-8 lg:p-10 shadow-2xl"
-        >
+        <GlowCard customSize glowColor="orange" className="rounded-2xl bg-[#17171C]/90 border border-[#2C2D35] p-6 sm:p-8 lg:p-10 shadow-2xl">
           <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 flex flex-col gap-5">
               <div className="flex items-center gap-3">
@@ -156,19 +97,18 @@ export function ScheduleSection() {
                 </div>
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-[#F95716]">
-                    Sede Ingeniero White • Lautaro 3322
+                    Sede {GYM_BRAND_CONFIG.identity.subdivision} • {GYM_BRAND_CONFIG.contact.address}
                   </span>
-                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#F4F5F7]">
-                    Horarios de Apertura
-                  </h3>
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#F4F5F7]">Horarios de Apertura</h3>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {HOURS.map((h) => (
-                  <div key={h.day} className="p-4 rounded-xl bg-[#0B0B0C] border border-[#2C2D35]">
-                    <span className="text-xs uppercase font-bold text-[#8A909A]">{h.day}</span>
-                    <p className={`text-lg font-extrabold mt-1 ${h.color}`}>{h.time}</p>
-                    <span className="text-xs text-[#8A909A]">{h.note}</span>
+                {GYM_BRAND_CONFIG.contact.schedule.map((h, i) => (
+                  <div key={h.days} className="p-4 rounded-xl bg-[#0B0B0C] border border-[#2C2D35]">
+                    <span className="text-xs uppercase font-bold text-[#8A909A]">{h.days}</span>
+                    <p className={`text-lg font-extrabold mt-1 ${i === 0 ? "text-[#F95716]" : i === 1 ? "text-[#FFB300]" : "text-[#D92614]"}`}>
+                      {h.hours}
+                    </p>
                   </div>
                 ))}
               </div>

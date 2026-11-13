@@ -18,6 +18,7 @@ import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditMod
 import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 import { savePhotoLocally } from "@/lib/offline/photo-store";
 import { useLocalMemberPhoto } from "@/lib/offline/use-local-photos";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 // TODO [TEMPORARY-TRANSITION]: botón de regularización sin cobro (mismo que el panel de profesores).
 import { TemporarySyncPeriodButton } from "@/components/shared/temporary-sync-period-button";
 
@@ -378,8 +379,12 @@ function MemberEditDialog({ memberId, plans = [], onClose, onChanged }: { member
                           phone: phone.trim(),
                           defaultMessage:
                             member.membershipStatus === "VENCIDA" && member.validUntil
-                              ? `¡Hola ${fullName.trim() || member.fullName}! Te escribimos de Gimnasio Ave Fénix para recordarte que tu cuota del plan ${member.planName} venció el ${formatDateAR(member.validUntil)}. ¡Te esperamos en recepción para renovarla!`
-                              : `¡Hola ${fullName.trim() || member.fullName}! Te escribimos de Gimnasio Ave Fénix.`,
+                              ? GYM_BRAND_CONFIG.messages.expiredPlan({
+                                  memberName: fullName.trim() || member.fullName,
+                                  planName: member.planName,
+                                  validUntil: formatDateAR(member.validUntil),
+                                })
+                              : `¡Hola ${fullName.trim() || member.fullName}! Te escribimos de ${GYM_BRAND_CONFIG.identity.name}.`,
                         })
                       }
                       className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"

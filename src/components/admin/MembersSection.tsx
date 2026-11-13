@@ -9,6 +9,7 @@ import type { MemberRowItem, MembersPage, MemberStatusFilter } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import { getMembersPage } from "@/actions/members.actions";
 import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 interface MembersSectionProps {
   searchQuery: string;
@@ -45,9 +46,13 @@ function lastVisitLabel(iso: string | null, now: number): string {
 
 function whatsAppMessage(m: MemberRowItem): string {
   if (m.membershipStatus === "VENCIDA" && m.validUntil) {
-    return `¡Hola ${m.fullName}! Te escribimos de Gimnasio Ave Fénix para recordarte que tu cuota del plan ${m.planName} venció el ${formatDateAR(m.validUntil)}. ¡Te esperamos en recepción para renovarla!`;
+    return GYM_BRAND_CONFIG.messages.expiredPlan({
+      memberName: m.fullName,
+      planName: m.planName,
+      validUntil: formatDateAR(m.validUntil),
+    });
   }
-  return `¡Hola ${m.fullName}! Te escribimos de Gimnasio Ave Fénix.`;
+  return `¡Hola ${m.fullName}! Te escribimos de ${GYM_BRAND_CONFIG.identity.name}.`;
 }
 
 function FilterButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {

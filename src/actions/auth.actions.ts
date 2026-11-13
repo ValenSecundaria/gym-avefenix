@@ -6,6 +6,7 @@ import { loginSchema, type LoginInput } from "@/lib/validations/auth.schema";
 import { AUTH_UNAVAILABLE_CODE, OFFLINE_RESUME_MAX_AGE_MS } from "@/lib/auth/auth-constants";
 import { verifySessionToken } from "@/lib/auth/session-token";
 import { issueSessionCookies, clearSessionCookies, getSessionCookie } from "@/lib/auth/session-cookie";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 import type { ActionResponse } from "@/types";
 import type { AuthenticatedUser, AuthSessionResult } from "@/types/auth";
 
@@ -54,7 +55,7 @@ export async function authenticateUser(
       username: user.username,
       name: user.name,
       role: user.role,
-      gymPhone: user.gymPhone ?? "5492915768403",
+      gymPhone: user.gymPhone ?? GYM_BRAND_CONFIG.contact.defaultWhatsapp,
     };
 
     const session = await issueSessionCookies(authenticatedUser);
@@ -97,7 +98,7 @@ export async function resumeSession(sessionToken: string): Promise<ActionRespons
       username: payload.username,
       name: payload.name,
       role: user.role,
-      gymPhone: payload.gymPhone ?? "5492915768403",
+      gymPhone: payload.gymPhone ?? GYM_BRAND_CONFIG.contact.defaultWhatsapp,
     });
     return { success: true, data: session };
   } catch (error) {
@@ -132,7 +133,7 @@ export async function getSessionUser(): Promise<ActionResponse<AuthenticatedUser
         username: payload.username,
         name: payload.name,
         role: payload.role ?? "ADMIN",
-        gymPhone: payload.gymPhone ?? "5492915768403",
+        gymPhone: payload.gymPhone ?? GYM_BRAND_CONFIG.contact.defaultWhatsapp,
       },
     };
   } catch {

@@ -7,6 +7,7 @@ import { formatCurrencyARS } from "@/lib/utils";
 import { PlanPicker } from "./PlanPicker";
 import { sanitizeNameInput, sanitizePhoneInput } from "@/lib/validations/member.schema";
 import { WebcamCapture } from "./WebcamCapture";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 export interface NewMemberFormValues {
   fullName: string;
@@ -84,7 +85,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember, hidePri
             </div>
             <div>
               <h2 id="new-member-title" className="text-lg sm:text-xl text-fx-text font-extrabold tracking-tight">
-                Registrar Nuevo Socio en Gimnasio Ave Fénix
+                Registrar Nuevo Socio en {GYM_BRAND_CONFIG.identity.name}
               </h2>
               <p className="text-xs text-fx-muted">Enrolamiento inmediato para apertura automática del molinete principal.</p>
             </div>

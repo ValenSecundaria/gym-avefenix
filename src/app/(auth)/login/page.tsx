@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 export const metadata: Metadata = {
-  title: "Iniciar Sesión | Gimnasio Ave Fénix",
-  description: "Acceso para operadores y administración del Gimnasio Ave Fénix.",
+  title: `Iniciar Sesión | ${GYM_BRAND_CONFIG.identity.name}`,
+  description: `Acceso para operadores y administración de ${GYM_BRAND_CONFIG.identity.name}.`,
   robots: { index: false, follow: false },
 };
 

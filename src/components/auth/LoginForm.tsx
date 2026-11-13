@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Flame, Lock, User, ArrowLeft, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useAuthSession } from "@/context/auth-session-context";
-import { warmCacheRoutes } from "@/lib/pwa/register-sw";
 import { dispatchScreens, ensureOnPrimaryScreen } from "@/lib/screens/screen-dispatcher";
 import { ADMIN_HOME, homePathFor } from "@/lib/auth/auth-constants";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
+import { ManualLaunchScreen } from "./ManualLaunchScreen";
 
 export function LoginForm() {
   const router = useRouter();
@@ -20,9 +21,6 @@ export function LoginForm() {
   const [needsManualLaunch, setNeedsManualLaunch] = useState(false);
   const [homePath, setHomePath] = useState<string>(ADMIN_HOME);
 
-  const isPending = isLoading;
-
-  // Al prender el equipo el login tiene que quedar en la pantalla de la notebook, no en el monitor del socio.
   useEffect(() => {
     void ensureOnPrimaryScreen();
   }, []);
@@ -30,11 +28,10 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setShowPassword(false); // no dejar la contraseña a la vista en la pantalla siguiente
+    setShowPassword(false);
     setIsLoading(true);
 
     try {
-      // 1. Ejecución del flujo de login (online con cookie firmada / offline fallback)
       const outcome = await login(username.trim(), password);
       if (!outcome.ok) {
         setError(outcome.error || "Credenciales inválidas");
@@ -44,33 +41,22 @@ export function LoginForm() {
 
       const userData = outcome.session.user;
 
-      // 2. Guardar el estado de sesión en sessionStorage para persistir ante recargas
-      // pero destruirse al apagar o cerrar el equipo/navegador
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("avefenix_user", JSON.stringify(userData));
-        sessionStorage.setItem("avefenix_auth_time", Date.now().toString());
+        sessionStorage.setItem("gym_user", JSON.stringify(userData));
+        sessionStorage.setItem("gym_auth_time", Date.now().toString());
 
-        // Disparar sincronización de terminales para coordinar pestañas y monitores
         try {
           const syncPayload = { type: "TERMINAL_AUTH_SYNC", user: userData, timestamp: Date.now() };
-          localStorage.setItem("avefenix_terminal_sync", JSON.stringify(syncPayload));
-          window.dispatchEvent(new CustomEvent("avefenix:terminal-sync", { detail: syncPayload }));
+          localStorage.setItem("gym_terminal_sync", JSON.stringify(syncPayload));
+          window.dispatchEvent(new CustomEvent("gym:terminal-sync", { detail: syncPayload }));
         } catch {
-          // Ignorar si StorageEvent o localStorage están restringidos
+          // Ignorar si StorageEvent está restringido
         }
       }
 
-      // Cada rol va a su panel (administración o profesor); los dos atienden el mostrador.
       const home = homePathFor(userData);
       setHomePath(home);
 
-      // 3. Precalentamiento de rutas en el Service Worker PWA
-      warmCacheRoutes([home, "/check-in"]);
-
-      // 4. Despliegue de pantallas para cualquier rol: el panel en la pantalla principal y la
-      // pantalla de ingreso (Check-in) en el monitor secundario. Con un solo monitor no se abre.
-      // (La ventana ya se movió a la pantalla principal al cargar el login: acá no se espera nada más,
-      // así el navegador no bloquea la ventana emergente por haber pasado mucho tiempo desde el clic.)
       const dispatchRes = await dispatchScreens({ skipIfSingleScreen: true });
       if (dispatchRes.popupBlocked) {
         setNeedsManualLaunch(true);
@@ -78,7 +64,6 @@ export function LoginForm() {
         return;
       }
 
-      // 5. Redirección al panel
       router.push(home);
       router.refresh();
     } catch {
@@ -96,37 +81,7 @@ export function LoginForm() {
   };
 
   if (needsManualLaunch) {
-    return (
-      <div className="w-full max-w-md bg-[#17171C] border border-[#2C2D35] rounded-3xl p-8 shadow-2xl">
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-[#F95716] flex items-center justify-center shadow-lg shadow-[#F95716]/30 mb-4">
-            <Flame className="w-8 h-8 text-[#F4F5F7]" />
-          </div>
-          <h1 className="text-2xl font-extrabold text-[#F4F5F7] uppercase tracking-tight">
-            Iniciando <span className="text-[#F95716]">Sistema...</span>
-          </h1>
-          <p className="text-sm text-[#8A909A] mt-1">
-            Sesión validada. Haz clic para desplegar el monitor de Check-In y acceder a recepción.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleManualLaunch}
-          disabled={isLoading}
-          className="w-full min-h-[48px] rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-[#F4F5F7] font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#F95716]/25 transition-all cursor-pointer disabled:opacity-50"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Desplegando...</span>
-            </>
-          ) : (
-            <span>Lanzar Pantallas</span>
-          )}
-        </button>
-      </div>
-    );
+    return <ManualLaunchScreen isLoading={isLoading} onLaunch={handleManualLaunch} />;
   }
 
   return (
@@ -139,7 +94,7 @@ export function LoginForm() {
           Acceso <span className="text-[#F95716]">Recepción</span>
         </h1>
         <p className="text-sm text-[#8A909A] mt-1">
-          Ingresá tus credenciales para administrar el Gimnasio Ave Fénix
+          Ingresá tus credenciales para administrar {GYM_BRAND_CONFIG.identity.name}
         </p>
       </div>
 
@@ -152,9 +107,7 @@ export function LoginForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-[#8A909A] mb-2">
-            Usuario
-          </label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#8A909A] mb-2">Usuario</label>
           <div className="relative">
             <User className="w-5 h-5 text-[#8A909A] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -170,9 +123,7 @@ export function LoginForm() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-[#8A909A] mb-2">
-            Contraseña
-          </label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#8A909A] mb-2">Contraseña</label>
           <div className="relative">
             <Lock className="w-5 h-5 text-[#8A909A] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -188,7 +139,6 @@ export function LoginForm() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              aria-pressed={showPassword}
               title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               className="absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg flex items-center justify-center text-[#8A909A] hover:text-[#F4F5F7] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F95716] cursor-pointer"
             >
@@ -199,7 +149,7 @@ export function LoginForm() {
 
         <button
           type="submit"
-          disabled={isLoading || isPending}
+          disabled={isLoading}
           className="w-full min-h-[48px] mt-2 rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-[#F4F5F7] font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#F95716]/25 transition-all disabled:opacity-50 cursor-pointer"
         >
           {isLoading ? (

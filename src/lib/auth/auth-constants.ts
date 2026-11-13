@@ -1,10 +1,10 @@
 // Constantes del flujo de autenticación (compartidas por servidor, proxy y cliente).
 
 /** Cookie httpOnly firmada con la sesión. Sin Max-Age: muere al cerrarse el proceso del navegador / apagar el equipo. */
-export const SESSION_COOKIE_NAME = "avefenix_session";
+export const SESSION_COOKIE_NAME = "gym_session";
 
 /** Cookie testigo (legible por JS, también de sesión) que indica que el navegador sigue vivo desde el login. */
-export const SESSION_ALIVE_COOKIE = "avefenix_alive";
+export const SESSION_ALIVE_COOKIE = "gym_alive";
 
 /** Clave de la sesión activa en sessionStorage. */
 export const SESSION_STORAGE_KEY = "gym_auth_session";

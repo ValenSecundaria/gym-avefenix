@@ -1,5 +1,6 @@
 import React from "react";
 import { Flame, Monitor, ShieldCheck } from "lucide-react";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 export function IdleDisplay() {
   return (
@@ -13,7 +14,7 @@ export function IdleDisplay() {
       </h2>
 
       <p className="text-[#8A909A] text-base sm:text-lg max-w-md mb-8">
-        Por favor registrá tu ingreso en el molinete de Ave Fénix escribiendo tu número de DNI.
+        Por favor registrá tu ingreso en el molinete de {GYM_BRAND_CONFIG.identity.name} escribiendo tu número de DNI.
       </p>
 
       <div className="flex items-center justify-center gap-2.5 text-[#8A909A] text-sm sm:text-base font-medium mb-6">

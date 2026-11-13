@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Gimnasio Ave Fénix",
   "short_name": "Ave Fénix",
-  "description": "Sistema de gestión y control de acceso del Gimnasio Ave Fénix: panel de recepción y terminal de check-in para doble pantalla.",
+  "description": "Sistema de gestión y control de acceso del gimnasio: panel de recepción y terminal de check-in para doble pantalla.",
   "lang": "es-AR",
   "dir": "ltr",
   "start_url": "/login",

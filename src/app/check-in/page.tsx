@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { CheckInMonitorClient } from "@/components/check-in/CheckInMonitorClient";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 export const metadata: Metadata = {
-  title: "Terminal de Check-In | Gimnasio Ave Fénix",
+  title: `Terminal de Check-In | ${GYM_BRAND_CONFIG.identity.name}`,
   description: "Monitor público de validación de ingreso de socios por DNI.",
   robots: { index: false, follow: false },
 };

@@ -44,14 +44,14 @@ export function readWindowSession(): ClientSession | null {
 export function clearWindowSession(): void {
   try {
     window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    window.sessionStorage.removeItem("avefenix_user");
-    window.sessionStorage.removeItem("avefenix_auth_time");
+    window.sessionStorage.removeItem("gym_user");
+    window.sessionStorage.removeItem("gym_auth_time");
     window.sessionStorage.clear();
   } catch {
     // sessionStorage bloqueado: nada que limpiar.
   }
   try {
-    window.localStorage.removeItem("avefenix_terminal_sync");
+    window.localStorage.removeItem("gym_terminal_sync");
   } catch {
     // localStorage bloqueado
   }

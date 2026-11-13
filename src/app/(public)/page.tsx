@@ -10,47 +10,46 @@ import { Footer } from "@/components/landing/Footer";
 import { getActiveMembersCount } from "@/actions/dashboard.actions";
 import { getPublicPlans } from "@/lib/public-plans";
 import { getSiteUrl } from "@/lib/site-url";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
-const SEO_TITLE = "Gimnasio Ave Fénix | Musculación y Funcional en Ingeniero White";
-const SEO_DESCRIPTION =
-  "Gimnasio Ave Fénix en Ingeniero White (Bahía Blanca): musculación, funcional y planes mensuales o por día. Conocé horarios, precios y escribinos por WhatsApp.";
+const SEO_TITLE = `${GYM_BRAND_CONFIG.identity.name} | Musculación y Funcional en ${GYM_BRAND_CONFIG.identity.subdivision}`;
+const SEO_DESCRIPTION = `${GYM_BRAND_CONFIG.identity.name} en ${GYM_BRAND_CONFIG.identity.subdivision} (${GYM_BRAND_CONFIG.identity.city}): musculación, funcional y planes mensuales o por día. Conocé horarios, precios y escribinos por WhatsApp.`;
 
 export const metadata: Metadata = {
   title: SEO_TITLE,
   description: SEO_DESCRIPTION,
-  keywords: ["gimnasio", "Ingeniero White", "Bahía Blanca", "musculación", "funcional", "Ave Fénix", "planes de gimnasio"],
+  keywords: ["gimnasio", GYM_BRAND_CONFIG.identity.subdivision, GYM_BRAND_CONFIG.identity.city, "musculación", "funcional", GYM_BRAND_CONFIG.identity.shortName, "planes de gimnasio"],
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "es_AR",
     url: "/",
-    siteName: "Gimnasio Ave Fénix",
+    siteName: GYM_BRAND_CONFIG.identity.name,
     title: SEO_TITLE,
     description: SEO_DESCRIPTION,
-    images: [{ url: "/Portada1.png", alt: "Gimnasio Ave Fénix" }],
+    images: [{ url: GYM_BRAND_CONFIG.assets.heroCover, alt: GYM_BRAND_CONFIG.identity.name }],
   },
   twitter: {
     card: "summary_large_image",
     title: SEO_TITLE,
     description: SEO_DESCRIPTION,
-    images: ["/Portada1.png"],
+    images: [GYM_BRAND_CONFIG.assets.heroCover],
   },
   robots: { index: true, follow: true },
 };
 
-// Datos estructurados (schema.org) para que Google muestre el gimnasio con dirección y contacto.
 const GYM_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "ExerciseGym",
-  name: "Gimnasio Ave Fénix",
+  name: GYM_BRAND_CONFIG.identity.name,
   description: SEO_DESCRIPTION,
-  image: new URL("/Portada1.png", getSiteUrl()).toString(),
+  image: new URL(GYM_BRAND_CONFIG.assets.heroCover, getSiteUrl()).toString(),
   url: getSiteUrl().origin,
-  telephone: "+5492915768403",
+  telephone: `+${GYM_BRAND_CONFIG.contact.defaultWhatsapp}`,
   address: {
     "@type": "PostalAddress",
-    streetAddress: "Lautaro 3322",
-    addressLocality: "Ingeniero White",
+    streetAddress: GYM_BRAND_CONFIG.contact.address,
+    addressLocality: GYM_BRAND_CONFIG.identity.subdivision,
     addressRegion: "Buenos Aires",
     addressCountry: "AR",
   },
@@ -70,8 +69,6 @@ const Files = dynamic(
   }
 );
 
-// La consulta a la BD es dinámica: se aísla en un componente dentro de <Suspense>
-// para que el resto de la landing pueda prerenderizarse.
 async function HeroWithStats() {
   await connection();
   const activeMembersRes = await getActiveMembersCount();
@@ -79,7 +76,6 @@ async function HeroWithStats() {
   return <Hero activeMembers={activeMembers} />;
 }
 
-// Los planes y disciplinas son los mismos que se venden en recepción (sección Planes del panel).
 async function PlansWithData() {
   await connection();
   const plans = await getPublicPlans();
@@ -91,7 +87,6 @@ export default function PublicLandingPage() {
     <div className="min-h-screen bg-[#0B0B0C] text-[#F4F5F7] flex flex-col">
       <script
         type="application/ld+json"
-        // Contenido fijo del propio sitio (no viene del usuario).
         dangerouslySetInnerHTML={{ __html: JSON.stringify(GYM_JSON_LD).replace(/</g, "\\u003c") }}
       />
       <Navbar />

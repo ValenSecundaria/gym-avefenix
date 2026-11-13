@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Camera, RefreshCw, Upload, CheckCircle2, Check, Move, ZoomIn, ZoomOut } from "lucide-react";
 import { listCameras, openNextCamera, openPreferredCamera } from "@/lib/camera";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 interface WebcamCaptureProps {
   photoDataUrl?: string | null;
@@ -372,7 +373,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
                   Arrastrar para encuadrar
                 </span>
                 <div className="w-full text-right opacity-80 pointer-events-none">
-                  <span className="text-[9px] text-white">Ave Fénix</span>
+                  <span className="text-[9px] text-white">{GYM_BRAND_CONFIG.identity.shortName}</span>
                 </div>
               </div>
             )}

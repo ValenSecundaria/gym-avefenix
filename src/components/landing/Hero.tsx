@@ -1,69 +1,26 @@
 "use client";
 
 import React from "react";
-import {
-  Flame,
-  ArrowRight,
-  MessageCircle,
-  Dumbbell,
-  Award,
-  ScanLine,
-  Users,
-  Activity,
-  ClipboardCheck,
-  Shield,
-} from "lucide-react";
+import { Flame, ArrowRight, MessageCircle, Users } from "lucide-react";
 import { useAuth } from "@/context/auth-session-context";
 import { buildWhatsAppLink } from "@/lib/utils";
 import { GlowCard } from "@/components/ui/spotlight-card";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
+import { STATIC_METRICS, PILLARS } from "./hero-data";
 
 interface HeroProps {
   activeMembers?: number;
 }
 
-const STATIC_METRICS = [
-  { value: "100% Pro", label: "Equipamiento Biomecánico", sub: "Línea Importada Calibrada", icon: Dumbbell, accent: "text-[#FFB300]" },
-  { value: "Élite", label: "Entrenadores en Sala", sub: "Profesores Certificados y de Primer Nivel", icon: Award, accent: "text-[#10B981]" },
-  { value: "DNI Ágil", label: "Ingreso Automático", sub: "Ingreso Rápido y Seguro", icon: ScanLine, accent: "text-[#F95716]" },
-];
-
-const PILLARS = [
-  {
-    title: "Zona Musculación y Fuerza",
-    description: "Equipamiento completo de peso libre, racks olímpicos y mancuernas de alto rendimiento para desarrollar fuerza y superar tus límites.",
-    tag: "Entrenamiento de Fuerza",
-    icon: Dumbbell,
-  },
-  {
-    title: "Sector Cardio & HIIT",
-    description: "Equipamiento aeróbico y entrenamiento de alta intensidad para mejorar tu resistencia, capacidad cardiovascular y rendimiento físico.",
-    tag: "Resistencia y Rendimiento",
-    icon: Activity,
-  },
-  {
-    title: "Rutinas Personalizadas",
-    description: "Planes de entrenamiento adaptados a tus objetivos, con acompañamiento y supervisión profesional en cada etapa.",
-    tag: "Seguimiento Continuo",
-    icon: ClipboardCheck,
-  },
-  {
-    title: "Acceso Rápido y Seguro",
-    description: "Ingresá fácilmente con tu DNI mediante un sistema de acceso ágil y seguro, sin demoras ni esperas.",
-    tag: "Tecnología Ágil",
-    icon: Shield,
-  },
-];
-
 export function Hero({ activeMembers }: HeroProps) {
   const { user } = useAuth();
-  const gymPhone = user?.gymPhone || "5492915768403";
+  const gymPhone = user?.gymPhone || GYM_BRAND_CONFIG.contact.defaultWhatsapp;
   const whatsappUrl = buildWhatsAppLink(
     gymPhone,
-    "Hola Gimnasio Ave Fénix! Quiero consultar acerca del gimnasio para empezar a entrenar."
+    `Hola ${GYM_BRAND_CONFIG.identity.name}! Quiero consultar acerca del gimnasio para empezar a entrenar.`
   );
 
-  const activeMembersValue =
-    typeof activeMembers === "number" ? String(activeMembers) : "0";
+  const activeMembersValue = typeof activeMembers === "number" ? String(activeMembers) : "0";
 
   const metrics = [
     {
@@ -88,14 +45,14 @@ export function Hero({ activeMembers }: HeroProps) {
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#17171C] border border-[#2C2D35] shadow-md mb-7">
           <Flame className="w-4 h-4 text-[#F95716]" aria-hidden="true" />
           <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#FFB300]">
-            Entrenamiento de Fuerza y Rendimiento • Ingeniero White
+            {GYM_BRAND_CONFIG.identity.heroSubtitle}
           </span>
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#F4F5F7] max-w-4xl leading-[1.08] mb-4 uppercase">
           Forjá tu mejor versión.{" "}
           <span className="bg-gradient-to-r from-[#F95716] via-[#F95716] to-[#FFB300] bg-clip-text text-transparent">
-            Renacé más fuerte en Ave Fénix
+            {GYM_BRAND_CONFIG.identity.heroTitle}
           </span>
         </h1>
 

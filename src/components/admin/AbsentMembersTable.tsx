@@ -6,6 +6,7 @@ import { formatDateAR } from "@/lib/utils";
 import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 import { EditMemberButton } from "./EditMemberButton";
 import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 interface AbsentMembersTableProps {
   absentMembers: AbsentMemberItem[];
@@ -40,7 +41,7 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
               {absentMembers.length} Socios Ausentes (+{ABSENT_DAYS_THRESHOLD} días sin marcar ingreso)
             </div>
             <div className="text-xs text-fx-muted">
-              Dejaron de venir al gimnasio. Campaña de reactivación Fénix recomendada.
+              Dejaron de venir al gimnasio. Campaña de reactivación recomendada.
             </div>
           </div>
         </div>
@@ -49,7 +50,10 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
       {/* Tarjetas de Recontacto */}
       <div className="flex flex-col gap-3">
         {absentMembers.map((member) => {
-          const waMessage = `¡Hola ${member.fullName}! Te escribimos de Gimnasio Ave Fénix. Hace ${member.daysAbsent} días que no te vemos entrenar y queríamos saber cómo estás. ¡Te esperamos esta semana para retomar con toda la energía!`;
+          const waMessage = GYM_BRAND_CONFIG.messages.absentMember({
+            memberName: member.fullName,
+            daysAbsent: member.daysAbsent,
+          });
 
           return (
             <div

@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ShieldCheck, Flame } from "lucide-react";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 const NAV_LINKS = [
   { label: "Inicio", href: "#inicio" },
@@ -15,15 +16,15 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full bg-[#0B0B0C]/90 backdrop-blur-xl border-b border-[#2C2D35] shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
       <div className="max-w-7xl mx-auto h-20 px-4 sm:px-6 lg:px-10 flex items-center justify-between gap-4">
-        {/* Identidad y Logo Ave Fénix */}
+        {/* Identidad y Logo */}
         <Link
           href="/"
           className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F95716] rounded-xl"
         >
           <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-[#17171C] border border-[#2C2D35] shadow-[0_0_20px_-4px_rgba(249,87,22,0.4)] flex items-center justify-center shrink-0 group-hover:border-[#F95716] transition-colors">
             <Image
-              src="/Logo.jpeg"
-              alt="Logo Gimnasio Ave Fénix"
+              src={GYM_BRAND_CONFIG.assets.logoMain}
+              alt={GYM_BRAND_CONFIG.identity.name}
               width={44}
               height={44}
               className="w-full h-full object-cover"
@@ -32,11 +33,11 @@ export function Navbar() {
           </div>
           <div className="flex flex-col">
             <span className="flex items-center gap-1.5 text-base sm:text-lg font-extrabold tracking-tight text-[#F4F5F7] uppercase leading-tight">
-              Ave Fénix
+              {GYM_BRAND_CONFIG.identity.shortName}
               <Flame className="w-4 h-4 text-[#F95716] hidden sm:inline" aria-hidden="true" />
             </span>
             <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#FFB300]">
-              By White • Sede Central
+              {GYM_BRAND_CONFIG.identity.subdivision} • Sede Central
             </span>
           </div>
         </Link>

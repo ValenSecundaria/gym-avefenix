@@ -1,12 +1,12 @@
-/* Service Worker — Gimnasio Ave Fénix
+/* Service Worker — Gimnasio White-Label
  * - Assets estáticos (JS/CSS/fuentes/imágenes/íconos): Stale-While-Revalidate en producción.
  * - Páginas (navegaciones HTML): red primero con respaldo en caché si se corta internet.
  * - Requests RSC, Server Actions (POST) y HMR nunca se interceptan.
  * - En localhost/desarrollo nunca intercepta para no romper Turbopack/Next.js HMR.
  */
 const VERSION = "v1";
-const STATIC_CACHE = `avefenix-static-${VERSION}`;
-const PAGES_CACHE = `avefenix-pages-${VERSION}`;
+const STATIC_CACHE = `gym-static-${VERSION}`;
+const PAGES_CACHE = `gym-pages-${VERSION}`;
 const KNOWN_CACHES = [STATIC_CACHE, PAGES_CACHE];
 
 const PRECACHE_PAGES = ["/login", "/"];
@@ -15,10 +15,10 @@ const PRECACHE_ASSETS = [
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
   "/icons/icon-maskable-512x512.png",
-  "/Logo.jpeg",
+  "/brand/logo.png",
 ];
 
-const OFFLINE_HTML = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sin conexión | Gimnasio Ave Fénix</title></head><body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0B0B0C;color:#F4F5F7;font-family:system-ui,sans-serif;text-align:center;padding:24px"><div><p style="color:#F95716;font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:12px">Gimnasio Ave Fénix</p><h1 style="font-size:22px;margin:8px 0">Sin conexión a internet</h1><p style="color:#8A909A;font-size:14px">Esta pantalla todavía no está disponible sin conexión. Se reintentará al volver la red.</p></div><script>addEventListener("online",()=>location.reload())</script></body></html>`;
+const OFFLINE_HTML = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sin conexión | Gimnasio</title></head><body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0B0B0C;color:#F4F5F7;font-family:system-ui,sans-serif;text-align:center;padding:24px"><div><p style="color:#F95716;font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:12px">Control de Acceso</p><h1 style="font-size:22px;margin:8px 0">Sin conexión a internet</h1><p style="color:#8A909A;font-size:14px">Esta pantalla todavía no está disponible sin conexión. Se reintentará al volver la red.</p></div><script>addEventListener("online",()=>location.reload())</script></body></html>`;
 
 function isCacheableResponse(response) {
   return Boolean(response) && response.ok && response.type === "basic" && !response.redirected;

@@ -8,9 +8,10 @@ import { ADMIN_HOME, SESSION_COOKIE_NAME, roleOf } from "@/lib/auth/auth-constan
 import { verifySessionToken } from "@/lib/auth/session-token";
 import { getStaffOverview } from "@/actions/dashboard.actions";
 import { ProfessorDashboardClient } from "@/components/profesor/ProfessorDashboardClient";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 export const metadata: Metadata = {
-  title: "Panel de Profesores | Gimnasio Ave Fénix",
+  title: `Panel de Profesores | ${GYM_BRAND_CONFIG.identity.name}`,
   description: "Alta de socios, registro de cobros, estado de clientes y métricas de asistencia.",
 };
 

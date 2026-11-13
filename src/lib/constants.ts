@@ -5,4 +5,4 @@ export const ABSENT_DAYS_THRESHOLD = 60;
 export const GYM_TIMEZONE = "America/Argentina/Buenos_Aires";
 
 // Cookie con el tema elegido para el panel de administración ("dark" | "light").
-export const ADMIN_THEME_COOKIE = "fenix-admin-theme";
+export const ADMIN_THEME_COOKIE = "gym-admin-theme";

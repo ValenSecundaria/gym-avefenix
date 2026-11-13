@@ -2,6 +2,7 @@
 
 import React from "react";
 import { CheckCircle2, Clock, GraduationCap, Sparkles } from "lucide-react";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 import type { ToggleShiftResult } from "@/types";
 
 interface TeacherResultCardProps {
@@ -63,7 +64,7 @@ export function TeacherResultCard({ result }: TeacherResultCardProps) {
         {result.teacherName}
       </h2>
       <span className="text-sm font-bold uppercase tracking-widest text-[#8A909A] mb-6">
-        Profesor / Equipo Ave Fénix
+        Profesor / Equipo {GYM_BRAND_CONFIG.identity.name}
       </span>
 
       <div className="w-full grid grid-cols-2 gap-3 pt-4 border-t border-[#2C2D35]">

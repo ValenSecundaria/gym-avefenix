@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Flame, LayoutDashboard, Maximize } from "lucide-react";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 interface CheckInHeaderProps {
   isFullscreen: boolean;
@@ -18,7 +19,7 @@ export function CheckInHeader({ isFullscreen, onRequestFullscreen }: CheckInHead
         </div>
         <div>
           <span className="font-extrabold text-2xl sm:text-3xl tracking-tight text-[#F4F5F7] block">
-            Gimnasio Ave Fénix
+            {GYM_BRAND_CONFIG.identity.name}
           </span>
           <span className="text-sm uppercase tracking-widest text-[#F95716] font-bold block">
             Ingreso al gimnasio
