@@ -84,6 +84,7 @@ async function computeDashboardOverview(): Promise<ActionResponse<DashboardOverv
           planName: latestMembership?.plan.name || "Sin plan",
           lastCheckInAt: lastCheckIn ? lastCheckIn.createdAt.toISOString() : null,
           daysAbsent,
+          lastNotifiedAt: member.lastNotifiedAt?.toISOString() ?? null,
         });
       } else if (!isCurrent) {
         const validUntilDate = latestMembership?.validUntil || null;
@@ -102,6 +103,7 @@ async function computeDashboardOverview(): Promise<ActionResponse<DashboardOverv
           planPrice: latestMembership ? Number(latestMembership.plan.price) : defaultPlan?.price || 0,
           validUntil: validUntilDate ? validUntilDate.toISOString() : null,
           daysOverdue,
+          lastNotifiedAt: member.lastNotifiedAt?.toISOString() ?? null,
         });
       }
     }
