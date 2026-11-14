@@ -354,6 +354,16 @@ export function AdminDashboardClient({
     void refreshAllData();
   };
 
+  const handleWhatsAppDispatched = (target: { fullName: string }) => {
+    showToast(
+      checkInScreenOnline
+        ? `Aviso despachado a WhatsApp (${target.fullName}). Al terminar volvé a esta ventana: el teclado numérico sigue fichando desde acá.`
+        : `Aviso despachado a WhatsApp (${target.fullName}).`
+    );
+    setMembersReloadKey((k) => k + 1);
+    void refreshAllData();
+  };
+
   const q = searchQuery.trim();
   const match = (name: string, dni: string) => !q || matchesSearch(name, q) || dni.includes(q);
   const section = ADMIN_SECTIONS.find((s) => s.tab === activeTab) || ADMIN_SECTIONS[0];
@@ -438,12 +448,14 @@ export function AdminDashboardClient({
                 debtors={debtors.filter((d) => match(d.fullName, d.dni))}
                 onRegisterPayment={setSelectedDebtor}
                 onEditMember={setEditingMemberId}
+                onWhatsAppDispatched={handleWhatsAppDispatched}
               />
             )}
             {activeTab === "ABSENT" && (
               <AbsentMembersTable
                 absentMembers={absentMembers.filter((a) => match(a.fullName, a.dni))}
                 onEditMember={setEditingMemberId}
+                onWhatsAppDispatched={handleWhatsAppDispatched}
               />
             )}
             {activeTab === "MEMBERS" && (
@@ -452,6 +464,7 @@ export function AdminDashboardClient({
                 reloadKey={membersReloadKey}
                 onEditMember={setEditingMemberId}
                 onSynced={handleMemberSynced}
+                onWhatsAppDispatched={handleWhatsAppDispatched}
               />
             )}
             {activeTab === "PAYMENTS" && roleOf(user) === "ADMIN" && (

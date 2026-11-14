@@ -1,7 +1,9 @@
 // Elección de cámara para la foto del socio: en el mostrador hay una cámara USB externa y la
 // notebook trae su webcam integrada. Se prefiere siempre la externa.
 
-const BASE_VIDEO = { width: { ideal: 640 }, height: { ideal: 480 } };
+// Resolución pedida a la cámara: alcanza para encuadrar la foto en grande sin que se vea pixelada.
+// Es un ideal: si la cámara no llega, el navegador entrega la más cercana que tenga.
+const BASE_VIDEO = { width: { ideal: 1280 }, height: { ideal: 960 } };
 const STORAGE_KEY = "gym_camera_device_v1";
 
 // Nombres típicos de la cámara de la notebook (Windows/Chrome los muestra así en `label`).

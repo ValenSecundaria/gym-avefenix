@@ -2,24 +2,38 @@
 
 import React, { useState } from "react";
 import { CheckCircle2, MessageCircle } from "lucide-react";
-import type { WhatsAppMode } from "@/lib/utils";
-import { getWhatsAppMode, setWhatsAppMode } from "@/lib/whatsapp-preference";
+import type { WhatsAppTarget } from "@/lib/whatsapp-dispatcher";
+import { DEFAULT_WHATSAPP_TARGET, getWhatsAppTarget, setWhatsAppTarget } from "@/lib/whatsapp-preference";
 
-const OPTIONS: { mode: WhatsAppMode; title: string; description: string }[] = [
-  { mode: "AUTO", title: "Automático", description: "wa.me: en el celular abre la app; en la PC muestra una página para elegir." },
-  { mode: "WEB", title: "WhatsApp Web", description: "Abre web.whatsapp.com en el navegador (hay que tener la sesión iniciada ahí)." },
-  { mode: "APP", title: "WhatsApp Desktop", description: "Abre la app de WhatsApp instalada en Windows directamente." },
+const OPTIONS: { target: WhatsAppTarget; title: string; description: string }[] = [
+  {
+    target: "web",
+    title: "WhatsApp Web",
+    description: "Abre web.whatsapp.com en este navegador (Chrome o Edge). La primera vez pide escanear el QR con el celular del gimnasio.",
+  },
+  {
+    target: "app",
+    title: "App de Windows",
+    description: "Abre la aplicación de WhatsApp instalada en esta computadora.",
+  },
+  {
+    target: "auto",
+    title: "Automático",
+    description: "wa.me: abre la app si está instalada; si no, ofrece continuar en WhatsApp Web.",
+  },
 ];
 
-/** Preferencia de cada computadora: la de recepción puede usar la app y el celular el modo automático. */
+/** Preferencia de cada computadora: la de recepción puede usar WhatsApp Web y otra la app de Windows. */
 export function WhatsAppModeSettings() {
   // La sección de Configuración solo se muestra en el navegador (no en el render del servidor).
-  const [mode, setMode] = useState<WhatsAppMode>(() => (typeof window === "undefined" ? "AUTO" : getWhatsAppMode()));
+  const [target, setTarget] = useState<WhatsAppTarget>(() =>
+    typeof window === "undefined" ? DEFAULT_WHATSAPP_TARGET : getWhatsAppTarget()
+  );
   const [saved, setSaved] = useState(false);
 
-  const choose = (m: WhatsAppMode) => {
-    setWhatsAppMode(m);
-    setMode(m);
+  const choose = (t: WhatsAppTarget) => {
+    setWhatsAppTarget(t);
+    setTarget(t);
     setSaved(true);
   };
 
@@ -35,16 +49,19 @@ export function WhatsAppModeSettings() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3" role="radiogroup" aria-label="Cómo abrir WhatsApp">
         {OPTIONS.map((o) => (
           <button
-            key={o.mode}
+            key={o.target}
             type="button"
             role="radio"
-            aria-checked={mode === o.mode}
-            onClick={() => choose(o.mode)}
+            aria-checked={target === o.target}
+            onClick={() => choose(o.target)}
             className={`text-left p-4 rounded-xl border transition-colors cursor-pointer ${
-              mode === o.mode ? "bg-[#25D366]/10 border-[#25D366]" : "bg-fx-base border-fx-border hover:border-fx-orange/60"
+              target === o.target ? "bg-[#25D366]/10 border-[#25D366]" : "bg-fx-base border-fx-border hover:border-fx-orange/60"
             }`}
           >
-            <span className="block font-bold text-fx-text">{o.title}</span>
+            <span className="block font-bold text-fx-text">
+              {o.title}
+              {o.target === DEFAULT_WHATSAPP_TARGET && <span className="ml-2 text-xs font-semibold text-fx-muted">(por defecto)</span>}
+            </span>
             <span className="block text-xs text-fx-muted mt-1">{o.description}</span>
           </button>
         ))}
