@@ -72,7 +72,7 @@ export function ProfessorAccountRow({ account, onChanged, onError }: Props) {
             <span>•</span>
             <span className="flex items-center gap-1">
               DNI: <strong className="font-mono text-fx-text">{account.dni || "Sin DNI"}</strong>
-              <button type="button" onClick={() => setEditingDni(!editingDni)} className="text-fx-orange hover:underline text-[10px] ml-1">
+              <button type="button" onClick={() => setEditingDni(!editingDni)} className="text-fx-orangeText hover:underline text-[10px] ml-1">
                 {editingDni ? "Cerrar" : "Editar"}
               </button>
             </span>
@@ -92,9 +92,9 @@ export function ProfessorAccountRow({ account, onChanged, onError }: Props) {
         ) : (
           <span className="flex items-center gap-2">
             <button type="button" onClick={() => setPasswordDraft("")} disabled={busy} className={SMALL_BTN}>
-              <KeyRound className="w-3.5 h-3.5 text-fx-orange" /> Contraseña
+              <KeyRound className="w-3.5 h-3.5 text-fx-orangeText" /> Contraseña
             </button>
-            <button type="button" onClick={() => setConfirmDelete(true)} disabled={busy} className={`${SMALL_BTN} text-fx-red`}>
+            <button type="button" onClick={() => setConfirmDelete(true)} disabled={busy} className={`${SMALL_BTN} text-fx-redText`}>
               <Trash2 className="w-3.5 h-3.5" /> Borrar
             </button>
           </span>

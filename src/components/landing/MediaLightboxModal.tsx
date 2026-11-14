@@ -25,7 +25,7 @@ export function MediaLightboxModal({ item, onClose }: MediaLightboxModalProps) {
       >
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#2C2D35] bg-[#0B0B0C]">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#23232A] text-[#F95716]">
+            <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#23232A] text-brand-primaryText">
               {item.category}
             </span>
             <h4 className="text-base sm:text-lg font-extrabold text-[#F4F5F7]">{item.title}</h4>

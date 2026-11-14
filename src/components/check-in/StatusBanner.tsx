@@ -27,13 +27,13 @@ const STATUS_CONFIG: Record<
   HABILITADO: {
     title: "HABILITADO",
     subtitle: "¡Bienvenido! Molinete abierto, excelente entrenamiento.",
-    bannerClass: "bg-[#10B981] text-[#F4F5F7] shadow-xl shadow-[#10B981]/25",
+    bannerClass: "bg-[#10B981] text-[#0B0B0C] shadow-xl shadow-[#10B981]/25",
     Icon: Check,
   },
   CUOTA_VENCIDA: {
     title: "CUOTA VENCIDA",
     subtitle: "Regularizá tu membresía en mostrador para habilitar el acceso.",
-    bannerClass: "bg-[#D92614] text-[#F4F5F7] shadow-xl shadow-[#D92614]/30",
+    bannerClass: "bg-brand-alert text-white shadow-xl shadow-brand-alert/30",
     Icon: AlertTriangle,
   },
   LIMITE_ALCANZADO: {

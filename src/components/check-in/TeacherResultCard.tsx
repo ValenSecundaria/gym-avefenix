@@ -43,7 +43,7 @@ export function TeacherResultCard({ result }: TeacherResultCardProps) {
         className={`w-24 h-24 rounded-full flex items-center justify-center mb-5 border-4 ${
           isCheckIn
             ? "bg-[#10B981]/20 border-[#10B981] text-[#10B981] shadow-[0_0_30px_rgba(16,185,129,0.3)]"
-            : "bg-[#F95716]/20 border-[#F95716] text-[#F95716] shadow-[0_0_30px_rgba(249,87,22,0.35)]"
+            : "bg-brand-primary/20 border-brand-primary text-brand-primaryText shadow-[0_0_30px_rgba(0,87,217,0.35)]"
         }`}
       >
         <GraduationCap className="w-12 h-12" />
@@ -51,7 +51,7 @@ export function TeacherResultCard({ result }: TeacherResultCardProps) {
 
       <div
         className={`w-full py-3 px-4 rounded-2xl flex items-center justify-center gap-2.5 font-black text-lg sm:text-xl uppercase tracking-wider mb-5 ${
-          isCheckIn ? "bg-[#10B981] text-white" : "bg-[#F95716] text-white"
+          isCheckIn ? "bg-[#10B981] text-[#0B0B0C]" : "bg-brand-primary text-white"
         }`}
       >
         {isCheckIn ? <CheckCircle2 className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
@@ -85,7 +85,7 @@ export function TeacherResultCard({ result }: TeacherResultCardProps) {
               Turno Activo
             </span>
           ) : (
-            <span className="text-lg font-black text-[#F95716] flex items-center gap-1.5">
+            <span className="text-lg font-black text-brand-primaryText flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
               {formatDuration(result.totalMinutes)}
             </span>

@@ -31,16 +31,23 @@ export function SystemTutorialsCard() {
           </div>
         </div>
 
-        <a
-          href={tutorialsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full min-h-[48px] px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer group"
-        >
-          <PlaySquare className="w-5 h-5 transition-transform group-hover:scale-110" />
-          <span>Ver Playlist en YouTube</span>
-          <ExternalLink className="w-4 h-4 opacity-75" />
-        </a>
+        {tutorialsUrl ? (
+          <a
+            href={tutorialsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full min-h-[48px] px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer group"
+          >
+            <PlaySquare className="w-5 h-5 transition-transform group-hover:scale-110" />
+            <span>Ver Playlist en YouTube</span>
+            <ExternalLink className="w-4 h-4 opacity-75" />
+          </a>
+        ) : (
+          <div className="w-full min-h-[48px] px-6 py-3 rounded-xl bg-fx-base border border-fx-border text-fx-muted font-semibold text-xs sm:text-sm flex items-center justify-center gap-2">
+            <PlaySquare className="w-4 h-4 shrink-0" />
+            <span>Playlist de capacitación próximamente disponible</span>
+          </div>
+        )}
       </div>
     </div>
   );

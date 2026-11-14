@@ -11,7 +11,7 @@ export function EditMemberButton({ fullName, onClick }: { fullName: string; onCl
       title="Editar / eliminar socio"
       className="min-h-[48px] min-w-[48px] px-3 rounded-xl bg-fx-surface border border-fx-border hover:border-fx-orange text-fx-muted hover:text-fx-text inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-bold transition-colors cursor-pointer"
     >
-      <UserPen className="w-4 h-4 text-fx-orange" />
+      <UserPen className="w-4 h-4 text-fx-orangeText" />
       <span className="hidden sm:inline">Editar</span>
     </button>
   );

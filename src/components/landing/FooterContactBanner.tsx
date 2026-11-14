@@ -13,7 +13,7 @@ export function FooterContactBanner({ whatsappUrl, gymPhoneDisplay }: FooterCont
       <div className="rounded-2xl bg-[#17171C] border border-[#2C2D35] p-6 sm:p-8 lg:p-10 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <div className="lg:col-span-7 flex flex-col gap-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0B0B0C] border border-[#2C2D35] w-fit">
-            <MapPin className="w-4 h-4 text-[#F95716]" aria-hidden="true" />
+            <MapPin className="w-4 h-4 text-brand-primaryText" aria-hidden="true" />
             <span className="text-xs font-bold uppercase tracking-wider text-[#FFB300]">
               Ubicación Oficial
             </span>

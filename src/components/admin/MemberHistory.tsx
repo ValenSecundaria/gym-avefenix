@@ -5,7 +5,7 @@ import { formatCurrencyARS, formatDateAR, formatTimeAR } from "@/lib/utils";
 
 const CHECKIN_LABEL: Record<AccessStatusType, { text: string; cls: string }> = {
   HABILITADO: { text: "Ingresó", cls: "text-fx-green" },
-  CUOTA_VENCIDA: { text: "Rechazado: cuota vencida", cls: "text-fx-red" },
+  CUOTA_VENCIDA: { text: "Rechazado: cuota vencida", cls: "text-fx-redText" },
   LIMITE_ALCANZADO: { text: "Rechazado: límite de ingresos", cls: "text-fx-amber" },
 };
 
@@ -13,7 +13,7 @@ function Stat({ icon: Icon, label, value }: { icon: React.ComponentType<{ classN
   return (
     <div className="p-3 rounded-xl bg-fx-base border border-fx-border">
       <div className="text-[11px] font-bold uppercase tracking-wider text-fx-muted flex items-center gap-1.5">
-        <Icon className="w-3.5 h-3.5 text-fx-orange" />
+        <Icon className="w-3.5 h-3.5 text-fx-orangeText" />
         {label}
       </div>
       <div className="mt-1 text-sm font-extrabold text-fx-text">{value}</div>
@@ -46,7 +46,7 @@ export function MemberHistory({ member }: { member: MemberDetail }) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-fx-border">
       <section aria-labelledby="history-payments">
         <h3 id="history-payments" className="text-xs font-bold uppercase tracking-wider text-fx-muted mb-2 flex items-center gap-1.5">
-          <CreditCard className="w-3.5 h-3.5 text-fx-orange" />
+          <CreditCard className="w-3.5 h-3.5 text-fx-orangeText" />
           Últimos pagos ({member.recentPayments.length} de {member.paymentsCount})
         </h3>
         {member.recentPayments.length === 0 ? (
@@ -73,7 +73,7 @@ export function MemberHistory({ member }: { member: MemberDetail }) {
 
       <section aria-labelledby="history-checkins">
         <h3 id="history-checkins" className="text-xs font-bold uppercase tracking-wider text-fx-muted mb-2 flex items-center gap-1.5">
-          <CalendarCheck className="w-3.5 h-3.5 text-fx-orange" />
+          <CalendarCheck className="w-3.5 h-3.5 text-fx-orangeText" />
           Últimos ingresos ({member.recentCheckIns.length} de {member.checkInsCount})
         </h3>
         {member.recentCheckIns.length === 0 ? (

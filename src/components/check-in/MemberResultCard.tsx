@@ -27,14 +27,14 @@ export function MemberResultCard({ result }: MemberResultCardProps) {
     result.status === "HABILITADO"
       ? "ring-8 ring-[#10B981]/15"
       : result.status === "CUOTA_VENCIDA"
-        ? "ring-8 ring-[#D92614]/20"
+        ? "ring-8 ring-brand-alert/20"
         : "ring-8 ring-[#FFB300]/20";
 
   const cornerBadgeClass =
     result.status === "HABILITADO"
-      ? "bg-[#10B981] text-[#F4F5F7]"
+      ? "bg-[#10B981] text-[#0B0B0C]"
       : result.status === "CUOTA_VENCIDA"
-        ? "bg-[#D92614] text-[#F4F5F7]"
+        ? "bg-brand-alert text-white"
         : "bg-[#FFB300] text-[#0B0B0C]";
 
   const CornerIcon =

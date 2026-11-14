@@ -1,14 +1,14 @@
-// Genera los íconos oficiales de la PWA (192x192, 512x512 y maskable) a partir de public/Logo.jpeg.
+// Genera los íconos oficiales de la PWA (192x192, 512x512 y maskable) a partir de public/brand/logo.png.
 // Uso: npm run pwa:icons
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
 const ROOT = process.cwd();
-const SOURCE = path.join(ROOT, "public", "Logo.jpeg");
+const SOURCE = path.join(ROOT, "public", "brand", "logo.png");
 const OUT_DIR = path.join(ROOT, "public", "icons");
-// El logo tiene fondo negro puro: el letterbox negro lo integra sin bordes visibles.
-const BACKGROUND = { r: 0, g: 0, b: 0, alpha: 1 };
+// Fondo Azul Cobalto oficial de Palestra GYM (#0057D9) para letterbox sin bordes visibles.
+const BACKGROUND = { r: 0, g: 87, b: 217, alpha: 1 };
 
 async function renderIcon(size, fileName, safeZoneRatio = 1) {
   const inner = Math.round(size * safeZoneRatio);

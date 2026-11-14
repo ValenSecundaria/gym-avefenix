@@ -105,12 +105,12 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
       <div className="py-10 flex flex-col items-center gap-3 text-sm text-fx-muted">
         {error ? (
           <>
-            <AlertCircle className="w-8 h-8 text-fx-red" />
+            <AlertCircle className="w-8 h-8 text-fx-redText" />
             <span>{error}</span>
           </>
         ) : (
           <>
-            <Loader2 className="w-8 h-8 animate-spin text-fx-orange" />
+            <Loader2 className="w-8 h-8 animate-spin text-fx-orangeText" />
             <span>Cargando planes...</span>
           </>
         )}
@@ -127,7 +127,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
     <div className="flex flex-col gap-5">
       {error && (
         <div role="alert" className="flex items-center gap-2 p-3 rounded-xl bg-fx-red/20 border border-fx-red text-sm text-fx-text">
-          <AlertCircle className="w-4 h-4 text-fx-red shrink-0" />
+          <AlertCircle className="w-4 h-4 text-fx-redText shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -170,7 +170,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
         return (
           <section key={d?.id ?? "sin-disciplina"} aria-label={d?.name ?? "Sin disciplina"} className="flex flex-col gap-2">
             <h3 className="text-sm font-extrabold text-fx-text flex items-center gap-2">
-              <Tags className="w-4 h-4 text-fx-orange" />
+              <Tags className="w-4 h-4 text-fx-orangeText" />
               {d?.name ?? "Sin disciplina"}
               {d && !d.isActive && (
                 <span className="px-2 py-0.5 rounded-md border text-[11px] font-bold bg-fx-amber/15 text-fx-amber border-fx-amber/40">
@@ -202,7 +202,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono font-extrabold text-lg text-fx-orange mr-1">{formatCurrencyARS(p.price)}</span>
+                      <span className="font-mono font-extrabold text-lg text-fx-orangeText mr-1">{formatCurrencyARS(p.price)}</span>
                       {confirmDeleteId === p.id ? (
                         <>
                           <span className="text-xs text-fx-text">¿Borrar {p.name}?</span>
@@ -221,7 +221,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
                       ) : (
                         <>
                           <button type="button" onClick={() => setEditingPlan(p)} disabled={busy} className={`${SMALL_BTN} text-fx-text`}>
-                            <Pencil className="w-3.5 h-3.5 text-fx-orange" /> Editar
+                            <Pencil className="w-3.5 h-3.5 text-fx-orangeText" /> Editar
                           </button>
                           <button
                             type="button"
@@ -245,7 +245,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
                                 ? `No se puede borrar: ${p.currentMembersCount} ${p.currentMembersCount === 1 ? "socio activo" : "socios activos"} en este plan`
                                 : undefined
                             }
-                            className={`${SMALL_BTN} text-fx-red`}
+                            className={`${SMALL_BTN} text-fx-redText`}
                           >
                             <Trash2 className="w-3.5 h-3.5" /> Borrar
                           </button>
@@ -265,7 +265,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
           <h3 id="disciplines-title" className="text-sm font-extrabold text-fx-text">Disciplinas</h3>
           {!disciplineDraft && (
             <button type="button" onClick={() => setDisciplineDraft({ name: "" })} className={`${SMALL_BTN} text-fx-text`}>
-              <Plus className="w-3.5 h-3.5 text-fx-orange" /> Nueva disciplina
+              <Plus className="w-3.5 h-3.5 text-fx-orangeText" /> Nueva disciplina
             </button>
           )}
         </div>
@@ -299,7 +299,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
               </span>
               <span className="flex items-center gap-2">
                 <button type="button" onClick={() => setDisciplineDraft({ id: d.id, name: d.name })} className={`${SMALL_BTN} text-fx-text`}>
-                  <Pencil className="w-3.5 h-3.5 text-fx-orange" /> Renombrar
+                  <Pencil className="w-3.5 h-3.5 text-fx-orangeText" /> Renombrar
                 </button>
                 <button
                   type="button"

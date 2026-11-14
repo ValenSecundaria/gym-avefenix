@@ -2,7 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { Flame, LayoutDashboard, Maximize } from "lucide-react";
+import Image from "next/image";
+import { LayoutDashboard, Maximize } from "lucide-react";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 interface CheckInHeaderProps {
@@ -12,16 +13,22 @@ interface CheckInHeaderProps {
 
 export function CheckInHeader({ isFullscreen, onRequestFullscreen }: CheckInHeaderProps) {
   return (
-    <header className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4 pb-4 border-b border-[#2C2D35]">
+    <header className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4 pb-4 border-b border-brand-border">
       <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F95716] to-[#D92614] flex items-center justify-center text-white shadow-[0_0_24px_rgba(249,87,22,0.35)]">
-          <Flame className="w-8 h-8" />
+        <div className="w-14 h-14 rounded-2xl overflow-hidden bg-brand-primary border border-brand-border flex items-center justify-center shadow-[0_0_24px_rgba(0,87,217,0.35)] shrink-0">
+          <Image
+            src={GYM_BRAND_CONFIG.assets.logoCheckIn}
+            alt={GYM_BRAND_CONFIG.identity.shortName}
+            width={56}
+            height={56}
+            className="w-full h-full object-cover"
+          />
         </div>
         <div>
-          <span className="font-extrabold text-2xl sm:text-3xl tracking-tight text-[#F4F5F7] block">
+          <span className="font-extrabold text-2xl sm:text-3xl tracking-tight text-brand-textPrimary block">
             {GYM_BRAND_CONFIG.identity.name}
           </span>
-          <span className="text-sm uppercase tracking-widest text-[#F95716] font-bold block">
+          <span className="text-sm uppercase tracking-widest text-brand-primaryText font-bold block">
             Ingreso al gimnasio
           </span>
         </div>
@@ -33,7 +40,7 @@ export function CheckInHeader({ isFullscreen, onRequestFullscreen }: CheckInHead
             type="button"
             tabIndex={-1}
             onClick={onRequestFullscreen}
-            className="min-h-[48px] inline-flex items-center gap-2 px-4 rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-sm font-bold text-white transition-colors cursor-pointer"
+            className="min-h-[48px] inline-flex items-center gap-2 px-4 rounded-xl bg-brand-primary hover:bg-brand-primaryHover text-sm font-bold text-white transition-colors cursor-pointer"
           >
             <Maximize className="w-5 h-5" />
             <span className="hidden sm:inline">Pantalla completa</span>

@@ -42,7 +42,7 @@ export function TeacherHoursSummary({ shifts }: Props) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-extrabold uppercase tracking-wider text-[#8A909A] flex items-center gap-2">
-          <Calculator className="w-4 h-4 text-[#F95716]" />
+          <Calculator className="w-4 h-4 text-brand-primaryText" />
           Liquidación de Horas por Profesor
         </h4>
         <span className="text-xs text-[#8A909A]">{summaries.length} profesores activos</span>
@@ -55,7 +55,7 @@ export function TeacherHoursSummary({ shifts }: Props) {
           return (
             <div
               key={sum.userId}
-              className="p-4 rounded-2xl bg-[#17171C] border border-[#2C2D35] hover:border-[#F95716]/40 transition-colors"
+              className="p-4 rounded-2xl bg-[#17171C] border border-[#2C2D35] hover:border-brand-primary/40 transition-colors"
             >
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div className="min-w-0">
@@ -64,7 +64,7 @@ export function TeacherHoursSummary({ shifts }: Props) {
                     <span className="text-xs font-mono text-[#8A909A]">DNI {sum.teacherDni}</span>
                   )}
                 </div>
-                <div className="w-9 h-9 rounded-xl bg-[#F95716]/15 border border-[#F95716]/30 flex items-center justify-center text-[#F95716] shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-brand-primary/15 border border-brand-primary/30 flex items-center justify-center text-brand-primaryText shrink-0">
                   <UserCheck className="w-5 h-5" />
                 </div>
               </div>
@@ -84,7 +84,7 @@ export function TeacherHoursSummary({ shifts }: Props) {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A909A] block mb-0.5">
                     Decimal / Turnos
                   </span>
-                  <span className="text-lg font-black text-[#F95716]">
+                  <span className="text-lg font-black text-brand-primaryText">
                     {sum.totalHours} <span className="text-xs font-normal text-[#8A909A]">hrs ({sum.shiftCount})</span>
                   </span>
                 </div>

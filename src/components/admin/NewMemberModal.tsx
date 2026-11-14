@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Check, Loader2, AlertCircle, Flame } from "lucide-react";
+import { X, Check, Loader2, AlertCircle, UserPlus } from "lucide-react";
 import type { PaymentMethodType, PlanOption } from "@/types";
 import { formatCurrencyARS } from "@/lib/utils";
 import { PlanPicker } from "./PlanPicker";
@@ -80,8 +80,8 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember, hidePri
       <div className="bg-fx-surface border border-fx-border w-full max-w-4xl rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-6 sm:p-8 flex flex-col gap-6 my-auto">
         <div className="flex items-start justify-between pb-4 border-b border-fx-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fx-orange to-fx-red flex items-center justify-center text-white shrink-0">
-              <Flame className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-brand-primary flex items-center justify-center text-white shrink-0">
+              <UserPlus className="w-5 h-5" />
             </div>
             <div>
               <h2 id="new-member-title" className="text-lg sm:text-xl text-fx-text font-extrabold tracking-tight">
@@ -103,7 +103,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember, hidePri
           <div className="md:col-span-7 flex flex-col gap-4">
             {error && (
               <div className="flex items-center gap-2 p-3 rounded-xl bg-fx-red/20 border border-fx-red text-xs sm:text-sm text-fx-text">
-                <AlertCircle className="w-4 h-4 text-fx-red shrink-0" />
+                <AlertCircle className="w-4 h-4 text-fx-redText shrink-0" />
                 <span>{error}</span>
               </div>
             )}
@@ -131,7 +131,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember, hidePri
               <div className="flex items-center justify-between">
                 <span className="text-xs text-fx-muted uppercase tracking-wider font-bold">Método de Cobro Inicial</span>
                 {!hidePrices && (
-                  <span className="font-mono text-lg text-fx-orange font-extrabold">{selectedPlan ? formatCurrencyARS(selectedPlan.price) : "$0"}</span>
+                  <span className="font-mono text-lg text-fx-orangeText font-extrabold">{selectedPlan ? formatCurrencyARS(selectedPlan.price) : "$0"}</span>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -148,7 +148,7 @@ export function NewMemberModal({ isOpen, onClose, plans, onSubmitMember, hidePri
               <button type="button" onClick={onClose} disabled={isSubmitting} className="min-h-[48px] px-6 rounded-xl bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text font-semibold text-sm cursor-pointer">
                 Cancelar
               </button>
-              <button type="submit" disabled={isSubmitting} className="min-h-[50px] px-7 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-bold text-sm inline-flex items-center gap-2 shadow-[0_4px_20px_rgba(249,87,22,0.4)] disabled:opacity-50 cursor-pointer">
+              <button type="submit" disabled={isSubmitting} className="min-h-[50px] px-7 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-bold text-sm inline-flex items-center gap-2 shadow-[0_4px_20px_rgba(0,87,217,0.4)] disabled:opacity-50 cursor-pointer">
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                 <span>{selectedPlan ? "✓ Guardar y Habilitar Socio" : "✓ Guardar Socio"}</span>
               </button>

@@ -101,14 +101,14 @@ export function TeacherShiftsTable({ shifts, onChanged }: Props) {
                       type="button"
                       onClick={() => handleCloseShift(s)}
                       disabled={isBusy}
-                      className="min-h-[34px] px-2.5 rounded-lg bg-[#F95716] hover:bg-[#EA580C] text-white text-xs font-black inline-flex items-center gap-1.5 cursor-pointer shadow-md shadow-[#F95716]/20 disabled:opacity-40"
+                      className="min-h-[34px] px-2.5 rounded-lg bg-brand-primary hover:bg-brand-primaryHover text-white text-xs font-black inline-flex items-center gap-1.5 cursor-pointer shadow-[0_4px_12px_rgba(0,87,217,0.25)] disabled:opacity-40"
                     >
                       {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3 h-3 fill-current" />}
                       <span>Marcar Salida</span>
                     </button>
                   )}
                 </td>
-                <td className="py-3.5 px-4 font-mono text-xs font-bold text-[#F95716]">
+                <td className="py-3.5 px-4 font-mono text-xs font-bold text-brand-primaryText">
                   {formatDuration(s.totalMinutes)}
                 </td>
                 <td className="py-3.5 px-4 text-right">
@@ -117,7 +117,7 @@ export function TeacherShiftsTable({ shifts, onChanged }: Props) {
                     onClick={() => handleDelete(s)}
                     disabled={isBusy}
                     title="Eliminar registro"
-                    className="p-2 rounded-lg text-[#8A909A] hover:text-[#D92614] hover:bg-[#D92614]/10 transition-colors cursor-pointer disabled:opacity-40"
+                    className="p-2 rounded-lg text-[#8A909A] hover:text-brand-alertText hover:bg-brand-alert/10 transition-colors cursor-pointer disabled:opacity-40"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

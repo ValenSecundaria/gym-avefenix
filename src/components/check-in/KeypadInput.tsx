@@ -32,7 +32,7 @@ export function KeypadInput({ value, onKey, isLoading = false, error = null }: K
     <div className="w-full bg-[#17171C] border border-[#2C2D35] rounded-3xl p-5 sm:p-7 shadow-2xl flex flex-col gap-4">
       <div className="text-center">
         <p className="text-2xl sm:text-3xl font-extrabold uppercase tracking-wide text-[#F4F5F7]">
-          Escribí tu <span className="text-[#F95716]">DNI</span>
+          Escribí tu <span className="text-brand-primaryText">DNI</span>
         </p>
         <p className="text-base sm:text-lg text-[#8A909A] mt-1">Solo números, sin puntos</p>
       </div>
@@ -43,7 +43,7 @@ export function KeypadInput({ value, onKey, isLoading = false, error = null }: K
         aria-label="Número de DNI"
         aria-live="polite"
         className={`relative w-full h-24 sm:h-28 overflow-hidden rounded-2xl border-4 flex items-center justify-center bg-[#0B0B0C] transition-colors ${
-          error ? "border-[#D92614]" : "border-[#F95716] shadow-[0_0_0_6px_rgba(249,87,22,0.15)]"
+          error ? "border-brand-alert" : "border-brand-primary shadow-[0_0_0_6px_rgba(0,87,217,0.18)]"
         } ${isLoading ? "opacity-60" : ""}`}
       >
         {value ? (
@@ -56,14 +56,14 @@ export function KeypadInput({ value, onKey, isLoading = false, error = null }: K
           </span>
         )}
         {!isLoading && value.length < DNI_MAX_LENGTH && (
-          <span aria-hidden="true" className="w-1 h-12 sm:h-14 ml-1 bg-[#F95716] rounded-full animate-pulse" />
+          <span aria-hidden="true" className="w-1 h-12 sm:h-14 ml-1 bg-brand-primary rounded-full animate-pulse" />
         )}
       </div>
 
       {error && (
         <div
           role="alert"
-          className="flex items-center gap-3 px-4 py-4 rounded-2xl bg-[#D92614] text-white text-lg sm:text-xl font-bold"
+          className="flex items-center gap-3 px-4 py-4 rounded-2xl bg-brand-alert text-white text-lg sm:text-xl font-bold"
         >
           <AlertCircle className="w-8 h-8 shrink-0" />
           <span>{error}</span>
@@ -122,7 +122,7 @@ export function KeypadInput({ value, onKey, isLoading = false, error = null }: K
         {...noFocus}
         disabled={isLoading || !isValidLength}
         onClick={() => onKey("Enter")}
-        className="w-full min-h-[76px] rounded-2xl bg-[#10B981] hover:bg-[#10B981]/90 active:scale-[0.99] text-white font-extrabold text-2xl uppercase tracking-wider flex items-center justify-center gap-3 shadow-lg shadow-[#10B981]/25 transition-all disabled:bg-[#23232A] disabled:text-[#8A909A] disabled:shadow-none cursor-pointer"
+        className="w-full min-h-[76px] rounded-2xl bg-[#10B981] hover:bg-[#10B981]/90 active:scale-[0.99] text-[#0B0B0C] font-extrabold text-2xl uppercase tracking-wider flex items-center justify-center gap-3 shadow-lg shadow-[#10B981]/25 transition-all disabled:bg-[#23232A] disabled:text-[#8A909A] disabled:shadow-none cursor-pointer"
       >
         {isLoading ? (
           <>

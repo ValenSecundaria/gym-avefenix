@@ -26,7 +26,7 @@ function StatusBadge({ status }: { status: AccessStatusType }) {
   }
   if (status === "CUOTA_VENCIDA") {
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-fx-red/20 text-fx-red border border-fx-red/50">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-fx-red/20 text-fx-redText border border-fx-red/50">
         <AlertTriangle className="w-4 h-4" />
         <span>⚠ Cuota Vencida</span>
       </span>
@@ -69,7 +69,7 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync }: LiveFeedTa
           }`}
         >
           <span>Cuota Vencida</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${filter === "DUE" ? "bg-white/20 text-white" : "bg-fx-red/20 text-fx-red"}`}>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${filter === "DUE" ? "bg-white/20 text-white" : "bg-fx-red/20 text-fx-redText"}`}>
             {dueCount}
           </span>
         </button>
@@ -108,7 +108,7 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync }: LiveFeedTa
                     <div className="font-bold text-lg text-fx-text leading-tight">{item.fullName}</div>
                     <div className="font-mono text-sm text-fx-muted">DNI {item.dni}</div>
                   </div>
-                  <div className="font-mono font-extrabold text-lg text-fx-orange shrink-0">{formatTimeAR(item.createdAt)}</div>
+                  <div className="font-mono font-extrabold text-lg text-fx-orangeText shrink-0">{formatTimeAR(item.createdAt)}</div>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <StatusBadge status={item.status} />
@@ -136,7 +136,7 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync }: LiveFeedTa
               <tbody className="divide-y divide-fx-border">
                 {filteredItems.map((item) => (
                   <tr key={item.id} className={`hover:bg-fx-hover transition-colors ${item.status === "CUOTA_VENCIDA" ? "bg-fx-red/5" : ""}`}>
-                    <td className="py-4 px-5 font-mono font-bold text-fx-orange">{formatTimeAR(item.createdAt)} hs</td>
+                    <td className="py-4 px-5 font-mono font-bold text-fx-orangeText">{formatTimeAR(item.createdAt)} hs</td>
                     <td className="py-4 px-4">
                       <div className="w-11 h-11 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center">
                         {item.photoUrl ? (

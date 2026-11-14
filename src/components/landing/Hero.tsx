@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Flame, ArrowRight, MessageCircle, Users } from "lucide-react";
+import { Dumbbell, ArrowRight, MessageCircle, Users } from "lucide-react";
 import { useAuth } from "@/context/auth-session-context";
 import { buildWhatsAppLink } from "@/lib/utils";
 import { GlowCard } from "@/components/ui/spotlight-card";
@@ -28,7 +28,7 @@ export function Hero({ activeMembers }: HeroProps) {
       label: "Socios Activos",
       sub: "Comunidad activa con cuota al día",
       icon: Users,
-      accent: "text-[#F95716]",
+      accent: "text-brand-primaryText",
     },
     ...STATIC_METRICS,
   ];
@@ -38,12 +38,12 @@ export function Hero({ activeMembers }: HeroProps) {
       id="inicio"
       className="relative w-full overflow-hidden bg-[#0B0B0C] px-4 sm:px-6 lg:px-10 pt-14 pb-20 lg:pt-20 lg:pb-24"
     >
-      <div aria-hidden="true" className="pointer-events-none absolute top-16 left-1/2 -translate-x-1/2 w-[680px] h-[420px] rounded-full bg-[#F95716]/15 blur-[130px]" />
-      <div aria-hidden="true" className="pointer-events-none absolute top-24 right-10 w-[280px] h-[280px] rounded-full bg-[#D92614]/10 blur-[100px]" />
+      <div aria-hidden="true" className="pointer-events-none absolute top-16 left-1/2 -translate-x-1/2 w-[680px] h-[420px] rounded-full bg-brand-primary/15 blur-[130px]" />
+      <div aria-hidden="true" className="pointer-events-none absolute top-24 right-10 w-[280px] h-[280px] rounded-full bg-brand-alert/10 blur-[100px]" />
 
       <div className="relative max-w-7xl mx-auto flex flex-col items-center text-center">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#17171C] border border-[#2C2D35] shadow-md mb-7">
-          <Flame className="w-4 h-4 text-[#F95716]" aria-hidden="true" />
+          <Dumbbell className="w-4 h-4 text-brand-primaryText" aria-hidden="true" />
           <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#FFB300]">
             {GYM_BRAND_CONFIG.identity.heroSubtitle}
           </span>
@@ -51,7 +51,7 @@ export function Hero({ activeMembers }: HeroProps) {
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#F4F5F7] max-w-4xl leading-[1.08] mb-4 uppercase">
           Forjá tu mejor versión.{" "}
-          <span className="bg-gradient-to-r from-[#F95716] via-[#F95716] to-[#FFB300] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#4D94FF] via-[#4D94FF] to-[#FFB300] bg-clip-text text-transparent">
             {GYM_BRAND_CONFIG.identity.heroTitle}
           </span>
         </h1>
@@ -64,7 +64,7 @@ export function Hero({ activeMembers }: HeroProps) {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mb-16">
           <a
             href="#planes"
-            className="w-full sm:w-auto min-h-[52px] inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-[#F4F5F7] text-sm sm:text-base font-bold uppercase tracking-wider shadow-[0_0_28px_-4px_rgba(249,87,22,0.55)] transition-all"
+            className="w-full sm:w-auto min-h-[52px] inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-xl bg-brand-primary hover:bg-brand-primaryHover text-white text-sm sm:text-base font-bold uppercase tracking-wider shadow-[0_0_28px_-4px_rgba(0,87,217,0.55)] transition-all"
           >
             <span>Empezar a Entrenar</span>
             <ArrowRight className="w-5 h-5" aria-hidden="true" />
@@ -82,7 +82,7 @@ export function Hero({ activeMembers }: HeroProps) {
 
         <GlowCard
           customSize
-          glowColor="orange"
+          glowColor="blue"
           className="w-full p-5 sm:p-6 rounded-2xl bg-[#17171C]/90 border border-[#2C2D35] shadow-xl mb-14"
         >
           <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -107,11 +107,11 @@ export function Hero({ activeMembers }: HeroProps) {
               <GlowCard
                 key={pillar.title}
                 customSize
-                glowColor="orange"
+                glowColor="blue"
                 className="p-6 rounded-2xl bg-[#17171C]/90 hover:bg-[#23232A]/90 border border-[#2C2D35] flex flex-col justify-between transition-colors group"
               >
                 <div>
-                  <div className="w-11 h-11 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] flex items-center justify-center text-[#F95716] mb-4 group-hover:border-[#F95716]/50 transition-colors">
+                  <div className="w-11 h-11 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] flex items-center justify-center text-brand-primaryText mb-4 group-hover:border-brand-primary/50 transition-colors">
                     <Icon className="w-5 h-5" aria-hidden="true" />
                   </div>
                   <h2 className="text-lg font-bold text-[#F4F5F7] mb-2">{pillar.title}</h2>

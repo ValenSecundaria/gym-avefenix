@@ -28,7 +28,7 @@ export function Card({
         "rounded-2xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] shadow-lg transition-all duration-200",
         hoverable && "hover:bg-[#23232A] hover:border-[#8A909A]/40",
         highlighted &&
-          "border-[#F95716] shadow-[0_0_32px_-6px_rgba(249,87,22,0.3)]",
+          "border-brand-primary shadow-[0_0_32px_-6px_rgba(0,87,217,0.3)]",
         PADDING_CLASSES[padding],
         className
       )}

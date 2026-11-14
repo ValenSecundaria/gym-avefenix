@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, MessageCircle, Clock, ShieldCheck, Flame } from "lucide-react";
+import { MapPin, MessageCircle, Clock, ShieldCheck } from "lucide-react";
 import { buildWhatsAppLink } from "@/lib/utils";
 import { useAuth } from "@/context/auth-session-context";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
@@ -30,7 +30,7 @@ export function Footer() {
           {/* Columna 1: Identidad y Redes */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#17171C] border border-[#2C2D35] shrink-0">
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-brand-primary border border-[#2C2D35] shrink-0">
                 <Image
                   src={GYM_BRAND_CONFIG.assets.logoMain}
                   alt={GYM_BRAND_CONFIG.identity.name}
@@ -42,7 +42,6 @@ export function Footer() {
               <div>
                 <span className="flex items-center gap-1 text-base font-extrabold uppercase text-[#F4F5F7]">
                   {GYM_BRAND_CONFIG.identity.shortName}
-                  <Flame className="w-4 h-4 text-[#F95716]" aria-hidden="true" />
                 </span>
                 <span className="text-[11px] font-bold uppercase tracking-widest text-[#FFB300]">
                   {GYM_BRAND_CONFIG.identity.subdivision}
@@ -100,12 +99,12 @@ export function Footer() {
               rel="noopener noreferrer"
               className="text-[#F4F5F7] font-medium flex items-center gap-2 hover:text-[#FFB300] transition-colors"
             >
-              <MapPin className="w-4 h-4 text-[#F95716] shrink-0" aria-hidden="true" />
+              <MapPin className="w-4 h-4 text-brand-primaryText shrink-0" aria-hidden="true" />
               <span>{GYM_BRAND_CONFIG.contact.address}</span>
             </a>
             {GYM_BRAND_CONFIG.contact.schedule.map((s) => (
               <p key={s.days} className="text-[#8A909A] flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#F95716] shrink-0" aria-hidden="true" />
+                <Clock className="w-4 h-4 text-brand-primaryText shrink-0" aria-hidden="true" />
                 <span>{s.days}: {s.hours}</span>
               </p>
             ))}
@@ -122,7 +121,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="flex items-center gap-2.5 text-[#8A909A] hover:text-[#F4F5F7] transition-colors group"
             >
-              <InstagramIcon className="w-4 h-4 text-[#F95716] group-hover:text-[#E1306C] transition-colors" />
+              <InstagramIcon className="w-4 h-4 text-brand-primaryText group-hover:text-[#E1306C] transition-colors" />
               <span>{GYM_BRAND_CONFIG.contact.instagramHandle}</span>
             </a>
             <a
@@ -143,9 +142,9 @@ export function Footer() {
             </span>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 text-[#8A909A] hover:text-[#F95716] transition-colors"
+              className="inline-flex items-center gap-2 text-[#8A909A] hover:text-brand-primaryText transition-colors"
             >
-              <ShieldCheck className="w-4 h-4 text-[#F95716]" aria-hidden="true" />
+              <ShieldCheck className="w-4 h-4 text-brand-primaryText" aria-hidden="true" />
               Panel de Recepción / Login
             </Link>
             <div className="pt-2 flex flex-col gap-1 text-xs text-[#8A909A]">

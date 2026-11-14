@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Gimnasio Ave Fénix",
-  "short_name": "Ave Fénix",
-  "description": "Sistema de gestión y control de acceso del gimnasio: panel de recepción y terminal de check-in para doble pantalla.",
+  "name": "Palestra GYM - Bahia Blanca",
+  "short_name": "Palestra GYM",
+  "description": "Sistema de gestión y control de acceso de Palestra GYM: panel de recepción y terminal de check-in para doble pantalla.",
   "lang": "es-AR",
   "dir": "ltr",
   "start_url": "/login",
@@ -10,7 +10,7 @@
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#0B0B0C",
-  "theme_color": "#F95716",
+  "theme_color": "#0057D9",
   "categories": ["business", "productivity", "health"],
   "launch_handler": {
     "client_mode": "focus-existing"

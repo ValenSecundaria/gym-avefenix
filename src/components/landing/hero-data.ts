@@ -26,7 +26,7 @@ export interface PillarItem {
 export const STATIC_METRICS: MetricItem[] = [
   { value: "100% Pro", label: "Equipamiento Biomecánico", sub: "Línea Importada Calibrada", icon: Dumbbell, accent: "text-[#FFB300]" },
   { value: "Élite", label: "Entrenadores en Sala", sub: "Profesores Certificados y de Primer Nivel", icon: Award, accent: "text-[#10B981]" },
-  { value: "DNI Ágil", label: "Ingreso Automático", sub: "Ingreso Rápido y Seguro", icon: ScanLine, accent: "text-[#F95716]" },
+  { value: "DNI Ágil", label: "Ingreso Automático", sub: "Ingreso Rápido y Seguro", icon: ScanLine, accent: "text-brand-primaryText" },
 ];
 
 export const PILLARS: PillarItem[] = [

@@ -35,7 +35,7 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
       {/* Banner Resumen de Mora (Stitch Screen 2 Tab B) */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-fx-red/10 border border-fx-red/40 text-fx-text">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-fx-red/20 flex items-center justify-center text-fx-red shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-fx-red/20 flex items-center justify-center text-fx-redText shrink-0">
             <Wallet className="w-6 h-6" />
           </div>
           <div>
@@ -44,7 +44,7 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
             </div>
             <div className="text-xs text-fx-muted">
               Total estimado a renovar:{" "}
-              <span className="text-fx-red font-mono font-bold">{formatCurrencyARS(totalDebt)}</span>
+              <span className="text-fx-redText font-mono font-bold">{formatCurrencyARS(totalDebt)}</span>
             </div>
           </div>
         </div>
@@ -65,7 +65,7 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
               className="p-4 sm:p-5 rounded-xl bg-fx-base border border-fx-border hover:border-fx-red/40 flex flex-wrap items-center justify-between gap-4 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-fx-red/20 border border-fx-red/50 overflow-hidden flex items-center justify-center text-fx-red shrink-0">
+                <div className="w-12 h-12 rounded-full bg-fx-red/20 border border-fx-red/50 overflow-hidden flex items-center justify-center text-fx-redText shrink-0">
                   {debtor.photoUrl ? (
                     <MemberPhotoImg memberId={debtor.id} src={debtor.photoUrl} alt={debtor.fullName} className="w-full h-full object-cover" />
                   ) : (
@@ -77,7 +77,7 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
                   <div className="font-mono text-xs text-fx-muted mt-0.5 flex flex-wrap items-center gap-x-2">
                     <span>DNI: {debtor.dni}</span>
                     <span>•</span>
-                    <span className="text-fx-red font-semibold">
+                    <span className="text-fx-redText font-semibold">
                       Venció: {formatDateAR(debtor.validUntil)} ({debtor.daysOverdue}d mora)
                     </span>
                     {debtor.phone && (
@@ -91,7 +91,7 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
               </div>
 
               <div className="w-full sm:w-auto flex flex-wrap items-center gap-3 sm:gap-4">
-                <span className="font-mono font-extrabold text-2xl text-fx-red">
+                <span className="font-mono font-extrabold text-2xl text-fx-redText">
                   {formatCurrencyARS(debtor.planPrice)}
                 </span>
                 <div className="w-full sm:w-auto flex items-center gap-2.5 [&>button:not(:last-child)]:flex-1 sm:[&>button]:flex-none [&>button]:justify-center">
@@ -114,7 +114,7 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
                   <button
                     type="button"
                     onClick={() => onRegisterPayment(debtor)}
-                    className="min-h-[48px] px-5 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-[0_2px_10px_rgba(249,87,22,0.3)] transition-all cursor-pointer"
+                    className="min-h-[48px] px-5 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-[0_2px_10px_rgba(0,87,217,0.3)] transition-all cursor-pointer"
                   >
                     <CreditCard className="w-4 h-4" />
                     <span>Cobrar Cuota</span>

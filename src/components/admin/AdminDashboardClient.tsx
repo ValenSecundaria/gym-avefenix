@@ -396,7 +396,7 @@ export function AdminDashboardClient({
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 sm:pb-5 border-b border-fx-border">
               <div className="flex items-center gap-3">
                 <span className="w-11 h-11 rounded-xl bg-fx-orange/10 flex items-center justify-center shrink-0">
-                  <SectionIcon className="w-6 h-6 text-fx-orange" />
+                  <SectionIcon className="w-6 h-6 text-fx-orangeText" />
                 </span>
                 <h2 className="text-xl sm:text-2xl font-extrabold text-fx-text">{section.label}</h2>
               </div>

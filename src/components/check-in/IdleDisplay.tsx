@@ -1,12 +1,19 @@
 import React from "react";
-import { Flame, Monitor, ShieldCheck } from "lucide-react";
+import Image from "next/image";
+import { Monitor, ShieldCheck } from "lucide-react";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 export function IdleDisplay() {
   return (
-    <div className="w-full bg-[#17171C] border border-[#2C2D35] rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center min-h-[420px] shadow-2xl">
-      <div className="w-16 h-16 rounded-2xl bg-[#0B0B0C] text-[#F95716] flex items-center justify-center mb-6 shadow-[0_0_24px_rgba(249,87,22,0.3)] border border-[#2C2D35]">
-        <Flame className="w-9 h-9" aria-hidden="true" />
+    <div className="w-full bg-brand-surface border border-brand-border rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center min-h-[420px] shadow-2xl">
+      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-brand-primary flex items-center justify-center mb-6 shadow-[0_0_24px_rgba(0,87,217,0.35)] border border-brand-border">
+        <Image
+          src={GYM_BRAND_CONFIG.assets.logoCheckIn}
+          alt={GYM_BRAND_CONFIG.identity.shortName}
+          width={64}
+          height={64}
+          className="w-full h-full object-cover"
+        />
       </div>
 
       <h2 className="text-3xl sm:text-4xl font-extrabold text-[#F4F5F7] tracking-tight mb-3">
@@ -18,7 +25,7 @@ export function IdleDisplay() {
       </p>
 
       <div className="flex items-center justify-center gap-2.5 text-[#8A909A] text-sm sm:text-base font-medium mb-6">
-        <Monitor className="w-5 h-5 text-[#F95716] shrink-0" aria-hidden="true" />
+        <Monitor className="w-5 h-5 text-brand-primaryText shrink-0" aria-hidden="true" />
         <span>Escribí tu DNI en el teclado numérico y presioná</span>
         <kbd className="bg-[#2C2D35] text-[#F4F5F7] font-mono font-bold px-2.5 py-1 rounded text-xs">
           ENTER

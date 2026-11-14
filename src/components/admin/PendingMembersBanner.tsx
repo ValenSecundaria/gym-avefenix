@@ -21,7 +21,7 @@ export function PendingMembersBanner({ pending, isSyncing, onSyncNow, onDiscard 
       {waiting.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 font-bold">
-            <CloudOff className="w-5 h-5 text-fx-orange shrink-0" />
+            <CloudOff className="w-5 h-5 text-fx-orangeText shrink-0" />
             <span>
               {waiting.length === 1
                 ? "1 socio guardado en esta PC, pendiente de subir"
@@ -43,7 +43,7 @@ export function PendingMembersBanner({ pending, isSyncing, onSyncNow, onDiscard 
 
       {blocked.length > 0 && (
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2.5 font-bold text-fx-red">
+          <div className="flex items-center gap-2.5 font-bold text-fx-redText">
             <AlertTriangle className="w-5 h-5 shrink-0" />
             <span>Altas guardadas que el servidor rechazó (revisar a mano)</span>
           </div>

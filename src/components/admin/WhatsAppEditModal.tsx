@@ -83,7 +83,7 @@ function WhatsAppEditDialog({ target, onClose }: { target: WhatsAppMessageTarget
         {/* Destinatario */}
         <div className="p-3.5 rounded-xl bg-fx-base border border-fx-border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
           <div className="flex items-center gap-2 text-fx-text font-bold">
-            <User className="w-4 h-4 text-fx-orange shrink-0" />
+            <User className="w-4 h-4 text-fx-orangeText shrink-0" />
             <span className="truncate">{target.fullName}</span>
           </div>
           <div className="flex items-center gap-1.5 text-fx-muted font-mono">

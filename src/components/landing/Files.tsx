@@ -68,7 +68,7 @@ export function Files() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all ${
-                  isActive ? "bg-[#F95716] text-[#F4F5F7] shadow-[0_0_20px_-4px_rgba(249,87,22,0.5)]" : "text-[#8A909A] hover:text-[#F4F5F7] hover:bg-[#23232A]"
+                  isActive ? "bg-brand-primary text-white shadow-[0_0_20px_-4px_rgba(0,87,217,0.5)]" : "text-[#8A909A] hover:text-[#F4F5F7] hover:bg-[#23232A]"
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -92,14 +92,14 @@ export function Files() {
           <div className="flex items-center justify-end gap-2 mb-4">
             <button
               type="button"
-              className={`${prevBtnClass} inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] hover:border-[#F95716] hover:text-[#F95716] transition-all cursor-pointer`}
+              className={`${prevBtnClass} inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] hover:border-brand-primary hover:text-brand-primaryText transition-all cursor-pointer`}
               aria-label="Anterior elemento"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               type="button"
-              className={`${nextBtnClass} inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] hover:border-[#F95716] hover:text-[#F95716] transition-all cursor-pointer`}
+              className={`${nextBtnClass} inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] hover:border-brand-primary hover:text-brand-primaryText transition-all cursor-pointer`}
               aria-label="Siguiente elemento"
             >
               <ChevronRight className="w-5 h-5" />
@@ -118,7 +118,7 @@ export function Files() {
               el: `.${paginationClass}`,
               clickable: true,
               bulletClass: "inline-block w-2.5 h-2.5 rounded-full bg-[#2C2D35] transition-all duration-300 cursor-pointer mx-1.5",
-              bulletActiveClass: "!w-8 !bg-[#F95716] !rounded-full shadow-[0_0_10px_rgba(249,87,22,0.5)]",
+              bulletActiveClass: "!w-8 !bg-brand-primary !rounded-full shadow-[0_0_10px_rgba(0,87,217,0.5)]",
             }}
             className="w-full !pb-12"
           >

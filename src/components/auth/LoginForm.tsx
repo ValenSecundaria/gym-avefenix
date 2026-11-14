@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Flame, Lock, User, ArrowLeft, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
+import { Lock, User, ArrowLeft, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useAuthSession } from "@/context/auth-session-context";
 import { dispatchScreens, ensureOnPrimaryScreen } from "@/lib/screens/screen-dispatcher";
 import { ADMIN_HOME, homePathFor } from "@/lib/auth/auth-constants";
@@ -87,11 +88,17 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-md bg-[#17171C] border border-[#2C2D35] rounded-3xl p-8 shadow-2xl">
       <div className="flex flex-col items-center text-center mb-8">
-        <div className="w-14 h-14 rounded-2xl bg-[#F95716] flex items-center justify-center shadow-lg shadow-[#F95716]/30 mb-4">
-          <Flame className="w-8 h-8 text-[#F4F5F7]" />
+        <div className="w-14 h-14 rounded-2xl overflow-hidden bg-brand-primary flex items-center justify-center shadow-[0_8px_24px_rgba(0,87,217,0.3)] mb-4">
+          <Image
+            src={GYM_BRAND_CONFIG.assets.logoLogin}
+            alt={GYM_BRAND_CONFIG.identity.shortName}
+            width={56}
+            height={56}
+            className="w-full h-full object-cover"
+          />
         </div>
         <h1 className="text-2xl font-extrabold text-[#F4F5F7] uppercase tracking-tight">
-          Acceso <span className="text-[#F95716]">Recepción</span>
+          Acceso <span className="text-brand-primaryText">Recepción</span>
         </h1>
         <p className="text-sm text-[#8A909A] mt-1">
           Ingresá tus credenciales para administrar {GYM_BRAND_CONFIG.identity.name}
@@ -99,8 +106,8 @@ export function LoginForm() {
       </div>
 
       {error && (
-        <div className="mb-5 flex items-center gap-2.5 p-3.5 rounded-xl bg-[#D92614]/20 border border-[#D92614] text-sm text-[#F4F5F7]">
-          <AlertCircle className="w-5 h-5 text-[#D92614] shrink-0" />
+        <div className="mb-5 flex items-center gap-2.5 p-3.5 rounded-xl bg-brand-alert/20 border border-brand-alert text-sm text-[#F4F5F7]">
+          <AlertCircle className="w-5 h-5 text-brand-alertText shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -117,7 +124,7 @@ export function LoginForm() {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Ingresá tu usuario"
               autoComplete="username"
-              className="w-full min-h-[48px] pl-11 pr-4 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] focus:border-[#F95716] focus:outline-none text-sm text-[#F4F5F7]"
+              className="w-full min-h-[48px] pl-11 pr-4 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] focus:border-brand-primary focus:outline-none text-sm text-[#F4F5F7]"
             />
           </div>
         </div>
@@ -133,14 +140,14 @@ export function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               autoComplete="current-password"
-              className="w-full min-h-[48px] pl-11 pr-12 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] focus:border-[#F95716] focus:outline-none text-sm text-[#F4F5F7]"
+              className="w-full min-h-[48px] pl-11 pr-12 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] focus:border-brand-primary focus:outline-none text-sm text-[#F4F5F7]"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg flex items-center justify-center text-[#8A909A] hover:text-[#F4F5F7] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F95716] cursor-pointer"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg flex items-center justify-center text-[#8A909A] hover:text-[#F4F5F7] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer"
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -150,7 +157,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full min-h-[48px] mt-2 rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-[#F4F5F7] font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#F95716]/25 transition-all disabled:opacity-50 cursor-pointer"
+          className="w-full min-h-[48px] mt-2 rounded-xl bg-brand-primary hover:bg-brand-primaryHover text-white font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(0,87,217,0.25)] transition-all disabled:opacity-50 cursor-pointer"
         >
           {isLoading ? (
             <>
@@ -166,7 +173,7 @@ export function LoginForm() {
       <div className="mt-6 pt-5 border-t border-[#2C2D35] flex items-center justify-end text-xs text-[#8A909A]">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-[#F4F5F7] hover:text-[#F95716] font-semibold transition-colors"
+          className="inline-flex items-center gap-1.5 text-[#F4F5F7] hover:text-brand-primaryText font-semibold transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Volver al inicio</span>

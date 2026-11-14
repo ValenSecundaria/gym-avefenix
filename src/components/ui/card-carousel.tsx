@@ -61,14 +61,14 @@ export const CardCarousel: React.FC<CardCarouselProps> = ({
         <div className="flex items-center justify-end gap-2 mb-3">
           <button
             type="button"
-            className={`${prevBtnClass} inline-flex items-center justify-center w-9 h-9 rounded-xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] hover:border-[#F95716] hover:text-[#F95716] hover:bg-[#1f1f26] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-[#2C2D35] disabled:hover:text-[#F4F5F7]`}
+            className={`${prevBtnClass} inline-flex items-center justify-center w-9 h-9 rounded-xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] hover:border-brand-primary hover:text-brand-primaryText hover:bg-[#1f1f26] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-[#2C2D35] disabled:hover:text-[#F4F5F7]`}
             aria-label="Anterior"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             type="button"
-            className={`${nextBtnClass} inline-flex items-center justify-center w-9 h-9 rounded-xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] hover:border-[#F95716] hover:text-[#F95716] hover:bg-[#1f1f26] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-[#2C2D35] disabled:hover:text-[#F4F5F7]`}
+            className={`${nextBtnClass} inline-flex items-center justify-center w-9 h-9 rounded-xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] hover:border-brand-primary hover:text-brand-primaryText hover:bg-[#1f1f26] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-[#2C2D35] disabled:hover:text-[#F4F5F7]`}
             aria-label="Siguiente"
           >
             <ChevronRight className="w-5 h-5" />
@@ -105,7 +105,7 @@ export const CardCarousel: React.FC<CardCarouselProps> = ({
                 el: `.${paginationClass}`,
                 clickable: true,
                 bulletClass: "inline-block w-2.5 h-2.5 rounded-full bg-[#2C2D35] transition-all duration-300 cursor-pointer mx-1",
-                bulletActiveClass: "!w-7 !bg-[#F95716] !rounded-full shadow-[0_0_10px_rgba(249,87,22,0.5)]",
+                bulletActiveClass: "!w-7 !bg-brand-primary !rounded-full shadow-[0_0_10px_rgba(0,87,217,0.5)]",
               }
             : false
         }

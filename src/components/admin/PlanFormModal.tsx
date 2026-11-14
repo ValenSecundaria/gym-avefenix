@@ -96,7 +96,7 @@ function PlanFormDialog({
       <form onSubmit={handleSubmit} className="bg-fx-surface border border-fx-border w-full max-w-lg rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-6 flex flex-col gap-4 my-auto">
         <div className="flex items-center justify-between pb-3 border-b border-fx-border">
           <h2 id="plan-form-title" className="text-lg font-extrabold text-fx-text flex items-center gap-2">
-            <Tags className="w-5 h-5 text-fx-orange" />
+            <Tags className="w-5 h-5 text-fx-orangeText" />
             {editing ? "Editar plan" : "Nuevo plan"}
           </h2>
           <button type="button" onClick={onClose} disabled={isSaving} aria-label="Cerrar" className="w-10 h-10 rounded-xl bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text flex items-center justify-center cursor-pointer">
@@ -106,7 +106,7 @@ function PlanFormDialog({
 
         {error && (
           <div role="alert" className="flex items-center gap-2 p-3 rounded-xl bg-fx-red/20 border border-fx-red text-sm text-fx-text">
-            <AlertCircle className="w-4 h-4 text-fx-red shrink-0" />
+            <AlertCircle className="w-4 h-4 text-fx-redText shrink-0" />
             <span>{error}</span>
           </div>
         )}

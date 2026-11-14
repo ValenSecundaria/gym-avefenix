@@ -58,7 +58,7 @@ export function TemporarySyncPeriodButton({ memberId, fullName, onSuccess, class
         title="Regularizar cuota sin cobro (vence en 30 días desde hoy)"
         className={`min-h-[44px] px-3 rounded-xl bg-fx-surface hover:bg-fx-hover border border-fx-border text-xs sm:text-sm font-bold text-fx-text inline-flex items-center gap-1.5 transition-colors cursor-pointer ${className}`}
       >
-        <Clock className="w-4 h-4 text-fx-orange shrink-0" />
+        <Clock className="w-4 h-4 text-fx-orangeText shrink-0" />
         <span className="truncate">⏱️ Regularizar (30 días desde hoy)</span>
       </button>
 
@@ -69,13 +69,13 @@ export function TemporarySyncPeriodButton({ memberId, fullName, onSuccess, class
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
         >
           <div className="bg-fx-surface border border-fx-border w-full max-w-md rounded-2xl p-6 shadow-2xl flex flex-col gap-4 text-left">
-            <div className="flex items-center gap-2 text-fx-orange font-bold text-base">
+            <div className="flex items-center gap-2 text-fx-orangeText font-bold text-base">
               <Clock className="w-5 h-5 shrink-0" />
               <span>Regularizar cuota sin cobro</span>
             </div>
             <p className="text-sm text-fx-text leading-relaxed">
               El vencimiento de <strong className="text-white">{fullName}</strong> va a quedar el{" "}
-              <strong className="text-fx-orange">{previewDate}</strong> (30 días desde hoy).
+              <strong className="text-fx-orangeText">{previewDate}</strong> (30 días desde hoy).
             </p>
             <p className="text-xs text-fx-muted">
               No se suman los días que le quedaban: la cuota se cuenta solo desde hoy. No se registra ningún cobro en caja y el
@@ -94,7 +94,7 @@ export function TemporarySyncPeriodButton({ memberId, fullName, onSuccess, class
                 type="button"
                 onClick={() => void handleConfirm()}
                 disabled={loading}
-                className="min-h-[44px] px-4 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-[0_4px_16px_rgba(249,87,22,0.35)] cursor-pointer disabled:opacity-50"
+                className="min-h-[44px] px-4 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white text-xs sm:text-sm font-bold inline-flex items-center gap-2 shadow-[0_4px_16px_rgba(0,87,217,0.35)] cursor-pointer disabled:opacity-50"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 <span>Confirmar (vence {previewDate})</span>

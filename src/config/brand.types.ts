@@ -43,6 +43,7 @@ export interface GymBrandConfig {
     surface: string;
     border: string;
     primary: string;
+    primaryHover: string;
     alert: string;
     warning: string;
     textPrimary: string;

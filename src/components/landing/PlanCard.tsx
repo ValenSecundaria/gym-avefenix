@@ -30,13 +30,13 @@ export function PlanCard({ plan, gymPhone }: { plan: PlanOption; gymPhone: strin
   return (
     <GlowCard
       customSize
-      glowColor="orange"
-      className="flex flex-col justify-between h-full p-7 rounded-2xl bg-[#17171C]/90 border border-[#2C2D35] hover:border-[#F95716]/60 shadow-lg transition-all"
+      glowColor="blue"
+      className="flex flex-col justify-between h-full p-7 rounded-2xl bg-[#17171C]/90 border border-[#2C2D35] hover:border-brand-primary/60 shadow-lg transition-all"
     >
       <div className="flex flex-col gap-5">
         <h4 className="text-xl font-extrabold text-[#F4F5F7]">{plan.name}</h4>
         <div className="flex items-baseline gap-2 py-4 border-y border-[#2C2D35]">
-          <span className="text-4xl font-extrabold tracking-tight text-[#F95716]">{formatCurrencyARS(plan.price)}</span>
+          <span className="text-4xl font-extrabold tracking-tight text-brand-primaryText">{formatCurrencyARS(plan.price)}</span>
           <span className="text-sm font-medium text-[#8A909A]">{planPeriod(plan)}</span>
         </div>
         <ul className="flex flex-col gap-3">

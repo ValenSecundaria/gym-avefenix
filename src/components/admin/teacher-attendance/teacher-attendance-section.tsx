@@ -69,7 +69,7 @@ export function TeacherAttendanceSection() {
             Gestión y Liquidación
           </span>
           <h3 className="text-xl font-extrabold text-[#F4F5F7] flex items-center gap-2">
-            <Clock className="w-6 h-6 text-[#F95716]" /> Asistencia de Profesores
+            <Clock className="w-6 h-6 text-brand-primaryText" /> Asistencia de Profesores
           </h3>
         </div>
 
@@ -91,13 +91,13 @@ export function TeacherAttendanceSection() {
             title="Actualizar turnos"
             className="p-2.5 rounded-xl border border-[#2C2D35] bg-[#0B0B0C] hover:bg-[#23232A] text-[#8A909A] hover:text-[#F4F5F7] cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#F95716]" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-brand-primaryText" : ""}`} />
           </button>
 
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="min-h-[44px] px-4 rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-white text-sm font-bold flex items-center gap-2 shadow-lg shadow-[#F95716]/25 transition-all cursor-pointer"
+            className="min-h-[44px] px-4 rounded-xl bg-brand-primary hover:bg-brand-primaryHover text-white text-sm font-bold flex items-center gap-2 shadow-[0_8px_20px_rgba(0,87,217,0.25)] transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>+ Fichar Profesor Manualmente</span>
@@ -127,7 +127,7 @@ export function TeacherAttendanceSection() {
                   type="button"
                   onClick={() => void handleCheckOut(s)}
                   disabled={closingId === s.id}
-                  className="min-h-[40px] px-4 rounded-xl bg-[#F95716] hover:bg-[#F95716]/90 text-white text-sm font-bold inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="min-h-[40px] px-4 rounded-xl bg-brand-primary hover:bg-brand-primaryHover text-white text-sm font-bold inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {closingId === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Square className="w-3.5 h-3.5 fill-current" />}
                   Marcar salida

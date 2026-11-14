@@ -17,7 +17,7 @@ export interface GlowCardProps extends React.HTMLAttributes<HTMLDivElement> {
 const GlowCard: React.FC<GlowCardProps> = ({
   children,
   className = "",
-  glowColor = "orange",
+  glowColor = "blue",
   size = "md",
   width,
   height,

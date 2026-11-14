@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { getBasePhotosDir, resolveSafePhotoPath } from "@/lib/security/safe-path";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 export function getLocalPhotosDir(): string {
   return getBasePhotosDir();
@@ -202,14 +203,15 @@ export async function deleteMemberPhotoFromDisk(photoFilename: string | null | u
   }
 }
 
-export async function generateFallbackAvatarWebp(label = "AF"): Promise<Buffer> {
+export async function generateFallbackAvatarWebp(label = "PG"): Promise<Buffer> {
   const safeText = label.slice(0, 2).toUpperCase();
+  const primary = GYM_BRAND_CONFIG.theme.primary;
   const svg = `<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
     <rect width="400" height="400" fill="#17171C"/>
-    <circle cx="200" cy="200" r="188" fill="none" stroke="#F95716" stroke-width="6" stroke-opacity="0.7"/>
+    <circle cx="200" cy="200" r="188" fill="none" stroke="${primary}" stroke-width="6" stroke-opacity="0.7"/>
     <circle cx="200" cy="155" r="56" fill="#26262F"/>
     <path d="M96 340 C96 270 304 270 304 340" fill="#26262F"/>
-    <text x="200" y="376" font-family="sans-serif" font-size="24" font-weight="bold" fill="#F95716" text-anchor="middle">${safeText}</text>
+    <text x="200" y="376" font-family="sans-serif" font-size="24" font-weight="bold" fill="${primary}" text-anchor="middle">${safeText}</text>
   </svg>`;
 
   return sharp(Buffer.from(svg)).webp({ quality: 82 }).toBuffer();

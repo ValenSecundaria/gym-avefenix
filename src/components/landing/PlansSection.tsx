@@ -33,7 +33,7 @@ export function PlansSection({ plans }: PlansSectionProps = {}) {
     <section id="planes" className="w-full bg-[#0B0B0C] px-4 sm:px-6 lg:px-10 py-20 lg:py-24 border-t border-[#2C2D35]/60">
       <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
         <div className="flex flex-col items-center text-center gap-3 max-w-2xl">
-          <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#F95716]">Suscripciones Transparentes</span>
+          <span className="text-xs font-bold uppercase tracking-[0.16em] text-brand-primaryText">Suscripciones Transparentes</span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#F4F5F7] tracking-tight">Elegí tu Plan de Entrenamiento</h2>
           <p className="text-base sm:text-lg text-[#8A909A]">
             Tarifas oficiales sin sorpresas, por disciplina. Consultanos por WhatsApp para comenzar a entrenar.
@@ -68,7 +68,7 @@ export function PlansSection({ plans }: PlansSectionProps = {}) {
               return (
                 <div key={g.key} className="flex flex-col gap-6 w-full">
                   <h3 className="text-2xl font-extrabold text-[#F4F5F7] flex items-center gap-2.5">
-                    <CalendarDays className="w-6 h-6 text-[#F95716]" aria-hidden="true" />
+                    <CalendarDays className="w-6 h-6 text-brand-primaryText" aria-hidden="true" />
                     {g.label}
                   </h3>
 
@@ -94,7 +94,7 @@ export function PlansSection({ plans }: PlansSectionProps = {}) {
         {/* Banner Informativo de Descuento 20% */}
         <GlowCard
           customSize
-          glowColor="orange"
+          glowColor="blue"
           className="w-full rounded-2xl bg-[#17171C]/90 border border-[#FFB300]/30 p-6 sm:p-7 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_24px_-8px_rgba(255,179,0,0.15)]"
         >
           <div className="flex items-start sm:items-center gap-4">

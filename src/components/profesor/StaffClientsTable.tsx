@@ -9,7 +9,7 @@ type StatusFilter = StaffMemberStatus | "ALL";
 
 const STATUS_BADGE: Record<StaffMemberStatus, { text: string; cls: string }> = {
   AL_DIA: { text: "Al día", cls: "bg-fx-green/15 text-fx-green border-fx-green/40" },
-  VENCIDA: { text: "Cuota vencida", cls: "bg-fx-red/15 text-fx-red border-fx-red/40" },
+  VENCIDA: { text: "Cuota vencida", cls: "bg-fx-red/15 text-fx-redText border-fx-red/40" },
   SIN_PLAN: { text: "Sin plan", cls: "bg-fx-hover text-fx-muted border-fx-border" },
 };
 
@@ -64,13 +64,13 @@ export function StaffClientsTable({
             {f.label}
           </button>
         ))}
-        {isLoading && <Loader2 className="w-4 h-4 animate-spin text-fx-orange" aria-label="Cargando" />}
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin text-fx-orangeText" aria-label="Cargando" />}
         {data && <span className="ml-auto text-xs text-fx-muted">{data.total} clientes</span>}
       </div>
 
       {listError && (
         <div role="alert" className="flex items-center gap-2 p-3 rounded-xl bg-fx-red/20 border border-fx-red text-sm text-fx-text">
-          <AlertCircle className="w-4 h-4 text-fx-red shrink-0" />
+          <AlertCircle className="w-4 h-4 text-fx-redText shrink-0" />
           <span>{listError}</span>
         </div>
       )}
@@ -99,7 +99,7 @@ export function StaffClientsTable({
                       disabled={!canCreateMember}
                       className="min-h-[44px] px-3.5 rounded-xl bg-fx-surface border border-fx-border hover:bg-fx-hover text-sm font-bold text-fx-text inline-flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      <CreditCard className="w-4 h-4 text-fx-orange" />
+                      <CreditCard className="w-4 h-4 text-fx-orangeText" />
                       Registrar pago
                     </button>
                   </div>

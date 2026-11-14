@@ -132,7 +132,7 @@ function MobileBottomBar({
         onClick={() => onSelect(tab)}
         aria-current={active ? "page" : undefined}
         className={`relative flex-1 flex flex-col items-center justify-center gap-1 rounded-xl text-xs font-bold cursor-pointer ${
-          active ? "text-fx-orange bg-fx-orange/10" : "text-fx-muted"
+          active ? "text-fx-orangeText bg-fx-orange/10" : "text-fx-muted"
         }`}
       >
         <Icon className="w-7 h-7" />
@@ -161,9 +161,9 @@ function MobileBottomBar({
           onClick={onOpenNewMember}
           disabled={!canCreateMember}
           aria-label={canCreateMember ? "Registrar nuevo socio" : "Registrar nuevo socio (primero creá un plan)"}
-          className="flex-1 flex flex-col items-center justify-center gap-1 text-xs font-bold text-fx-orange cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 flex flex-col items-center justify-center gap-1 text-xs font-bold text-fx-orangeText cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <span className="w-12 h-12 -mt-5 rounded-full bg-fx-orange text-white flex items-center justify-center shadow-[0_4px_16px_rgba(249,87,22,0.45)] border-4 border-fx-surface">
+          <span className="w-12 h-12 -mt-5 rounded-full bg-fx-orange text-white flex items-center justify-center shadow-[0_4px_16px_rgba(0,87,217,0.45)] border-4 border-fx-surface">
             <UserPlus className="w-6 h-6" />
           </span>
           <span>Nuevo</span>
@@ -174,7 +174,7 @@ function MobileBottomBar({
           onClick={onOpenMobile}
           aria-label="Abrir menú con todas las secciones"
           className={`flex-1 flex flex-col items-center justify-center gap-1 rounded-xl text-xs font-bold cursor-pointer ${
-            inMenu ? "text-fx-orange bg-fx-orange/10" : "text-fx-muted"
+            inMenu ? "text-fx-orangeText bg-fx-orange/10" : "text-fx-muted"
           }`}
         >
           <Menu className="w-7 h-7" />
