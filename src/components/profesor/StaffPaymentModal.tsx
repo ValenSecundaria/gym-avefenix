@@ -57,7 +57,7 @@ export function StaffPaymentModal({ member, plans, registeredByName, onClose, on
       <div className="w-full max-w-lg bg-fx-surface border border-fx-border rounded-3xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-fx-border bg-fx-base/60">
           <div className="flex items-center gap-2.5">
-            <CreditCard className="w-5 h-5 text-fx-orange" />
+            <CreditCard className="w-5 h-5 text-fx-orangeText" />
             <h2 id="staff-payment-title" className="text-lg font-extrabold text-fx-text">Registrar pago</h2>
           </div>
           <button type="button" onClick={onClose} disabled={isSubmitting} aria-label="Cerrar" className="min-h-[48px] min-w-[48px] rounded-xl bg-fx-hover hover:bg-fx-border text-fx-muted hover:text-fx-text flex items-center justify-center cursor-pointer">
@@ -68,7 +68,7 @@ export function StaffPaymentModal({ member, plans, registeredByName, onClose, on
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div role="alert" className="flex items-center gap-2 p-3 rounded-xl bg-fx-red/20 border border-fx-red text-sm text-fx-text">
-              <AlertCircle className="w-4 h-4 text-fx-red shrink-0" />
+              <AlertCircle className="w-4 h-4 text-fx-redText shrink-0" />
               <span>{error}</span>
             </div>
           )}

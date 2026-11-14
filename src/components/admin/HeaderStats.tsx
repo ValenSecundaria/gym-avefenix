@@ -1,6 +1,6 @@
 import React from "react";
+import Image from "next/image";
 import {
-  Flame,
   UserPlus,
   RefreshCw,
   MonitorCheck,
@@ -58,18 +58,24 @@ export function HeaderStats({
       {/* Celular: barra superior simple */}
       <div className="lg:hidden sticky top-0 z-20 -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 px-4 sm:px-6 py-3 bg-fx-surface/95 backdrop-blur border-b border-fx-border flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-fx-orange to-fx-red flex items-center justify-center shrink-0">
-            <Flame className="w-6 h-6 text-white" />
+          <div className="w-11 h-11 rounded-xl overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shrink-0">
+            <Image
+              src={GYM_BRAND_CONFIG.assets.logoMain}
+              alt={GYM_BRAND_CONFIG.identity.shortName}
+              width={44}
+              height={44}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="min-w-0">
             <div className="text-lg font-extrabold text-fx-text leading-tight truncate">{GYM_BRAND_CONFIG.identity.shortName}</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-fx-orange">Recepción</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-fx-orangeText">Recepción</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {onRefresh && (
             <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Actualizar datos" className={ICON_BTN}>
-              <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orange" : ""}`} />
+              <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orangeText" : ""}`} />
             </button>
           )}
           <button type="button" onClick={onToggleTheme} aria-label={themeLabel} title={themeLabel} className={ICON_BTN}>
@@ -81,12 +87,18 @@ export function HeaderStats({
       {/* Escritorio: barra operativa */}
       <div className="hidden lg:flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-fx-surface border border-fx-border shadow-lg">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fx-orange to-fx-red flex items-center justify-center shadow-[0_0_18px_rgba(249,87,22,0.45)] shrink-0">
-            <Flame className="w-7 h-7 text-white" />
+          <div className="w-12 h-12 rounded-xl overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shadow-[0_0_18px_rgba(37,99,235,0.45)] shrink-0">
+            <Image
+              src={GYM_BRAND_CONFIG.assets.logoMain}
+              alt={GYM_BRAND_CONFIG.identity.shortName}
+              width={48}
+              height={48}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-fx-text tracking-tight">
-              {GYM_BRAND_CONFIG.identity.shortName} <span className="text-fx-orange">• Recepción</span>
+              {GYM_BRAND_CONFIG.identity.shortName} <span className="text-fx-orangeText">• Recepción</span>
             </h1>
             <p className="text-sm text-fx-muted">
               Caja del mes: <b className="font-mono text-fx-text">{formatCurrencyARS(stats.monthlyRevenue)}</b>
@@ -116,7 +128,7 @@ export function HeaderStats({
 
           {onRefresh && (
             <button type="button" onClick={onRefresh} disabled={isRefreshing} className={ICON_BTN}>
-              <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orange" : ""}`} />
+              <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orangeText" : ""}`} />
               <span>Actualizar</span>
             </button>
           )}
@@ -130,7 +142,7 @@ export function HeaderStats({
             onClick={onOpenNewMember}
             disabled={!canCreateMember}
             title={canCreateMember ? undefined : NO_PLANS_HINT}
-            className="min-h-[52px] px-6 rounded-xl bg-fx-orange hover:bg-fx-orange/90 active:scale-[0.98] text-white font-extrabold text-base inline-flex items-center gap-2.5 shadow-[0_4px_16px_rgba(249,87,22,0.35)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:active:scale-100"
+            className="min-h-[52px] px-6 rounded-xl bg-fx-orange hover:bg-fx-orange/90 active:scale-[0.98] text-white font-extrabold text-base inline-flex items-center gap-2.5 shadow-[0_4px_16px_rgba(37,99,235,0.35)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:active:scale-100"
           >
             <UserPlus className="w-5 h-5" />
             <span>Nuevo socio</span>

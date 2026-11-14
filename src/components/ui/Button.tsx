@@ -16,15 +16,15 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
-    "bg-[#F95716] text-[#F4F5F7] hover:bg-[#F95716]/90 border border-transparent shadow-[0_0_20px_-4px_rgba(249,87,22,0.45)]",
+    "bg-brand-primary text-brand-textPrimary hover:bg-brand-primaryHover hover:text-brand-bg border border-transparent shadow-[0_0_20px_-4px_rgba(37,99,235,0.45)]",
   surface:
-    "bg-[#17171C] text-[#F4F5F7] border border-[#2C2D35] hover:bg-[#23232A] hover:border-[#8A909A]/40",
+    "bg-brand-surface text-brand-textPrimary border border-brand-border hover:bg-brand-surfaceHover hover:border-brand-textSecondary/40",
   danger:
-    "bg-[#D92614] text-[#F4F5F7] hover:bg-[#D92614]/90 border border-transparent shadow-[0_0_20px_-4px_rgba(217,38,20,0.4)]",
+    "bg-brand-alert text-white hover:bg-brand-alert/90 border border-transparent shadow-[0_0_20px_-4px_rgba(220,38,38,0.4)]",
   whatsapp:
-    "bg-[#25D366] text-[#0B0B0C] font-bold hover:bg-[#25D366]/90 border border-transparent shadow-[0_0_20px_-4px_rgba(37,211,102,0.35)]",
+    "bg-[#25D366] text-brand-bg font-bold hover:bg-[#25D366]/90 border border-transparent shadow-[0_0_20px_-4px_rgba(37,211,102,0.35)]",
   ghost:
-    "bg-transparent text-[#8A909A] hover:text-[#F4F5F7] hover:bg-[#23232A] border border-transparent",
+    "bg-transparent text-brand-textSecondary hover:text-brand-textPrimary hover:bg-brand-surfaceHover border border-transparent",
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
@@ -59,7 +59,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         className={cn(
           "inline-flex items-center justify-center font-semibold tracking-wide transition-all duration-200 select-none cursor-pointer",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F95716] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0B0C]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg",
           "active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none",
           VARIANT_CLASSES[variant],
           SIZE_CLASSES[size],

@@ -34,45 +34,45 @@ const BADGE_STYLES: Record<BadgeVariant, { container: string; dot: string; label
     dot: "bg-[#10B981]",
   },
   CUOTA_VENCIDA: {
-    container: "bg-[#D92614]/15 text-[#D92614] border-[#D92614]/40",
-    dot: "bg-[#D92614]",
+    container: "bg-brand-alert/15 text-brand-alertText border-brand-alert/40",
+    dot: "bg-brand-alert",
     label: "Cuota Vencida",
   },
   VENCIDA: {
-    container: "bg-[#D92614]/15 text-[#D92614] border-[#D92614]/40",
-    dot: "bg-[#D92614]",
+    container: "bg-brand-alert/15 text-brand-alertText border-brand-alert/40",
+    dot: "bg-brand-alert",
     label: "Vencida",
   },
   danger: {
-    container: "bg-[#D92614]/15 text-[#D92614] border-[#D92614]/40",
-    dot: "bg-[#D92614]",
+    container: "bg-brand-alert/15 text-brand-alertText border-brand-alert/40",
+    dot: "bg-brand-alert",
   },
   LIMITE_ALCANZADO: {
-    container: "bg-[#FFB300]/15 text-[#FFB300] border-[#FFB300]/40",
-    dot: "bg-[#FFB300]",
+    container: "bg-brand-warning/15 text-brand-warning border-brand-warning/40",
+    dot: "bg-brand-warning",
     label: "Límite Alcanzado",
   },
   warning: {
-    container: "bg-[#FFB300]/15 text-[#FFB300] border-[#FFB300]/40",
-    dot: "bg-[#FFB300]",
+    container: "bg-brand-warning/15 text-brand-warning border-brand-warning/40",
+    dot: "bg-brand-warning",
   },
   primary: {
-    container: "bg-[#F95716]/15 text-[#F95716] border-[#F95716]/40",
-    dot: "bg-[#F95716]",
+    container: "bg-brand-primary/15 text-brand-primaryText border-brand-primary/40",
+    dot: "bg-brand-primary",
   },
   CANCELADA: {
-    container: "bg-[#23232A] text-[#8A909A] border-[#2C2D35]",
-    dot: "bg-[#8A909A]",
+    container: "bg-brand-surfaceHover text-brand-textSecondary border-brand-border",
+    dot: "bg-brand-textSecondary",
     label: "Cancelada",
   },
   SIN_MEMBRESIA: {
-    container: "bg-[#23232A] text-[#8A909A] border-[#2C2D35]",
-    dot: "bg-[#8A909A]",
+    container: "bg-brand-surfaceHover text-brand-textSecondary border-brand-border",
+    dot: "bg-brand-textSecondary",
     label: "Sin Membresía",
   },
   neutral: {
-    container: "bg-[#23232A] text-[#8A909A] border-[#2C2D35]",
-    dot: "bg-[#8A909A]",
+    container: "bg-brand-surfaceHover text-brand-textSecondary border-brand-border",
+    dot: "bg-brand-textSecondary",
   },
 };
 

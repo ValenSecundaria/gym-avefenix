@@ -84,12 +84,12 @@ export function LogoutButton({
       aria-busy={isLoggingOut}
       aria-label="Cerrar Sesión"
       title={collapsed ? "Cerrar Sesión" : undefined}
-      className={`group relative w-full min-h-[48px] rounded-xl flex items-center gap-3 text-sm font-bold border transition-all cursor-pointer select-none bg-fx-surface text-fx-muted border-fx-border hover:bg-fx-red/10 hover:text-fx-red hover:border-fx-red/40 focus:outline-none focus:ring-2 focus:ring-fx-red/40 focus:border-fx-red disabled:opacity-60 disabled:cursor-not-allowed ${
+      className={`group relative w-full min-h-[48px] rounded-xl flex items-center gap-3 text-sm font-bold border transition-all cursor-pointer select-none bg-fx-surface text-fx-muted border-fx-border hover:bg-fx-red/10 hover:text-fx-redText hover:border-fx-red/40 focus:outline-none focus:ring-2 focus:ring-fx-red/40 focus:border-fx-red disabled:opacity-60 disabled:cursor-not-allowed ${
         collapsed ? "justify-center px-0" : "px-3.5"
       } ${className}`}
     >
       {isLoggingOut ? (
-        <Loader2 className="w-5 h-5 shrink-0 animate-spin text-fx-red" />
+        <Loader2 className="w-5 h-5 shrink-0 animate-spin text-fx-redText" />
       ) : (
         <LogOut className="w-5 h-5 shrink-0 transition-transform group-hover:-translate-x-0.5 text-inherit" />
       )}

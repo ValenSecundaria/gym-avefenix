@@ -332,7 +332,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
     <div className="flex flex-col gap-3 w-full select-none">
       <label className="text-xs sm:text-sm text-fx-text font-bold flex items-center justify-between">
         <span className="flex items-center gap-2">
-          <Camera className="w-4 h-4 text-fx-orange" />
+          <Camera className="w-4 h-4 text-fx-orangeText" />
           <span>Foto de Identificación Biométrica</span>
         </span>
         <span className="text-[11px] font-normal text-fx-muted">(Opcional)</span>
@@ -406,7 +406,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between px-3 py-2 bg-fx-surface rounded-xl border border-fx-border text-xs">
             <span className="text-fx-muted flex items-center gap-1.5 font-medium">
-              <Move className="w-3.5 h-3.5 text-fx-orange" />
+              <Move className="w-3.5 h-3.5 text-fx-orangeText" />
               <span>Tamaño del encuadre:</span>
             </span>
             <div className="flex items-center gap-2">
@@ -417,7 +417,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
                 className="px-2.5 py-1.5 rounded-lg bg-fx-base hover:bg-fx-hover text-fx-text border border-fx-border flex items-center gap-1.5 disabled:opacity-30 cursor-pointer font-semibold"
                 title="Abarcar más imagen"
               >
-                <ZoomOut className="w-3.5 h-3.5 text-fx-orange" />
+                <ZoomOut className="w-3.5 h-3.5 text-fx-orangeText" />
                 <span>Más amplio</span>
               </button>
               <button
@@ -427,7 +427,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
                 className="px-2.5 py-1.5 rounded-lg bg-fx-base hover:bg-fx-hover text-fx-text border border-fx-border flex items-center gap-1.5 disabled:opacity-30 cursor-pointer font-semibold"
                 title="Acercar rostro"
               >
-                <ZoomIn className="w-3.5 h-3.5 text-fx-orange" />
+                <ZoomIn className="w-3.5 h-3.5 text-fx-orangeText" />
                 <span>Más de cerca</span>
               </button>
             </div>
@@ -445,7 +445,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
             <button
               type="button"
               onClick={handleApplyCrop}
-              className="min-h-[46px] rounded-xl bg-fx-green hover:bg-fx-green/90 text-white text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(22,163,74,0.3)] cursor-pointer"
+              className="min-h-[46px] rounded-xl bg-fx-green hover:bg-fx-green/90 text-fx-base text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(16,185,129,0.3)] cursor-pointer"
             >
               <Check className="w-4 h-4" />
               <span>Confirmar Encuadre</span>
@@ -458,7 +458,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
           onClick={handleRetake}
           className="min-h-[46px] w-full rounded-xl bg-fx-hover hover:bg-fx-border border border-fx-border text-sm font-bold text-fx-text inline-flex items-center justify-center gap-2 cursor-pointer"
         >
-          <RefreshCw className="w-4 h-4 text-fx-orange" />
+          <RefreshCw className="w-4 h-4 text-fx-orangeText" />
           <span>Volver a sacar / Cambiar foto</span>
         </button>
       ) : (
@@ -466,7 +466,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
           type="button"
           onClick={handleSnap}
           disabled={!cameraActive}
-          className="min-h-[46px] w-full rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-bold text-sm inline-flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(249,87,22,0.35)] disabled:opacity-40 cursor-pointer"
+          className="min-h-[46px] w-full rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-bold text-sm inline-flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(37,99,235,0.35)] disabled:opacity-40 cursor-pointer"
         >
           <Camera className="w-4 h-4" />
           <span>📷 Tomar Foto del Socio</span>
@@ -485,7 +485,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
             <button
               type="button"
               onClick={() => void switchCamera()}
-              className="text-fx-muted hover:text-fx-orange underline inline-flex items-center gap-1 cursor-pointer"
+              className="text-fx-muted hover:text-fx-orangeText underline inline-flex items-center gap-1 cursor-pointer"
             >
               <Camera className="w-3.5 h-3.5" />
               <span>Cambiar cámara</span>
@@ -501,7 +501,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="text-fx-muted hover:text-fx-orange underline inline-flex items-center gap-1 cursor-pointer"
+            className="text-fx-muted hover:text-fx-orangeText underline inline-flex items-center gap-1 cursor-pointer"
           >
             <Upload className="w-3.5 h-3.5" />
             <span>Subir foto local</span>

@@ -66,10 +66,10 @@ export default function AdminPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#0B0B0C] text-[#F4F5F7] flex items-center justify-center p-8">
+        <div className="min-h-screen bg-brand-bg text-brand-textPrimary flex items-center justify-center p-8">
           <div className="text-center space-y-2">
-            <div className="w-10 h-10 rounded-full border-2 border-[#F95716] border-t-transparent animate-spin mx-auto" />
-            <p className="text-sm text-[#8A909A]">Cargando panel de recepción {GYM_BRAND_CONFIG.identity.shortName}...</p>
+            <div className="w-10 h-10 rounded-full border-2 border-brand-primary border-t-transparent animate-spin mx-auto" />
+            <p className="text-sm text-brand-textSecondary">Cargando panel de recepción {GYM_BRAND_CONFIG.identity.shortName}...</p>
           </div>
         </div>
       }

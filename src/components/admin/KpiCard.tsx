@@ -21,9 +21,9 @@ export function KpiCard({
   onClick,
 }: KpiCardProps) {
   const toneCls = {
-    orange: { card: "hover:border-fx-orange/60", icon: "bg-fx-orange/10 text-fx-orange", value: "text-fx-text" },
+    orange: { card: "hover:border-fx-orange/60", icon: "bg-fx-orange/10 text-fx-orangeText", value: "text-fx-text" },
     neutral: { card: "hover:border-fx-text/30", icon: "bg-fx-base text-fx-text", value: "text-fx-text" },
-    red: { card: "border-fx-red/40 hover:border-fx-red", icon: "bg-fx-red/15 text-fx-red", value: "text-fx-red" },
+    red: { card: "border-fx-red/40 hover:border-fx-red", icon: "bg-fx-red/15 text-fx-redText", value: "text-fx-redText" },
     amber: { card: "border-fx-amber/40 hover:border-fx-amber", icon: "bg-fx-amber/15 text-fx-amber", value: "text-fx-amber" },
   }[tone];
 

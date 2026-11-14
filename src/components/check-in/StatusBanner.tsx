@@ -27,19 +27,19 @@ const STATUS_CONFIG: Record<
   HABILITADO: {
     title: "HABILITADO",
     subtitle: "¡Bienvenido! Molinete abierto, excelente entrenamiento.",
-    bannerClass: "bg-[#10B981] text-[#F4F5F7] shadow-xl shadow-[#10B981]/25",
+    bannerClass: "bg-[#10B981] text-brand-bg shadow-xl shadow-[#10B981]/25",
     Icon: Check,
   },
   CUOTA_VENCIDA: {
     title: "CUOTA VENCIDA",
     subtitle: "Regularizá tu membresía en mostrador para habilitar el acceso.",
-    bannerClass: "bg-[#D92614] text-[#F4F5F7] shadow-xl shadow-[#D92614]/30",
+    bannerClass: "bg-brand-alert text-brand-textPrimary shadow-xl shadow-brand-alert/30",
     Icon: AlertTriangle,
   },
   LIMITE_ALCANZADO: {
     title: "LÍMITE DE DÍAS ALCANZADO",
     subtitle: "Completaste las asistencias semanales incluidas en tu plan.",
-    bannerClass: "bg-[#FFB300] text-[#0B0B0C] shadow-xl shadow-[#FFB300]/25",
+    bannerClass: "bg-brand-warning text-brand-bg shadow-xl shadow-brand-warning/25",
     Icon: Clock,
   },
 };
@@ -68,13 +68,13 @@ export function StatusBanner({
         </span>
       </div>
 
-      <p className="text-sm sm:text-base text-[#8A909A] font-medium max-w-md text-center">
+      <p className="text-sm sm:text-base text-brand-textSecondary font-medium max-w-md text-center">
         {config.subtitle}
       </p>
 
       {(planName || allowedDaysPerWeek) && (
-        <div className="inline-flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm text-[#8A909A] bg-[#0B0B0C] px-4 py-1.5 rounded-full border border-[#2C2D35]">
-          {planName && <span className="font-bold text-[#F4F5F7]">{planName}</span>}
+        <div className="inline-flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm text-brand-textSecondary bg-brand-bg px-4 py-1.5 rounded-full border border-brand-border">
+          {planName && <span className="font-bold text-brand-textPrimary">{planName}</span>}
           {typeof daysUsedThisWeek === "number" && allowedDaysPerWeek ? (
             <span>
               • Semana: {daysUsedThisWeek}/{allowedDaysPerWeek} días

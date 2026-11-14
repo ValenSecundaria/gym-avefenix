@@ -20,20 +20,20 @@ export function MediaLightboxModal({ item, onClose }: MediaLightboxModalProps) {
       onClick={onClose}
     >
       <div
-        className="relative max-w-4xl w-full bg-[#17171C] border border-[#2C2D35] rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+        className="relative max-w-4xl w-full bg-brand-surface border border-brand-border rounded-3xl overflow-hidden shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#2C2D35] bg-[#0B0B0C]">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-brand-border bg-brand-bg">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#23232A] text-[#F95716]">
+            <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-brand-surfaceHover text-brand-primaryText">
               {item.category}
             </span>
-            <h4 className="text-base sm:text-lg font-extrabold text-[#F4F5F7]">{item.title}</h4>
+            <h4 className="text-base sm:text-lg font-extrabold text-brand-textPrimary">{item.title}</h4>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-[#17171C] hover:bg-[#23232A] text-[#F4F5F7] border border-[#2C2D35] transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-brand-surface hover:bg-brand-surfaceHover text-brand-textPrimary border border-brand-border transition-colors cursor-pointer"
             aria-label="Cerrar vista previa"
           >
             <X className="w-5 h-5" aria-hidden="true" />
@@ -49,12 +49,12 @@ export function MediaLightboxModal({ item, onClose }: MediaLightboxModalProps) {
           )}
         </div>
 
-        <div className="p-4 sm:p-5 bg-[#0B0B0C] border-t border-[#2C2D35] flex items-center justify-between">
-          <p className="text-sm text-[#8A909A] leading-relaxed">{item.description}</p>
+        <div className="p-4 sm:p-5 bg-brand-bg border-t border-brand-border flex items-center justify-between">
+          <p className="text-sm text-brand-textSecondary leading-relaxed">{item.description}</p>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-[#23232A] hover:bg-[#2C2D35] text-[#F4F5F7] text-xs font-bold uppercase tracking-wider transition-colors shrink-0 ml-4 cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-brand-surfaceHover hover:bg-brand-border text-brand-textPrimary text-xs font-bold uppercase tracking-wider transition-colors shrink-0 ml-4 cursor-pointer"
           >
             Cerrar
           </button>

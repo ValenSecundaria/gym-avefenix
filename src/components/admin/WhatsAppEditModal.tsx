@@ -83,7 +83,7 @@ function WhatsAppEditDialog({ target, onClose }: { target: WhatsAppMessageTarget
         {/* Destinatario */}
         <div className="p-3.5 rounded-xl bg-fx-base border border-fx-border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
           <div className="flex items-center gap-2 text-fx-text font-bold">
-            <User className="w-4 h-4 text-fx-orange shrink-0" />
+            <User className="w-4 h-4 text-fx-orangeText shrink-0" />
             <span className="truncate">{target.fullName}</span>
           </div>
           <div className="flex items-center gap-1.5 text-fx-muted font-mono">
@@ -123,7 +123,7 @@ function WhatsAppEditDialog({ target, onClose }: { target: WhatsAppMessageTarget
             <button
               type="submit"
               disabled={!message.trim()}
-              className="min-h-[46px] px-6 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] font-extrabold text-sm inline-flex items-center gap-2 shadow-[0_4px_16px_rgba(37,211,102,0.3)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+              className="min-h-[46px] px-6 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-brand-bg font-extrabold text-sm inline-flex items-center gap-2 shadow-[0_4px_16px_rgba(37,211,102,0.3)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
             >
               <Send className="w-4 h-4" />
               <span>Continuar a WhatsApp</span>

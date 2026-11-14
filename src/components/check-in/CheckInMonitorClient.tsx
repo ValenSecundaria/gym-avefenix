@@ -102,7 +102,7 @@ export function CheckInMonitorClient({
   useCheckInKeypad(pressKey, () => setDni(""));
 
   return (
-    <div className="min-h-screen bg-[#0B0B0C] text-[#F4F5F7] flex flex-col p-4 sm:p-6 lg:p-8 select-none cursor-default">
+    <div className="min-h-screen bg-brand-bg text-brand-textPrimary flex flex-col p-4 sm:p-6 lg:p-8 select-none cursor-default">
       <CheckInHeader isFullscreen={isFullscreen} onRequestFullscreen={requestFullscreen} />
 
       <main className="w-full max-w-7xl mx-auto flex-1 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
@@ -121,7 +121,7 @@ export function CheckInMonitorClient({
         </div>
       </main>
 
-      <footer className="w-full max-w-7xl mx-auto pt-3 border-t border-[#2C2D35]/60 flex items-center justify-center text-sm text-[#8A909A] gap-2.5">
+      <footer className="w-full max-w-7xl mx-auto pt-3 border-t border-brand-border/60 flex items-center justify-center text-sm text-brand-textSecondary gap-2.5">
         <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981] animate-pulse" />
         <span>Listo para ingresar</span>
       </footer>

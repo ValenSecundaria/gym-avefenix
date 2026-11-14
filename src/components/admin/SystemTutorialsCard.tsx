@@ -5,7 +5,9 @@ import { ListVideo, ExternalLink, PlaySquare } from "lucide-react";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 export function SystemTutorialsCard() {
-  const tutorialsUrl = GYM_BRAND_CONFIG.assets.tutorialsPlaylistUrl;
+  const tutorialsUrl = GYM_BRAND_CONFIG.assets.tutorialsPlaylistUrl.trim();
+  const hasTutorials = tutorialsUrl.length > 0;
+
   return (
     <div className="w-full py-4 space-y-6 flex flex-col justify-between">
       <div>
@@ -26,21 +28,35 @@ export function SystemTutorialsCard() {
           <div className="space-y-1">
             <h4 className="text-sm font-bold text-fx-text">Playlist Oficial de Capacitación</h4>
             <p className="text-xs text-fx-muted leading-relaxed">
-              Guías paso a paso para recepción, gestión de cuotas, cobros, asistencia y solución de problemas comunes.
+              {hasTutorials
+                ? "Guías paso a paso para recepción, gestión de cuotas, cobros, asistencia y solución de problemas comunes."
+                : "Los videos de capacitación todavía no están cargados para esta sede. Consultá con soporte ante cualquier duda."}
             </p>
           </div>
         </div>
 
-        <a
-          href={tutorialsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full min-h-[48px] px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer group"
-        >
-          <PlaySquare className="w-5 h-5 transition-transform group-hover:scale-110" />
-          <span>Ver Playlist en YouTube</span>
-          <ExternalLink className="w-4 h-4 opacity-75" />
-        </a>
+        {hasTutorials ? (
+          <a
+            href={tutorialsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full min-h-[48px] px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer group"
+          >
+            <PlaySquare className="w-5 h-5 transition-transform group-hover:scale-110" />
+            <span>Ver Playlist en YouTube</span>
+            <ExternalLink className="w-4 h-4 opacity-75" />
+          </a>
+        ) : (
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            className="w-full min-h-[48px] px-6 py-3 rounded-xl bg-fx-base border border-fx-border text-fx-muted font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 opacity-60 cursor-not-allowed"
+          >
+            <PlaySquare className="w-5 h-5" />
+            <span>Playlist Próximamente</span>
+          </button>
+        )}
       </div>
     </div>
   );

@@ -60,12 +60,12 @@ export function TeacherShiftToggleCard({ userId, initialShift = null }: { userId
   const inTime = shift ? new Date(shift.checkIn).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }) : "";
 
   return (
-    <div className="w-full rounded-2xl bg-[#17171C] border border-[#2C2D35] p-5 shadow-lg">
+    <div className="w-full rounded-2xl bg-brand-surface border border-brand-border p-5 shadow-lg">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-[#8A909A] block mb-1">Control de Asistencia</span>
-          <h3 className="text-lg font-black text-[#F4F5F7] flex items-center gap-2">
-            <Clock className="w-5 h-5 text-[#F95716]" /> ¿Estás trabajando ahora?
+          <span className="text-xs font-bold uppercase tracking-wider text-brand-textSecondary block mb-1">Control de Asistencia</span>
+          <h3 className="text-lg font-black text-brand-textPrimary flex items-center gap-2">
+            <Clock className="w-5 h-5 text-brand-primaryText" /> ¿Estás trabajando ahora?
           </h3>
         </div>
         {shift ? (
@@ -74,15 +74,15 @@ export function TeacherShiftToggleCard({ userId, initialShift = null }: { userId
             Turno activo • desde {inTime} hs ({elapsed})
           </span>
         ) : (
-          <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#2C2D35]/50 text-xs font-bold text-[#8A909A]">
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-brand-border/50 text-xs font-bold text-brand-textSecondary">
             Fuera de turno
           </span>
         )}
       </div>
 
       {feedback && (
-        <div role="status" className="mb-4 p-3 rounded-xl bg-[#0B0B0C] border border-[#2C2D35] text-xs font-bold text-[#F4F5F7] flex items-center gap-2">
-          {shift ? <CheckCircle2 className="w-4 h-4 text-[#10B981]" /> : <Sparkles className="w-4 h-4 text-[#F95716]" />}
+        <div role="status" className="mb-4 p-3 rounded-xl bg-brand-bg border border-brand-border text-xs font-bold text-brand-textPrimary flex items-center gap-2">
+          {shift ? <CheckCircle2 className="w-4 h-4 text-[#10B981]" /> : <Sparkles className="w-4 h-4 text-brand-primaryText" />}
           <span>{feedback}</span>
         </div>
       )}
@@ -91,8 +91,10 @@ export function TeacherShiftToggleCard({ userId, initialShift = null }: { userId
         type="button"
         onClick={handleToggle}
         disabled={loading}
-        className={`w-full min-h-[48px] px-6 rounded-xl text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 transition-colors cursor-pointer disabled:opacity-50 ${
-          shift ? "bg-[#F95716] hover:bg-[#EA580C] shadow-lg shadow-[#F95716]/25" : "bg-[#10B981] hover:bg-[#059669] shadow-lg shadow-[#10B981]/25"
+        className={`w-full min-h-[48px] px-6 rounded-xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 transition-colors cursor-pointer disabled:opacity-50 ${
+          shift
+            ? "bg-brand-primary hover:bg-brand-primaryHover text-brand-textPrimary hover:text-brand-bg shadow-lg shadow-brand-primary/25"
+            : "bg-[#10B981] hover:bg-[#10B981]/90 text-brand-bg shadow-lg shadow-[#10B981]/25"
         }`}
       >
         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : shift ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}

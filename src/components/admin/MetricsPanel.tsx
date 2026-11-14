@@ -121,9 +121,9 @@ function Card({ title, subtitle, children, className = "" }: { title: string; su
 
 type TileTone = "default" | "accent" | "danger" | "warning";
 const TONE: Record<TileTone, { border: string; value: string; icon: string }> = {
-  default: { border: "border-fx-border", value: "text-fx-text", icon: "text-fx-orange" },
-  accent: { border: "border-fx-orange/50", value: "text-fx-text", icon: "text-fx-orange" },
-  danger: { border: "border-fx-red/50", value: "text-fx-red", icon: "text-fx-red" },
+  default: { border: "border-fx-border", value: "text-fx-text", icon: "text-fx-orangeText" },
+  accent: { border: "border-fx-orange/50", value: "text-fx-text", icon: "text-fx-orangeText" },
+  danger: { border: "border-fx-red/50", value: "text-fx-redText", icon: "text-fx-redText" },
   warning: { border: "border-fx-amber/50", value: "text-fx-amber", icon: "text-fx-amber" },
 };
 
@@ -175,7 +175,7 @@ function Delta({ pct, suffix }: { pct: number | null; suffix: string }) {
   const up = pct >= 0;
   const Icon = up ? TrendingUp : TrendingDown;
   return (
-    <span className={`inline-flex items-center gap-1 font-bold ${up ? "text-fx-green" : "text-fx-red"}`}>
+    <span className={`inline-flex items-center gap-1 font-bold ${up ? "text-fx-green" : "text-fx-redText"}`}>
       <Icon className="w-3.5 h-3.5" />
       {fmtPct(pct)} <span className="font-normal text-fx-muted">{suffix}</span>
     </span>
@@ -234,7 +234,7 @@ function HoursByDay({ cells, todayDow }: { cells: HeatmapCell[]; todayDow: numbe
             >
               {DAY_SHORT[d]}
               {d === todayDow && <span className="sr-only"> (hoy)</span>}
-              {d === todayDow && <span aria-hidden className="ml-1 text-fx-orange">•</span>}
+              {d === todayDow && <span aria-hidden className="ml-1 text-fx-orangeText">•</span>}
             </button>
           );
         })}
@@ -279,7 +279,7 @@ function HoursByDay({ cells, todayDow }: { cells: HeatmapCell[]; todayDow: numbe
             />
             <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={36} isAnimationActive={false}>
               {series.map((s) => (
-                <Cell key={s.hour} fill={peak && s.hour === peak.hour ? C.orange : "rgba(249,87,22,0.35)"} />
+                <Cell key={s.hour} fill={peak && s.hour === peak.hour ? C.orange : "rgba(37,99,235,0.35)"} />
               ))}
               <LabelList
                 dataKey="value"
@@ -359,7 +359,7 @@ function MonthlyRevenue({ points }: { points: MonthlyPoint[] }) {
             />
             <Bar dataKey="revenue" radius={[4, 4, 0, 0]} maxBarSize={44} isAnimationActive={false}>
               {points.map((p) => (
-                <Cell key={p.month} fill={p.inProgress ? "rgba(249,87,22,0.35)" : C.orange} />
+                <Cell key={p.month} fill={p.inProgress ? "rgba(37,99,235,0.35)" : C.orange} />
               ))}
             </Bar>
           </BarChart>
@@ -447,7 +447,7 @@ export function MetricsPanel({ stats, onGoToTab, hideMoney = false }: MetricsPan
   const periodLabel = (d: AnalyticsPeriodDays) => PERIODS.find((p) => p.days === d)?.label.toLowerCase() || "";
   const periodSelector = (
     <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Período del análisis">
-      {loading && <Loader2 className="w-4 h-4 animate-spin text-fx-orange" aria-label="Cargando" />}
+      {loading && <Loader2 className="w-4 h-4 animate-spin text-fx-orangeText" aria-label="Cargando" />}
       {PERIODS.map((p) => (
         <button
           key={p.days}
@@ -529,7 +529,7 @@ export function MetricsPanel({ stats, onGoToTab, hideMoney = false }: MetricsPan
         />
 
         {error && !loading && (
-          <div role="alert" className="p-4 rounded-xl bg-fx-red/10 border border-fx-red/40 text-sm text-fx-red font-bold flex flex-wrap items-center justify-between gap-3">
+          <div role="alert" className="p-4 rounded-xl bg-fx-red/10 border border-fx-red/40 text-sm text-fx-redText font-bold flex flex-wrap items-center justify-between gap-3">
             <span>
               {error}.{" "}
               {staleData && data && (
@@ -563,7 +563,7 @@ export function MetricsPanel({ stats, onGoToTab, hideMoney = false }: MetricsPan
                   {data.peakSlots.map((p, i) => (
                     <li key={`${p.dow}-${p.hour}`} className="flex items-center justify-between gap-3 text-sm">
                       <span className="flex items-center gap-3 text-fx-text">
-                        <span className="w-6 h-6 rounded-full bg-fx-orange/15 border border-fx-orange/40 text-fx-orange text-xs font-bold flex items-center justify-center">{i + 1}</span>
+                        <span className="w-6 h-6 rounded-full bg-fx-orange/15 border border-fx-orange/40 text-fx-orangeText text-xs font-bold flex items-center justify-center">{i + 1}</span>
                         {DAY_NAMES[p.dow]} de {slotLabel(p.hour)}
                       </span>
                       <span className="text-fx-muted">{people(p.avgArrivals)}</span>
@@ -614,7 +614,7 @@ export function MetricsPanel({ stats, onGoToTab, hideMoney = false }: MetricsPan
                       />
                       <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false}>
                         {data.weekdays.map((w) => (
-                          <Cell key={w.dow} fill={w.avgVisits === maxWeekday && maxWeekday > 0 ? C.orange : "rgba(249,87,22,0.35)"} />
+                          <Cell key={w.dow} fill={w.avgVisits === maxWeekday && maxWeekday > 0 ? C.orange : "rgba(37,99,235,0.35)"} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -655,7 +655,7 @@ export function MetricsPanel({ stats, onGoToTab, hideMoney = false }: MetricsPan
                         />
                         <Bar dataKey="visits" radius={[4, 4, 0, 0]} maxBarSize={28} isAnimationActive={false}>
                           {data.weeklyTrend.map((w) => (
-                            <Cell key={w.weekStart} fill={w.inProgress ? "rgba(249,87,22,0.35)" : C.orange} />
+                            <Cell key={w.weekStart} fill={w.inProgress ? "rgba(37,99,235,0.35)" : C.orange} />
                           ))}
                         </Bar>
                       </BarChart>
@@ -689,7 +689,7 @@ export function MetricsPanel({ stats, onGoToTab, hideMoney = false }: MetricsPan
                   })}
                 </div>
                 <div className="pt-3 border-t border-fx-border flex items-start gap-2 text-xs text-fx-muted">
-                  <Ban className="w-4 h-4 text-fx-red shrink-0" />
+                  <Ban className="w-4 h-4 text-fx-redText shrink-0" />
                   <span>
                     Accesos rechazados en el período: <b className="text-fx-text">{data.rejected.cuotaVencida}</b> por cuota vencida,{" "}
                     <b className="text-fx-text">{data.rejected.limiteAlcanzado}</b> por límite de días
@@ -703,7 +703,7 @@ export function MetricsPanel({ stats, onGoToTab, hideMoney = false }: MetricsPan
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
                   {insights.map((t) => (
                     <li key={t} className="flex items-start gap-2 text-sm text-fx-muted">
-                      <Lightbulb className="w-4 h-4 text-fx-orange shrink-0 mt-0.5" />
+                      <Lightbulb className="w-4 h-4 text-fx-orangeText shrink-0 mt-0.5" />
                       <span>{t}</span>
                     </li>
                   ))}

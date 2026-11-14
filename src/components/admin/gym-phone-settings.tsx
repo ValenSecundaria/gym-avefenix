@@ -43,7 +43,7 @@ export function GymPhoneSettings() {
     <div className="w-full py-4 space-y-6">
       <div>
         <h3 className="text-xl font-extrabold text-fx-text flex items-center gap-2">
-          <Phone className="w-5 h-5 text-fx-orange" />
+          <Phone className="w-5 h-5 text-fx-orangeText" />
           WhatsApp Institucional del Gimnasio
         </h3>
         <p className="text-sm text-fx-muted mt-1 leading-relaxed">
@@ -66,21 +66,21 @@ export function GymPhoneSettings() {
               inputMode="numeric"
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/[^\d]/g, ""))}
-              placeholder={GYM_BRAND_CONFIG.contact.defaultWhatsapp}
+              placeholder={GYM_BRAND_CONFIG.contact.defaultWhatsapp || "5492910000000"}
               disabled={isSaving}
               required
               className="w-full min-h-[48px] pl-8 pr-4 rounded-xl bg-fx-base border border-fx-border focus:border-fx-orange focus:outline-none text-sm text-fx-text font-mono transition-colors disabled:opacity-50"
             />
           </div>
           <span className="text-xs text-fx-muted">
-            Ejemplo: {GYM_BRAND_CONFIG.contact.defaultWhatsapp} (Prefijo de país + código de área + número).
+            Ejemplo: {GYM_BRAND_CONFIG.contact.defaultWhatsapp || "5492910000000"} (Prefijo de país + código de área + número).
           </span>
         </div>
 
         {feedback && (
           <div
             className={`flex items-start gap-2.5 p-3.5 rounded-xl border text-sm font-medium ${
-              feedback.type === "success" ? "bg-fx-green/10 border-fx-green text-fx-green" : "bg-fx-red/10 border-fx-red text-fx-red"
+              feedback.type === "success" ? "bg-fx-green/10 border-fx-green text-fx-green" : "bg-fx-red/10 border-fx-red text-fx-redText"
             }`}
             role="status"
           >

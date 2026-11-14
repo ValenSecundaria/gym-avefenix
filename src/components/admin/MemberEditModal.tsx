@@ -26,7 +26,7 @@ const PHOTO_STATUS_TEXT = {
   PENDING: { text: "Foto guardada en esta PC, pendiente de subir.", cls: "text-fx-amber" },
   SYNCING: { text: "Subiendo foto...", cls: "text-fx-muted" },
   SYNCED: { text: "Foto sincronizada.", cls: "text-fx-green" },
-  ERROR: { text: "No se pudo subir la foto (sigue guardada en esta PC).", cls: "text-fx-red" },
+  ERROR: { text: "No se pudo subir la foto (sigue guardada en esta PC).", cls: "text-fx-redText" },
 } as const;
 
 /** Estado de sincronización de la foto local del socio (si la hay). */
@@ -56,8 +56,8 @@ const LABEL_CLS = "block text-xs font-bold uppercase tracking-wider text-fx-mute
 
 const STATUS_LABEL: Record<MemberDetail["membershipStatus"], { text: string; cls: string }> = {
   ACTIVA: { text: "Cuota al día", cls: "bg-fx-green/15 text-fx-green border-fx-green/40" },
-  VENCIDA: { text: "Cuota vencida", cls: "bg-fx-red/15 text-fx-red border-fx-red/40" },
-  CANCELADA: { text: "Cancelada", cls: "bg-fx-red/15 text-fx-red border-fx-red/40" },
+  VENCIDA: { text: "Cuota vencida", cls: "bg-fx-red/15 text-fx-redText border-fx-red/40" },
+  CANCELADA: { text: "Cancelada", cls: "bg-fx-red/15 text-fx-redText border-fx-red/40" },
   SIN_MEMBRESIA: { text: "Sin plan", cls: "bg-fx-hover text-fx-muted border-fx-border" },
 };
 
@@ -275,12 +275,12 @@ function MemberEditDialog({ memberId, plans = [], onClose, onChanged }: { member
           <div className="py-10 flex flex-col items-center gap-3 text-sm text-fx-muted">
             {loadError ? (
               <>
-                <AlertCircle className="w-8 h-8 text-fx-red" />
+                <AlertCircle className="w-8 h-8 text-fx-redText" />
                 <span>{loadError}</span>
               </>
             ) : (
               <>
-                <Loader2 className="w-8 h-8 animate-spin text-fx-orange" />
+                <Loader2 className="w-8 h-8 animate-spin text-fx-orangeText" />
                 <span>Cargando datos del socio...</span>
               </>
             )}
@@ -300,7 +300,7 @@ function MemberEditDialog({ memberId, plans = [], onClose, onChanged }: { member
               ) : (
                 <>
                   <span className="text-xs sm:text-sm text-fx-text font-bold flex items-center gap-2">
-                    <Camera className="w-4 h-4 text-fx-orange" />
+                    <Camera className="w-4 h-4 text-fx-orangeText" />
                     Foto del socio
                   </span>
                   <div className="w-full aspect-4/3 rounded-xl bg-fx-base border border-fx-border overflow-hidden flex items-center justify-center">
@@ -311,7 +311,7 @@ function MemberEditDialog({ memberId, plans = [], onClose, onChanged }: { member
                     )}
                   </div>
                   <button type="button" onClick={() => setChangingPhoto(true)} disabled={isBusy} className="min-h-[48px] w-full rounded-xl bg-fx-hover hover:bg-fx-border border border-fx-border text-sm font-bold text-fx-text inline-flex items-center justify-center gap-2 cursor-pointer">
-                    <Camera className="w-4 h-4 text-fx-orange" />
+                    <Camera className="w-4 h-4 text-fx-orangeText" />
                     {member.photoUrl ? "Cambiar foto" : "Agregar foto"}
                   </button>
                 </>
@@ -325,7 +325,7 @@ function MemberEditDialog({ memberId, plans = [], onClose, onChanged }: { member
             <div className="md:col-span-7 flex flex-col gap-4">
               {error && (
                 <div role="alert" className="flex items-center gap-2 p-3 rounded-xl bg-fx-red/20 border border-fx-red text-xs sm:text-sm text-fx-text">
-                  <AlertCircle className="w-4 h-4 text-fx-red shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-fx-redText shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
@@ -387,14 +387,14 @@ function MemberEditDialog({ memberId, plans = [], onClose, onChanged }: { member
                               : `¡Hola ${fullName.trim() || member.fullName}! Te escribimos de ${GYM_BRAND_CONFIG.identity.name}.`,
                         })
                       }
-                      className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                      className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-brand-bg text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span>Aviso WhatsApp</span>
                     </button>
                   )}
                 </div>
-                <button type="submit" disabled={isBusy} className="min-h-[50px] px-7 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-bold text-sm inline-flex items-center gap-2 shadow-[0_4px_20px_rgba(249,87,22,0.4)] disabled:opacity-50 cursor-pointer">
+                <button type="submit" disabled={isBusy} className="min-h-[50px] px-7 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-bold text-sm inline-flex items-center gap-2 shadow-[0_4px_20px_rgba(37,99,235,0.4)] disabled:opacity-50 cursor-pointer">
                   {isBusy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                   <span>Guardar cambios</span>
                 </button>
@@ -417,7 +417,7 @@ function MemberEditDialog({ memberId, plans = [], onClose, onChanged }: { member
                         Reactivar socio
                       </button>
                     )}
-                    <button type="button" onClick={() => setDangerStep("delete")} disabled={isBusy} className="min-h-[44px] px-4 rounded-xl bg-fx-base border border-fx-red/60 text-fx-red text-sm font-bold inline-flex items-center gap-2 cursor-pointer">
+                    <button type="button" onClick={() => setDangerStep("delete")} disabled={isBusy} className="min-h-[44px] px-4 rounded-xl bg-fx-base border border-fx-red/60 text-fx-redText text-sm font-bold inline-flex items-center gap-2 cursor-pointer">
                       <Trash2 className="w-4 h-4" />
                       Eliminar definitivamente
                     </button>

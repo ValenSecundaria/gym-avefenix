@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Flame, MonitorCheck, MonitorX, Moon, RefreshCw, Sun, UserPlus } from "lucide-react";
+import Image from "next/image";
+import { MonitorCheck, MonitorX, Moon, RefreshCw, Sun, UserPlus } from "lucide-react";
 import { LogoutButton } from "@/components/admin/logout-button";
 import { NO_PLANS_HINT } from "@/components/admin/HeaderStats";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
@@ -38,12 +39,18 @@ export function ProfessorHeader({
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-fx-surface border border-fx-border shadow-lg">
       <div className="flex items-center gap-3.5 min-w-0">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fx-orange to-fx-red flex items-center justify-center shrink-0">
-          <Flame className="w-7 h-7 text-white" />
+        <div className="w-12 h-12 rounded-xl overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shrink-0">
+          <Image
+            src={GYM_BRAND_CONFIG.assets.logoMain}
+            alt={GYM_BRAND_CONFIG.identity.shortName}
+            width={48}
+            height={48}
+            className="w-full h-full object-cover"
+          />
         </div>
         <div className="min-w-0">
           <h1 className="text-xl font-extrabold text-fx-text tracking-tight">
-            {GYM_BRAND_CONFIG.identity.shortName} <span className="text-fx-orange">• Profesores</span>
+            {GYM_BRAND_CONFIG.identity.shortName} <span className="text-fx-orangeText">• Profesores</span>
           </h1>
           <p className="text-sm text-fx-muted truncate">Hola, {displayName}</p>
         </div>
@@ -69,7 +76,7 @@ export function ProfessorHeader({
           </button>
         )}
         <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Actualizar datos" className={ICON_BTN}>
-          <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orange" : ""}`} />
+          <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orangeText" : ""}`} />
           <span className="hidden sm:inline">Actualizar</span>
         </button>
         <button type="button" onClick={onToggleTheme} aria-label={themeLabel} title={themeLabel} className={ICON_BTN}>
@@ -80,7 +87,7 @@ export function ProfessorHeader({
           onClick={onOpenNewMember}
           disabled={!canCreateMember}
           title={canCreateMember ? undefined : NO_PLANS_HINT}
-          className="min-h-[52px] px-5 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-extrabold text-base inline-flex items-center gap-2.5 shadow-[0_4px_16px_rgba(249,87,22,0.35)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+          className="min-h-[52px] px-5 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white font-extrabold text-base inline-flex items-center gap-2.5 shadow-[0_4px_16px_rgba(37,99,235,0.35)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
         >
           <UserPlus className="w-5 h-5" />
           <span>Nuevo socio</span>

@@ -1,16 +1,16 @@
 {
   "id": "/",
-  "name": "Gimnasio Ave Fénix",
-  "short_name": "Ave Fénix",
-  "description": "Sistema de gestión y control de acceso del gimnasio: panel de recepción y terminal de check-in para doble pantalla.",
+  "name": "Punto Bahia GYM",
+  "short_name": "Punto Bahia",
+  "description": "Sistema de gestión y control de acceso de Punto Bahia GYM: panel de recepción y terminal de check-in para doble pantalla.",
   "lang": "es-AR",
   "dir": "ltr",
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",
-  "orientation": "landscape",
-  "background_color": "#0B0B0C",
-  "theme_color": "#F95716",
+  "orientation": "any",
+  "background_color": "#0D0F12",
+  "theme_color": "#2563EB",
   "categories": ["business", "productivity", "health"],
   "launch_handler": {
     "client_mode": "focus-existing"

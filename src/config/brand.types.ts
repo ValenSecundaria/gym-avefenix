@@ -25,6 +25,7 @@ export interface GymBrandConfig {
     defaultWhatsapp: string;
     address: string;
     googleMapsUrl: string;
+    googleMapsUrlSecondary?: string;
     instagramUrl: string;
     instagramHandle: string;
     facebookUrl?: string;
@@ -43,6 +44,7 @@ export interface GymBrandConfig {
     surface: string;
     border: string;
     primary: string;
+    primaryHover: string;
     alert: string;
     warning: string;
     textPrimary: string;

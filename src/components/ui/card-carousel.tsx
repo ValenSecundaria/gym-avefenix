@@ -61,14 +61,14 @@ export const CardCarousel: React.FC<CardCarouselProps> = ({
         <div className="flex items-center justify-end gap-2 mb-3">
           <button
             type="button"
-            className={`${prevBtnClass} inline-flex items-center justify-center w-9 h-9 rounded-xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] hover:border-[#F95716] hover:text-[#F95716] hover:bg-[#1f1f26] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-[#2C2D35] disabled:hover:text-[#F4F5F7]`}
+            className={`${prevBtnClass} inline-flex items-center justify-center w-9 h-9 rounded-xl bg-brand-surface border border-brand-border text-brand-textPrimary hover:border-brand-primary hover:text-brand-primaryText hover:bg-brand-surfaceHover transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-brand-border disabled:hover:text-brand-textPrimary`}
             aria-label="Anterior"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             type="button"
-            className={`${nextBtnClass} inline-flex items-center justify-center w-9 h-9 rounded-xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] hover:border-[#F95716] hover:text-[#F95716] hover:bg-[#1f1f26] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-[#2C2D35] disabled:hover:text-[#F4F5F7]`}
+            className={`${nextBtnClass} inline-flex items-center justify-center w-9 h-9 rounded-xl bg-brand-surface border border-brand-border text-brand-textPrimary hover:border-brand-primary hover:text-brand-primaryText hover:bg-brand-surfaceHover transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-brand-border disabled:hover:text-brand-textPrimary`}
             aria-label="Siguiente"
           >
             <ChevronRight className="w-5 h-5" />
@@ -104,8 +104,8 @@ export const CardCarousel: React.FC<CardCarouselProps> = ({
             ? {
                 el: `.${paginationClass}`,
                 clickable: true,
-                bulletClass: "inline-block w-2.5 h-2.5 rounded-full bg-[#2C2D35] transition-all duration-300 cursor-pointer mx-1",
-                bulletActiveClass: "!w-7 !bg-[#F95716] !rounded-full shadow-[0_0_10px_rgba(249,87,22,0.5)]",
+                bulletClass: "inline-block w-2.5 h-2.5 rounded-full bg-brand-border transition-all duration-300 cursor-pointer mx-1",
+                bulletActiveClass: "!w-7 !bg-brand-primary !rounded-full shadow-[0_0_10px_rgba(37,99,235,0.5)]",
               }
             : false
         }
@@ -129,8 +129,8 @@ export const CardCarousel: React.FC<CardCarouselProps> = ({
             ))
           : images?.map((image, idx) => (
               <SwiperSlide key={idx} className="!h-auto flex">
-                <div className="relative w-full h-full overflow-hidden rounded-2xl bg-[#17171C] border border-[#2C2D35] flex flex-col justify-between">
-                  <div className="aspect-[4/5] sm:aspect-[3/4] w-full overflow-hidden bg-[#0B0B0C]">
+                <div className="relative w-full h-full overflow-hidden rounded-2xl bg-brand-surface border border-brand-border flex flex-col justify-between">
+                  <div className="aspect-[4/5] sm:aspect-[3/4] w-full overflow-hidden bg-brand-bg">
                     <img
                       src={image.src}
                       alt={image.alt || `Imagen ${idx + 1}`}
@@ -141,12 +141,12 @@ export const CardCarousel: React.FC<CardCarouselProps> = ({
                   {(image.title || image.description) && (
                     <div className="p-5 flex flex-col gap-1">
                       {image.title && (
-                        <h4 className="font-extrabold text-[#F4F5F7] text-lg">
+                        <h4 className="font-extrabold text-brand-textPrimary text-lg">
                           {image.title}
                         </h4>
                       )}
                       {image.description && (
-                        <p className="text-sm text-[#8A909A]">
+                        <p className="text-sm text-brand-textSecondary">
                           {image.description}
                         </p>
                       )}

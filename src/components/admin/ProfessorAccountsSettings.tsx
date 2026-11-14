@@ -34,7 +34,7 @@ export function ProfessorAccountsSettings() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-xl font-extrabold text-fx-text flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-fx-orange" />
+            <GraduationCap className="w-5 h-5 text-fx-orangeText" />
             Cuentas de profesores
           </h3>
           <p className="text-sm text-fx-muted mt-1 leading-relaxed">
@@ -47,7 +47,7 @@ export function ProfessorAccountsSettings() {
             onClick={() => setIsCreating(true)}
             className="min-h-[40px] px-3.5 rounded-lg border border-fx-border bg-fx-surface hover:bg-fx-hover text-xs font-bold text-fx-text flex items-center gap-1.5 cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5 text-fx-orange" /> Nueva cuenta
+            <Plus className="w-3.5 h-3.5 text-fx-orangeText" /> Nueva cuenta
           </button>
         )}
       </div>
@@ -56,7 +56,7 @@ export function ProfessorAccountsSettings() {
         <div
           role="status"
           className={`flex items-start gap-2.5 p-3.5 rounded-xl border text-sm font-medium ${
-            feedback.type === "success" ? "bg-fx-green/10 border-fx-green text-fx-green" : "bg-fx-red/10 border-fx-red text-fx-red"
+            feedback.type === "success" ? "bg-fx-green/10 border-fx-green text-fx-green" : "bg-fx-red/10 border-fx-red text-fx-redText"
           }`}
         >
           {feedback.type === "success" ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
@@ -79,7 +79,7 @@ export function ProfessorAccountsSettings() {
       {accounts === null ? (
         !feedback && (
           <div className="py-6 flex items-center justify-center gap-2 text-sm text-fx-muted">
-            <Loader2 className="w-4 h-4 animate-spin text-fx-orange" /> Cargando cuentas...
+            <Loader2 className="w-4 h-4 animate-spin text-fx-orangeText" /> Cargando cuentas...
           </div>
         )
       ) : accounts.length === 0 ? (

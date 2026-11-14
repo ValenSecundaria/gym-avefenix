@@ -1,8 +1,9 @@
 import React from "react";
+import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 export function formatGymPhoneDisplay(rawPhone: string): string {
-  const digits = (rawPhone || "").replace(/\D/g, "");
-  if (!digits) return "+54 9 291 5768403";
+  const digits = (rawPhone || GYM_BRAND_CONFIG.contact.defaultWhatsapp).replace(/\D/g, "");
+  if (!digits) return "";
   if (digits.startsWith("549") && digits.length >= 12) {
     const area = digits.slice(3, 6);
     const num = digits.slice(6);

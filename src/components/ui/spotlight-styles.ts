@@ -2,7 +2,7 @@ export const glowColorMap = {
   blue: { base: 220, spread: 200 },
   purple: { base: 280, spread: 300 },
   green: { base: 120, spread: 200 },
-  red: { base: 0, spread: 200 },
+  red: { base: 347, spread: 30 },
   orange: { base: 18, spread: 25 },
 };
 
@@ -36,7 +36,7 @@ export const beforeAfterStyles = `
         calc(var(--spotlight-size) * 0.75) calc(var(--spotlight-size) * 0.75) at
         calc(var(--x, 0) * 1px)
         calc(var(--y, 0) * 1px),
-        hsl(var(--hue, 18) calc(var(--saturation, 100) * 1%) calc(var(--lightness, 50) * 1%) / var(--border-spot-opacity, 1)), transparent 100%
+        hsl(var(--hue, 347) calc(var(--saturation, 100) * 1%) calc(var(--lightness, 50) * 1%) / var(--border-spot-opacity, 1)), transparent 100%
       );
       filter: brightness(2);
     }

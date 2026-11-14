@@ -22,8 +22,8 @@ interface MembersSectionProps {
 
 const STATUS_BADGE: Record<MemberRowItem["membershipStatus"], { text: string; cls: string }> = {
   ACTIVA: { text: "Al día", cls: "bg-fx-green/15 text-fx-green border-fx-green/40" },
-  VENCIDA: { text: "Vencida", cls: "bg-fx-red/15 text-fx-red border-fx-red/40" },
-  CANCELADA: { text: "Cancelada", cls: "bg-fx-red/15 text-fx-red border-fx-red/40" },
+  VENCIDA: { text: "Vencida", cls: "bg-fx-red/15 text-fx-redText border-fx-red/40" },
+  CANCELADA: { text: "Cancelada", cls: "bg-fx-red/15 text-fx-redText border-fx-red/40" },
   SIN_MEMBRESIA: { text: "Sin plan", cls: "bg-fx-hover text-fx-muted border-fx-border" },
 };
 
@@ -146,14 +146,14 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember, onSynced 
           </div>
         </div>
         <div className="text-xs text-fx-muted inline-flex items-center gap-2 min-h-[20px]" aria-live="polite">
-          {isLoading && <Loader2 className="w-4 h-4 animate-spin text-fx-orange" />}
+          {isLoading && <Loader2 className="w-4 h-4 animate-spin text-fx-orangeText" />}
           {data && (data.total === 0 ? "Sin resultados" : `Mostrando ${from}–${to} de ${data.total} clientes`)}
         </div>
       </div>
 
       {error && (
         <div role="alert" className="flex items-center gap-2 p-3 rounded-xl bg-fx-red/20 border border-fx-red text-sm text-fx-text">
-          <AlertCircle className="w-4 h-4 text-fx-red shrink-0" />
+          <AlertCircle className="w-4 h-4 text-fx-redText shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -218,7 +218,7 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember, onSynced 
                         })
                       }
                       aria-label={`Contactar por WhatsApp a ${m.fullName}`}
-                      className="min-h-[40px] px-3 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                      className="min-h-[40px] px-3 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-brand-bg text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span className="hidden sm:inline">WhatsApp</span>
@@ -230,7 +230,7 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember, onSynced 
                     onClick={() => onEditMember(m.id)}
                     className="min-h-[40px] px-3 rounded-xl bg-fx-surface border border-fx-border hover:border-fx-orange text-fx-text text-sm font-bold inline-flex items-center gap-2 cursor-pointer"
                   >
-                    <UserPen className="w-4 h-4 text-fx-orange" />
+                    <UserPen className="w-4 h-4 text-fx-orangeText" />
                     <span>Ver / editar</span>
                   </button>
                 </div>

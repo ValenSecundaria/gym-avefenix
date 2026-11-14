@@ -4,10 +4,10 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  const username = process.env.SEED_ADMIN_USER || "admin";
-  const password = process.env.SEED_ADMIN_PASS || "admin123";
-  const name = process.env.SEED_ADMIN_NAME || "Administrador";
-  const gymPhone = process.env.SEED_GYM_PHONE || "5492915768403";
+  const username = process.env.SEED_ADMIN_USER || "Superadmin";
+  const password = process.env.SEED_ADMIN_PASS || "Gemetro";
+  const name = process.env.SEED_ADMIN_NAME || "Superadmin";
+  const gymPhone = process.env.SEED_GYM_PHONE || null;
 
   console.log(`[Seed] Inicializando administrador: ${username}`);
   const passwordHash = await bcrypt.hash(password, 10);

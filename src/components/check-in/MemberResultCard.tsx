@@ -27,25 +27,25 @@ export function MemberResultCard({ result }: MemberResultCardProps) {
     result.status === "HABILITADO"
       ? "ring-8 ring-[#10B981]/15"
       : result.status === "CUOTA_VENCIDA"
-        ? "ring-8 ring-[#D92614]/20"
-        : "ring-8 ring-[#FFB300]/20";
+        ? "ring-8 ring-brand-alert/20"
+        : "ring-8 ring-brand-warning/20";
 
   const cornerBadgeClass =
     result.status === "HABILITADO"
-      ? "bg-[#10B981] text-[#F4F5F7]"
+      ? "bg-[#10B981] text-brand-bg"
       : result.status === "CUOTA_VENCIDA"
-        ? "bg-[#D92614] text-[#F4F5F7]"
-        : "bg-[#FFB300] text-[#0B0B0C]";
+        ? "bg-brand-alert text-brand-textPrimary"
+        : "bg-brand-warning text-brand-bg";
 
   const CornerIcon =
     result.status === "HABILITADO" ? Check : result.status === "CUOTA_VENCIDA" ? AlertCircle : Clock;
 
   return (
-    <div className="w-full bg-[#17171C] border border-[#2C2D35] rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col items-center text-center transition-all">
+    <div className="w-full bg-brand-surface border border-brand-border rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col items-center text-center transition-all">
       {/* 1. Foto de perfil circular con badge de estado en esquina (Stitch Screen 1) */}
       <div className="relative mb-6">
         <div
-          className={`w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden border-4 border-[#2C2D35] bg-[#23232A] flex items-center justify-center shadow-2xl ${ringClass}`}
+          className={`w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden border-4 border-brand-border bg-brand-surfaceHover flex items-center justify-center shadow-2xl ${ringClass}`}
         >
           {showPhoto && result.photoUrl ? (
             <MemberPhotoImg
@@ -56,31 +56,31 @@ export function MemberResultCard({ result }: MemberResultCardProps) {
               onError={() => setFailedPhotoUrl(result.photoUrl)}
             />
           ) : (
-            <div className="flex items-center justify-center text-[#8A909A]">
+            <div className="flex items-center justify-center text-brand-textSecondary">
               {result.fullName ? (
-                <span className="text-4xl sm:text-5xl font-extrabold text-[#F4F5F7]">
+                <span className="text-4xl sm:text-5xl font-extrabold text-brand-textPrimary">
                   {getInitials(result.fullName)}
                 </span>
               ) : (
-                <User className="w-16 h-16 text-[#8A909A]" />
+                <User className="w-16 h-16 text-brand-textSecondary" />
               )}
             </div>
           )}
         </div>
         <div
-          className={`absolute bottom-2 right-2 w-11 h-11 rounded-full flex items-center justify-center border-4 border-[#17171C] shadow-lg ${cornerBadgeClass}`}
+          className={`absolute bottom-2 right-2 w-11 h-11 rounded-full flex items-center justify-center border-4 border-brand-surface shadow-lg ${cornerBadgeClass}`}
         >
           <CornerIcon className="w-6 h-6 stroke-[2.8]" />
         </div>
       </div>
 
       {/* 2. Nombre y Apellido */}
-      <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#F4F5F7] tracking-tight mb-1.5">
+      <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-brand-textPrimary tracking-tight mb-1.5">
         {result.fullName}
       </h2>
 
       {/* 3. Número de DNI */}
-      <p className="font-semibold text-xl sm:text-2xl md:text-3xl text-[#8A909A] tracking-wider font-mono mb-8">
+      <p className="font-semibold text-xl sm:text-2xl md:text-3xl text-brand-textSecondary tracking-wider font-mono mb-8">
         DNI: {result.dni}
       </p>
 

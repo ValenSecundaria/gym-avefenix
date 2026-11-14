@@ -63,16 +63,16 @@ export function TeacherShiftsTable({ shifts, onChanged }: Props) {
 
   if (shifts.length === 0) {
     return (
-      <div className="p-8 text-center text-sm text-[#8A909A] rounded-2xl bg-[#17171C] border border-[#2C2D35]">
+      <div className="p-8 text-center text-sm text-brand-textSecondary rounded-2xl bg-brand-surface border border-brand-border">
         No hay turnos registrados en este período.
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-[#2C2D35] bg-[#17171C]">
-      <table className="w-full text-left text-sm text-[#F4F5F7]">
-        <thead className="bg-[#0B0B0C] border-b border-[#2C2D35] text-xs uppercase tracking-wider text-[#8A909A]">
+    <div className="overflow-x-auto rounded-2xl border border-brand-border bg-brand-surface">
+      <table className="w-full text-left text-sm text-brand-textPrimary">
+        <thead className="bg-brand-bg border-b border-brand-border text-xs uppercase tracking-wider text-brand-textSecondary">
           <tr>
             <th className="py-3.5 px-4">Fecha</th>
             <th className="py-3.5 px-4">Profesor</th>
@@ -82,33 +82,33 @@ export function TeacherShiftsTable({ shifts, onChanged }: Props) {
             <th className="py-3.5 px-4 text-right">Acciones</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#2C2D35]">
+        <tbody className="divide-y divide-brand-border">
           {shifts.map((s) => {
             const isBusy = busyId === s.id;
             return (
-              <tr key={s.id} className="hover:bg-[#23232A] transition-colors">
+              <tr key={s.id} className="hover:bg-brand-surfaceHover transition-colors">
                 <td className="py-3.5 px-4 font-mono text-xs">{formatDate(s.checkIn)}</td>
                 <td className="py-3.5 px-4">
-                  <span className="font-bold text-[#F4F5F7] block">{s.teacherName}</span>
-                  {s.notes && <span className="text-xs text-[#8A909A] italic block">{s.notes}</span>}
+                  <span className="font-bold text-brand-textPrimary block">{s.teacherName}</span>
+                  {s.notes && <span className="text-xs text-brand-textSecondary italic block">{s.notes}</span>}
                 </td>
                 <td className="py-3.5 px-4 font-mono font-bold text-[#10B981]">{formatTime(s.checkIn)} hs</td>
                 <td className="py-3.5 px-4 font-mono">
                   {s.checkOut ? (
-                    <span className="text-[#F4F5F7] font-bold">{formatTime(s.checkOut)} hs</span>
+                    <span className="text-brand-textPrimary font-bold">{formatTime(s.checkOut)} hs</span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleCloseShift(s)}
                       disabled={isBusy}
-                      className="min-h-[34px] px-2.5 rounded-lg bg-[#F95716] hover:bg-[#EA580C] text-white text-xs font-black inline-flex items-center gap-1.5 cursor-pointer shadow-md shadow-[#F95716]/20 disabled:opacity-40"
+                      className="min-h-[34px] px-2.5 rounded-lg bg-brand-primary hover:bg-brand-primaryHover hover:text-brand-bg text-white text-xs font-black inline-flex items-center gap-1.5 cursor-pointer shadow-md shadow-brand-primary/20 disabled:opacity-40"
                     >
                       {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3 h-3 fill-current" />}
                       <span>Marcar Salida</span>
                     </button>
                   )}
                 </td>
-                <td className="py-3.5 px-4 font-mono text-xs font-bold text-[#F95716]">
+                <td className="py-3.5 px-4 font-mono text-xs font-bold text-brand-primaryText">
                   {formatDuration(s.totalMinutes)}
                 </td>
                 <td className="py-3.5 px-4 text-right">
@@ -117,7 +117,7 @@ export function TeacherShiftsTable({ shifts, onChanged }: Props) {
                     onClick={() => handleDelete(s)}
                     disabled={isBusy}
                     title="Eliminar registro"
-                    className="p-2 rounded-lg text-[#8A909A] hover:text-[#D92614] hover:bg-[#D92614]/10 transition-colors cursor-pointer disabled:opacity-40"
+                    className="p-2 rounded-lg text-brand-textSecondary hover:text-brand-alertText hover:bg-brand-alert/10 transition-colors cursor-pointer disabled:opacity-40"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

@@ -45,7 +45,9 @@ const GYM_JSON_LD = {
   description: SEO_DESCRIPTION,
   image: new URL(GYM_BRAND_CONFIG.assets.heroCover, getSiteUrl()).toString(),
   url: getSiteUrl().origin,
-  telephone: `+${GYM_BRAND_CONFIG.contact.defaultWhatsapp}`,
+  ...(GYM_BRAND_CONFIG.contact.defaultWhatsapp
+    ? { telephone: `+${GYM_BRAND_CONFIG.contact.defaultWhatsapp}` }
+    : {}),
   address: {
     "@type": "PostalAddress",
     streetAddress: GYM_BRAND_CONFIG.contact.address,
@@ -59,10 +61,10 @@ const Files = dynamic(
   () => import("@/components/landing/Files").then((mod) => mod.Files),
   {
     loading: () => (
-      <section className="w-full bg-[#0B0B0C] px-4 sm:px-6 lg:px-10 py-20 lg:py-24 border-t border-[#2C2D35]/60">
+      <section className="w-full bg-brand-bg px-4 sm:px-6 lg:px-10 py-20 lg:py-24 border-t border-brand-border/60">
         <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
-          <div className="w-48 h-8 rounded-full bg-[#17171C] animate-pulse" />
-          <div className="w-full h-80 rounded-2xl bg-[#17171C] border border-[#2C2D35] animate-pulse" />
+          <div className="w-48 h-8 rounded-full bg-brand-surface animate-pulse" />
+          <div className="w-full h-80 rounded-2xl bg-brand-surface border border-brand-border animate-pulse" />
         </div>
       </section>
     ),
@@ -84,7 +86,7 @@ async function PlansWithData() {
 
 export default function PublicLandingPage() {
   return (
-    <div className="min-h-screen bg-[#0B0B0C] text-[#F4F5F7] flex flex-col">
+    <div className="min-h-screen bg-brand-bg text-brand-textPrimary flex flex-col">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(GYM_JSON_LD).replace(/</g, "\\u003c") }}

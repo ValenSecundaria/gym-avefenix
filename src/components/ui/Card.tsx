@@ -25,10 +25,10 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-2xl bg-[#17171C] border border-[#2C2D35] text-[#F4F5F7] shadow-lg transition-all duration-200",
-        hoverable && "hover:bg-[#23232A] hover:border-[#8A909A]/40",
+        "rounded-2xl bg-brand-surface border border-brand-border text-brand-textPrimary shadow-lg transition-all duration-200",
+        hoverable && "hover:bg-brand-surfaceHover hover:border-brand-textSecondary/40",
         highlighted &&
-          "border-[#F95716] shadow-[0_0_32px_-6px_rgba(249,87,22,0.3)]",
+          "border-brand-primary shadow-[0_0_32px_-6px_rgba(37,99,235,0.3)]",
         PADDING_CLASSES[padding],
         className
       )}
@@ -58,7 +58,7 @@ export function CardTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("text-lg sm:text-xl font-bold text-[#F4F5F7] tracking-tight", className)}
+      className={cn("text-lg sm:text-xl font-bold text-brand-textPrimary tracking-tight", className)}
       {...props}
     >
       {children}
@@ -72,7 +72,7 @@ export function CardDescription({
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn("text-sm text-[#8A909A]", className)} {...props}>
+    <p className={cn("text-sm text-brand-textSecondary", className)} {...props}>
       {children}
     </p>
   );

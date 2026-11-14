@@ -9,26 +9,28 @@ export interface ModalityItem {
   accent: string;
 }
 
+const STANDARD_SCHEDULE = "Lun a Vie 06:30–22:00 • Sáb 16:00–19:00";
+
 export const MODALITIES: ModalityItem[] = [
   {
     name: "Sala de Musculación",
-    schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
+    schedule: STANDARD_SCHEDULE,
     level: "Fuerza e Hipertrofia",
     description: "Zona completa de peso libre, mancuernas, racks y maquinaria biomecánica guiada para sobrecarga progresiva con profesores capacitados en sala.",
     icon: Dumbbell,
-    accent: "text-[#F95716]",
+    accent: "text-brand-primaryText",
   },
   {
     name: "Entrenamiento Funcional",
-    schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
+    schedule: STANDARD_SCHEDULE,
     level: "Acondicionamiento Físico",
     description: "Circuitos metabólicos y ejercicios multiarticulares orientados a potencia, agilidad, coordinación, core y resistencia cardiovascular.",
     icon: Flame,
-    accent: "text-[#FFB300]",
+    accent: "text-brand-warning",
   },
   {
     name: "Cardio",
-    schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
+    schedule: STANDARD_SCHEDULE,
     level: "Salud y Resistencia",
     description: "Cintas de alto rendimiento, bicicletas y sector aeróbico para maximizar la resistencia pulmonar y el gasto calórico.",
     icon: HeartPulse,
@@ -36,10 +38,10 @@ export const MODALITIES: ModalityItem[] = [
   },
   {
     name: "Entrenamiento Híbrido",
-    schedule: "Lun a Vie 08:00 – 22:00 • Sáb 10:00 – 14:00",
+    schedule: STANDARD_SCHEDULE,
     level: "Alto Rendimiento",
     description: "La sinergia ideal entre la fuerza y sobrecarga de la musculación con la intensidad metabólica del funcional para atletas integrales.",
     icon: Zap,
-    accent: "text-[#F95716]",
+    accent: "text-brand-primaryText",
   },
 ];

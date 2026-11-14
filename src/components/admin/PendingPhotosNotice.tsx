@@ -27,7 +27,7 @@ export function PendingPhotosNotice() {
       <div className="flex flex-col gap-1">
         {pending > 0 && (
           <span className="flex items-center gap-2.5 font-bold">
-            <CloudOff className="w-5 h-5 text-fx-orange shrink-0" />
+            <CloudOff className="w-5 h-5 text-fx-orangeText shrink-0" />
             <span>
               {pending === 1 ? "1 foto guardada en esta PC, pendiente de subir" : `${pending} fotos guardadas en esta PC, pendientes de subir`}
               <span className="font-normal text-fx-muted"> · se ven igual y se suben solas</span>
@@ -35,7 +35,7 @@ export function PendingPhotosNotice() {
           </span>
         )}
         {errors > 0 && (
-          <span className="flex items-center gap-2.5 font-bold text-fx-red">
+          <span className="flex items-center gap-2.5 font-bold text-fx-redText">
             <AlertTriangle className="w-5 h-5 shrink-0" />
             <span>
               {errors === 1 ? "1 foto no se pudo subir" : `${errors} fotos no se pudieron subir`}

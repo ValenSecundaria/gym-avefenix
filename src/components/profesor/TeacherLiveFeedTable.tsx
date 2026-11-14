@@ -25,7 +25,7 @@ function StatusBadge({ status }: { status: AccessStatusType }) {
   }
   if (status === "CUOTA_VENCIDA") {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-fx-red/20 text-fx-red border border-fx-red/50">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-fx-red/20 text-fx-redText border border-fx-red/50">
         <AlertTriangle className="w-3.5 h-3.5" />
         <span>Vencido</span>
       </span>
@@ -92,7 +92,7 @@ export function TeacherLiveFeedTable({ items, isLoading = false, onSuccessSync }
               </div>
 
               <div className="flex items-center justify-between sm:justify-end gap-2.5">
-                <span className="font-mono text-xs text-fx-orange font-bold shrink-0">{formatTimeAR(item.createdAt)}</span>
+                <span className="font-mono text-xs text-fx-orangeText font-bold shrink-0">{formatTimeAR(item.createdAt)}</span>
                 <StatusBadge status={item.status} />
                 <TemporarySyncPeriodButton
                   memberId={item.memberId}

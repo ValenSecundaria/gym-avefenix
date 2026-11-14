@@ -97,7 +97,7 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
                         defaultMessage: waMessage,
                       })
                     }
-                    className="min-h-[48px] px-5 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                    className="min-h-[48px] px-5 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-brand-bg text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span>Recontactar por WhatsApp</span>
