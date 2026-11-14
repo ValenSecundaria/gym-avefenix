@@ -6,11 +6,28 @@ import { gymBroadcast, toCheckInKey } from "@/lib/screens/broadcast-channel";
 /** Si la pantalla de ingreso no da señales en este tiempo, se considera cerrada. */
 const CHECKIN_ALIVE_TIMEOUT_MS = 6000;
 
-const NON_TEXT_INPUT_TYPES = new Set(["button", "submit", "reset", "checkbox", "radio", "range", "color", "file", "image"]);
+const NON_TEXT_INPUT_TYPES = new Set([
+  "button",
+  "submit",
+  "reset",
+  "checkbox",
+  "radio",
+  "range",
+  "color",
+  "file",
+  "image",
+  "date",
+  "datetime-local",
+  "month",
+  "time",
+  "week",
+]);
 
 /** Hay un campo del panel donde se está escribiendo (buscador, alta, montos...). */
 function isEditableElement(el: Element | null): boolean {
   if (!el) return false;
+  // El selector de fecha histórica nunca bloquea el teclado numérico del ingreso
+  if (el.id === "historical-date-input") return false;
   if (el instanceof HTMLInputElement) return !NON_TEXT_INPUT_TYPES.has(el.type);
   if (el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) return true;
   return el instanceof HTMLElement && el.isContentEditable;
@@ -42,6 +59,12 @@ export function useCheckInKeyForwarding(): boolean {
     const onKeyDown = (e: KeyboardEvent) => {
       if (Date.now() - lastAliveRef.current > CHECKIN_ALIVE_TIMEOUT_MS) return;
       if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+
+      const activeEl = document.activeElement;
+      if (activeEl?.id === "historical-date-input" || (activeEl instanceof HTMLInputElement && activeEl.type === "date")) {
+        (activeEl as HTMLElement).blur();
+      }
+
       const typingInPanel = isEditableElement(document.activeElement);
       // Escape queda para el panel (cerrar ventanas y menús).
       if (!typingInPanel && e.key === "Escape") return;

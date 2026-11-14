@@ -11,8 +11,9 @@ import { TemporarySyncPeriodButton } from "@/components/shared/temporary-sync-pe
 // TODO [TEMPORARY-TRANSITION]: Eliminar este botón al finalizar el primer mes
 interface LiveFeedTableProps {
   items: LiveCheckInItem[];
-  onEditMember: (memberId: string) => void;
+  onEditMember?: (memberId: string) => void;
   onSuccessSync?: (msg: string) => void;
+  isHistorical?: boolean;
 }
 
 function StatusBadge({ status }: { status: AccessStatusType }) {
@@ -40,7 +41,7 @@ function StatusBadge({ status }: { status: AccessStatusType }) {
   );
 }
 
-export function LiveFeedTable({ items, onEditMember, onSuccessSync }: LiveFeedTableProps) {
+export function LiveFeedTable({ items, onEditMember, onSuccessSync, isHistorical = false }: LiveFeedTableProps) {
   const [filter, setFilter] = useState<"ALL" | "DUE" | "LIMIT">("ALL");
 
   const dueCount = items.filter((i) => i.status === "CUOTA_VENCIDA").length;
@@ -89,7 +90,9 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync }: LiveFeedTa
 
       {filteredItems.length === 0 ? (
         <div className="p-8 text-center text-sm text-fx-muted rounded-xl border border-dashed border-fx-border">
-          No hay ingresos en vivo registrados el día de hoy.
+          {isHistorical
+            ? "No se encontraron ingresos registrados en la fecha seleccionada."
+            : "No hay ingresos en vivo registrados el día de hoy."}
         </div>
       ) : (
         <>
@@ -112,10 +115,12 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync }: LiveFeedTa
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <StatusBadge status={item.status} />
-                  <div className="flex items-center gap-2">
-                    <TemporarySyncPeriodButton memberId={item.memberId} fullName={item.fullName} onSuccess={onSuccessSync} />
-                    <EditMemberButton fullName={item.fullName} onClick={() => onEditMember(item.memberId)} />
-                  </div>
+                  {!isHistorical && (
+                    <div className="flex items-center gap-2">
+                      <TemporarySyncPeriodButton memberId={item.memberId} fullName={item.fullName} onSuccess={onSuccessSync} />
+                      {onEditMember && <EditMemberButton fullName={item.fullName} onClick={() => onEditMember(item.memberId)} />}
+                    </div>
+                  )}
                 </div>
               </li>
             ))}
@@ -130,7 +135,9 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync }: LiveFeedTa
                   <th className="py-4 px-5">Socio / Documento</th>
                   <th className="py-4 px-5">Plan Contratado</th>
                   <th className="py-4 px-5 text-right">Estado Acceso / Cuota</th>
-                  <th className="py-4 px-4"><span className="sr-only">Acciones</span></th>
+                  {!isHistorical && (
+                    <th className="py-4 px-4"><span className="sr-only">Acciones</span></th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-fx-border">
@@ -158,12 +165,14 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync }: LiveFeedTa
                     <td className="py-4 px-5 text-right">
                       <StatusBadge status={item.status} />
                     </td>
-                    <td className="py-4 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <TemporarySyncPeriodButton memberId={item.memberId} fullName={item.fullName} onSuccess={onSuccessSync} />
-                        <EditMemberButton fullName={item.fullName} onClick={() => onEditMember(item.memberId)} />
-                      </div>
-                    </td>
+                    {!isHistorical && (
+                      <td className="py-4 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <TemporarySyncPeriodButton memberId={item.memberId} fullName={item.fullName} onSuccess={onSuccessSync} />
+                          {onEditMember && <EditMemberButton fullName={item.fullName} onClick={() => onEditMember(item.memberId)} />}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

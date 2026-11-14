@@ -1,9 +1,10 @@
 import type { CachedMember, PendingCheckIn } from "@/types";
 
 const DB_NAME = "gym_local_db";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_MEMBERS = "members_cache";
 const STORE_PENDING = "pending_checkins";
+export const STORE_HISTORICAL_CACHE = "historical_checkins_cache";
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -27,6 +28,9 @@ export function openGymDb(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_PENDING)) {
         db.createObjectStore(STORE_PENDING, { keyPath: "id", autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains(STORE_HISTORICAL_CACHE)) {
+        db.createObjectStore(STORE_HISTORICAL_CACHE, { keyPath: "dateKey" });
       }
     };
 
