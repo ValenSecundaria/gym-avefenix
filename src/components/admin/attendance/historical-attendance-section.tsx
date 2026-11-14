@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useCallback } from "react";
 import {
@@ -147,17 +147,17 @@ export function HistoricalAttendanceSection({
 
       {/* Banner amigable cuando se consulta una fecha histórica */}
       {isHistorical && (
-        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-[#17171C] border border-[#2C2D35] text-sm text-[#F4F5F7]">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-fx-surface border border-fx-border text-sm text-fx-text">
           <div className="flex items-center gap-2">
             <span className="text-base">📅</span>
             <span>
               Viendo ingresos del{" "}
-              <strong className="capitalize text-[#F95716] font-bold">
+              <strong className="capitalize text-fx-orangeText font-bold">
                 {formatDisplayDate(selectedDate)}
               </strong>
             </span>
           </div>
-          <div className="font-semibold text-xs text-[#8A909A] bg-[#0B0B0C] px-3 py-1.5 rounded-lg border border-[#2C2D35]">
+          <div className="font-semibold text-xs text-fx-muted bg-fx-base px-3 py-1.5 rounded-lg border border-fx-border">
             Total:{" "}
             <span className="text-[#10B981] font-bold font-mono text-sm">
               {historicalItems.length}
@@ -174,7 +174,7 @@ export function HistoricalAttendanceSection({
       )}
 
       {loading ? (
-        <div className="p-8 text-center text-sm text-[#8A909A] rounded-xl border border-dashed border-[#2C2D35] animate-pulse">
+        <div className="p-8 text-center text-sm text-fx-muted rounded-xl border border-dashed border-fx-border animate-pulse">
           Cargando ingresos de la fecha...
         </div>
       ) : (

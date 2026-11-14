@@ -25,10 +25,10 @@ export async function getCheckInsByDateAction(
       return { success: false, error: "Tu sesión expiró. Volvé a iniciar sesión." };
     }
 
-    if (session.role === "PROFESOR") {
+    if (session.role !== "ADMIN") {
       return {
         success: false,
-        error: "No autorizado: los profesores solo pueden visualizar los ingresos del día actual.",
+        error: "No autorizado: solo el administrador puede consultar ingresos de días anteriores.",
       };
     }
 

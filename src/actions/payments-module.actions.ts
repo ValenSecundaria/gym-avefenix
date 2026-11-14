@@ -52,8 +52,8 @@ export async function getPaymentsHistoryAction(
   filters?: PaymentsHistoryFilters
 ): Promise<{ success: true; data: PaymentsHistoryResult } | { success: false; error: string }> {
   const session = await getActionSession();
-  if (!session || session.role === "PROFESOR") {
-    return { success: false, error: "No autorizado para ver pagos." };
+  if (!session || session.role !== "ADMIN") {
+    return { success: false, error: "No autorizado: solo el administrador puede ver los pagos." };
   }
 
   const where: Prisma.PaymentWhereInput = {};

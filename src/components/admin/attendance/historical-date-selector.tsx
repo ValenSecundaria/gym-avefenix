@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { Calendar, RotateCcw } from "lucide-react";
@@ -35,7 +35,7 @@ export function HistoricalDateSelector({
             onSelectDate(todayStr);
             e.currentTarget.blur();
           }}
-          className="flex items-center gap-2 bg-[#F95716] hover:bg-[#ea4807] text-white font-semibold px-4 min-h-[44px] rounded-lg transition-colors cursor-pointer text-sm shadow-sm"
+          className="flex items-center gap-2 bg-fx-orange hover:bg-fx-orange/90 text-white font-semibold px-4 min-h-[44px] rounded-lg transition-colors cursor-pointer text-sm shadow-sm"
           title="Volver a los ingresos en vivo de hoy"
         >
           <RotateCcw className="w-4 h-4" />
@@ -43,9 +43,9 @@ export function HistoricalDateSelector({
         </button>
       )}
 
-      <div className="flex items-center gap-2 bg-[#17171C] border border-[#2C2D35] rounded-lg px-3 min-h-[44px]">
-        <Calendar className="w-4 h-4 text-[#8A909A] shrink-0" />
-        <label htmlFor="historical-date-input" className="text-xs font-semibold text-[#8A909A] whitespace-nowrap">
+      <div className="flex items-center gap-2 bg-fx-surface border border-fx-border rounded-lg px-3 min-h-[44px]">
+        <Calendar className="w-4 h-4 text-fx-muted shrink-0" />
+        <label htmlFor="historical-date-input" className="text-xs font-semibold text-fx-muted whitespace-nowrap">
           Consultar otro día:
         </label>
         <input
@@ -64,12 +64,12 @@ export function HistoricalDateSelector({
               e.currentTarget.blur();
             }
           }}
-          className="bg-transparent text-[#F4F5F7] text-sm font-medium focus:outline-none cursor-pointer [color-scheme:dark]"
+          className="bg-transparent text-fx-text text-sm font-medium focus:outline-none cursor-pointer [color-scheme:dark]"
         />
       </div>
 
       {recentDates.length > 0 && (
-        <div className="flex items-center gap-1.5 text-xs text-[#8A909A]">
+        <div className="flex items-center gap-1.5 text-xs text-fx-muted">
           <span className="hidden xl:inline">Últimas vistas:</span>
           {recentDates.map((date) => {
             const isCurrent = date === selectedDate;
@@ -83,8 +83,8 @@ export function HistoricalDateSelector({
                 }}
                 className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer border ${
                   isCurrent
-                    ? "bg-[#F95716]/20 border-[#F95716] text-[#F95716]"
-                    : "bg-[#17171C] border-[#2C2D35] text-[#F4F5F7] hover:border-[#8A909A]"
+                    ? "bg-fx-orange/20 border-fx-orange text-fx-orangeText"
+                    : "bg-fx-surface border-fx-border text-fx-text hover:border-fx-muted"
                 }`}
                 title={`Ver fecha ${date}`}
               >

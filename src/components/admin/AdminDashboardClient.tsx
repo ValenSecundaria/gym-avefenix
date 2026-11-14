@@ -454,7 +454,7 @@ export function AdminDashboardClient({
                 onSynced={handleMemberSynced}
               />
             )}
-            {activeTab === "PAYMENTS" && roleOf(user) !== "PROFESOR" && (
+            {activeTab === "PAYMENTS" && roleOf(user) === "ADMIN" && (
               <div className="hidden lg:block">
                 <PaymentsManagerView plans={plans} />
               </div>
