@@ -348,7 +348,7 @@ export function AdminDashboardClient({
   const SectionIcon = section.icon;
 
   return (
-    <div data-theme={theme} className="min-h-screen bg-fx-base text-fx-text flex">
+    <div data-theme={theme} className="min-h-screen bg-fx-base text-fx-text flex flex-col">
       <AdminSidebar
         activeTab={activeTab}
         onSelect={goToTab}
@@ -362,8 +362,8 @@ export function AdminDashboardClient({
         canCreateMember={canCreateMember}
       />
 
-      <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 pb-28 lg:pb-8">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-6 pb-28 lg:pb-10">
+        <div className="max-w-7xl mx-auto space-y-5">
           <HeaderStats
             stats={displayStats}
             onOpenNewMember={openNewMember}
@@ -386,19 +386,19 @@ export function AdminDashboardClient({
           <PendingPhotosNotice />
 
           {feedbackBanner && (
-            <div className="flex items-center gap-2.5 p-4 rounded-2xl bg-fx-green/15 border border-fx-green text-sm font-bold text-fx-green">
+            <div className="flex items-center gap-2.5 p-4 rounded-lg bg-fx-green/15 border border-fx-green text-sm font-bold text-fx-green">
               <CheckCircle2 className="w-5 h-5 shrink-0" />
               <span>{feedbackBanner}</span>
             </div>
           )}
 
-          <div className="flex flex-col rounded-2xl bg-fx-surface border border-fx-border shadow-lg p-4 sm:p-6 gap-5 sm:gap-6">
+          <div className="flex flex-col rounded-lg bg-fx-surface border-2 border-fx-border shadow-md p-4 sm:p-6 gap-5 sm:gap-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 sm:pb-5 border-b border-fx-border">
-              <div className="flex items-center gap-3">
-                <span className="w-11 h-11 rounded-xl bg-fx-orange/10 flex items-center justify-center shrink-0">
-                  <SectionIcon className="w-6 h-6 text-fx-orangeText" />
+              <div className="flex items-center gap-3 border-l-4 border-fx-orange pl-3">
+                <span className="w-10 h-10 rounded-md bg-fx-orange/15 flex items-center justify-center shrink-0">
+                  <SectionIcon className="w-5 h-5 text-fx-orangeText" />
                 </span>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-fx-text">{section.label}</h2>
+                <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-fx-text">{section.label}</h2>
               </div>
 
               <div className={`relative w-full lg:w-80 ${activeTab === "METRICS" || activeTab === "PLANS" || activeTab === "SETTINGS" || activeTab === "TEACHER_ATTENDANCE" ? "hidden" : ""}`}>
@@ -408,7 +408,7 @@ export function AdminDashboardClient({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar por nombre o DNI..."
-                  className="w-full min-h-[52px] pl-12 pr-4 rounded-xl bg-fx-base border-2 border-fx-border focus:border-fx-orange focus:outline-none text-base text-fx-text"
+                  className="w-full min-h-[48px] pl-12 pr-4 rounded-md bg-fx-base border-2 border-fx-border focus:border-fx-orange focus:outline-none text-base text-fx-text"
                 />
               </div>
             </div>

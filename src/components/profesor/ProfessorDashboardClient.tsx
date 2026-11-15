@@ -43,7 +43,7 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
 
   return (
     <div data-theme={theme} className="min-h-screen bg-fx-base text-fx-text">
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-5">
         <ProfessorHeader
           displayName={user?.name || professorName}
           isRefreshing={d.isRefreshing}
@@ -56,88 +56,93 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
           onOpenCheckInScreen={() => void dispatchScreens()}
         />
 
-        {(userId || user?.id) && <TeacherShiftToggleCard userId={userId || user?.id || ""} />}
-        <PendingPhotosNotice />
-
         {!canCreate && (
-          <div role="status" className="flex items-center gap-2.5 p-4 rounded-2xl bg-fx-amber/15 border border-fx-amber/50 text-sm font-bold text-fx-amber">
+          <div role="status" className="flex items-center gap-2.5 p-4 rounded-lg bg-fx-amber/15 border border-fx-amber/50 text-sm font-bold text-fx-amber">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <span>No hay planes a la venta: la administración debe cargar uno primero.</span>
           </div>
         )}
 
         {d.toast && (
-          <div role="status" className="flex items-center gap-2.5 p-4 rounded-2xl bg-fx-green/15 border border-fx-green text-sm font-bold text-fx-green">
+          <div role="status" className="flex items-center gap-2.5 p-4 rounded-lg bg-fx-green/15 border border-fx-green text-sm font-bold text-fx-green">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <span>{d.toast}</span>
           </div>
         )}
 
-        <div className="flex flex-col rounded-2xl bg-fx-surface border border-fx-border shadow-lg p-4 sm:p-6 gap-5">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-fx-border">
-            <div className="flex flex-wrap gap-2" role="tablist">
-              {[
-                { tab: "LIVE_FEED", label: "Ingresos de Hoy", icon: Activity },
-                { tab: "CLIENTS", label: "Clientes", icon: Users },
-                { tab: "METRICS", label: "Métricas", icon: BarChart3 },
-              ].map(({ tab, label, icon: Icon }) => (
-                <button
-                  key={tab}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === tab}
-                  onClick={() => setActiveTab(tab as typeof activeTab)}
-                  className={`min-h-[48px] px-4 sm:px-5 rounded-xl inline-flex items-center gap-2 text-sm sm:text-base font-bold transition-colors cursor-pointer ${
-                    activeTab === tab ? "bg-fx-orange text-white" : "text-fx-muted hover:text-fx-text hover:bg-fx-hover"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{label}</span>
-                  {tab === "LIVE_FEED" && feed.checkIns.length > 0 && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${activeTab === tab ? "bg-white/20 text-white" : "bg-fx-base text-fx-muted"}`}>
-                      {feed.checkIns.length}
-                    </span>
-                  )}
-                </button>
-              ))}
+        {/* Vista en 2 columnas: Izquierda fichaje de turno + avisos, Derecha ingresos y clientes */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <aside className="lg:col-span-4 space-y-4">
+            {(userId || user?.id) && <TeacherShiftToggleCard userId={userId || user?.id || ""} />}
+            <PendingPhotosNotice />
+          </aside>
+
+          <section className="lg:col-span-8 flex flex-col rounded-lg bg-fx-surface border-2 border-fx-border shadow-md p-4 sm:p-6 gap-5">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-fx-border">
+              <div className="flex flex-wrap gap-2" role="tablist">
+                {[
+                  { tab: "LIVE_FEED", label: "Ingresos de Hoy", icon: Activity },
+                  { tab: "CLIENTS", label: "Clientes", icon: Users },
+                  { tab: "METRICS", label: "Métricas", icon: BarChart3 },
+                ].map(({ tab, label, icon: Icon }) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab}
+                    onClick={() => setActiveTab(tab as typeof activeTab)}
+                    className={`min-h-[48px] px-4 rounded-md inline-flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide transition-colors cursor-pointer ${
+                      activeTab === tab ? "bg-fx-orange text-white" : "text-fx-muted hover:text-fx-text hover:bg-fx-hover"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{label}</span>
+                    {tab === "LIVE_FEED" && feed.checkIns.length > 0 && (
+                      <span className={`font-mono text-xs px-2 py-0.5 rounded-sm ${activeTab === tab ? "bg-black/25 text-white" : "bg-fx-base text-fx-muted"}`}>
+                        {feed.checkIns.length}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {activeTab === "CLIENTS" && (
+                <div className="relative w-full xl:w-72">
+                  <Search className="w-5 h-5 text-fx-muted absolute left-4 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="search"
+                    value={d.searchInput}
+                    onChange={(e) => d.setSearchInput(e.target.value)}
+                    placeholder="Buscar por nombre o DNI..."
+                    className="w-full min-h-[48px] pl-12 pr-4 rounded-md bg-fx-base border-2 border-fx-border focus:border-fx-orange focus:outline-none text-base text-fx-text"
+                  />
+                </div>
+              )}
             </div>
 
-            {activeTab === "CLIENTS" && (
-              <div className="relative w-full lg:w-80">
-                <Search className="w-5 h-5 text-fx-muted absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="search"
-                  value={d.searchInput}
-                  onChange={(e) => d.setSearchInput(e.target.value)}
-                  placeholder="Buscar por nombre o DNI..."
-                  className="w-full min-h-[52px] pl-12 pr-4 rounded-xl bg-fx-base border-2 border-fx-border focus:border-fx-orange focus:outline-none text-base text-fx-text"
-                />
+            {activeTab === "LIVE_FEED" ? (
+              <TeacherLiveFeedTable
+                items={feed.checkIns}
+                isLoading={feed.isLoadingCheckIns}
+              />
+            ) : activeTab === "CLIENTS" ? (
+              <StaffClientsTable
+                data={d.data}
+                statusFilter={d.statusFilter}
+                onChangeFilter={(f) => { d.setStatusFilter(f); d.setPage(1); d.setIsLoading(true); }}
+                isLoading={d.isLoading}
+                listError={d.listError}
+                onGoToPage={(p) => { d.setPage(p); d.setIsLoading(true); }}
+                onPayMember={setPayingMember}
+                canCreateMember={canCreate}
+                onSuccessSync={(msg: string) => { d.setToast(msg); void feed.refreshCheckIns(); void d.refreshAll(); }}
+              />
+            ) : (
+              <div className="hidden lg:block">
+                <MetricsPanel stats={d.stats} hideMoney onGoToTab={(t) => { setActiveTab("CLIENTS"); d.setStatusFilter(t === "DEBTORS" ? "VENCIDA" : "ALL"); }} />
               </div>
             )}
-          </div>
-
-          {activeTab === "LIVE_FEED" ? (
-            <TeacherLiveFeedTable
-              items={feed.checkIns}
-              isLoading={feed.isLoadingCheckIns}
-            />
-          ) : activeTab === "CLIENTS" ? (
-            <StaffClientsTable
-              data={d.data}
-              statusFilter={d.statusFilter}
-              onChangeFilter={(f) => { d.setStatusFilter(f); d.setPage(1); d.setIsLoading(true); }}
-              isLoading={d.isLoading}
-              listError={d.listError}
-              onGoToPage={(p) => { d.setPage(p); d.setIsLoading(true); }}
-              onPayMember={setPayingMember}
-              canCreateMember={canCreate}
-              onSuccessSync={(msg: string) => { d.setToast(msg); void feed.refreshCheckIns(); void d.refreshAll(); }}
-            />
-          ) : (
-            <div className="hidden lg:block">
-              <MetricsPanel stats={d.stats} hideMoney onGoToTab={(t) => { setActiveTab("CLIENTS"); d.setStatusFilter(t === "DEBTORS" ? "VENCIDA" : "ALL"); }} />
-            </div>
-          )}
+          </section>
         </div>
       </div>
 

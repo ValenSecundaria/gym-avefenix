@@ -1,141 +1,155 @@
 "use client";
 
-import React, { useState, useId } from "react";
-import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import { Autoplay, Navigation } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
+import { ChevronLeft, ChevronRight, MapPin, MessageCircle } from "lucide-react";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
+import { buildWhatsAppLink } from "@/lib/utils";
+import { useAuth } from "@/context/auth-session-context";
+import "swiper/css";
+import "swiper/css/navigation";
+
 import { FILTER_TABS, type MediaItem } from "./media.types";
 import { MediaItemCard } from "./MediaItemCard";
 import { MediaLightboxModal } from "./MediaLightboxModal";
 
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
+const ALL_MEDIA: MediaItem[] = GYM_BRAND_CONFIG.assets.galleryImages.map((img, i) => ({
+  id: `brand-media-${i}`,
+  type: "image",
+  category: img.category || "Musculación",
+  title: img.title,
+  src: img.src,
+  description: img.description,
+}));
 
 export function Files() {
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const { user } = useAuth();
+  const [filter, setFilter] = useState<string>("all");
+  const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
+  const swiperRef = useRef<SwiperType | null>(null);
 
-  const rawId = useId();
-  const instanceId = rawId.replace(/[^a-zA-Z0-9_-]/g, "");
-  const prevBtnClass = `files-prev-${instanceId}`;
-  const nextBtnClass = `files-next-${instanceId}`;
-  const paginationClass = `files-pagination-${instanceId}`;
+  const gymPhone = user?.gymPhone || GYM_BRAND_CONFIG.contact.defaultWhatsapp;
+  const whatsappUrl = buildWhatsAppLink(gymPhone, GYM_BRAND_CONFIG.messages.generalInquiry());
 
-  const mediaList: MediaItem[] = GYM_BRAND_CONFIG.assets.galleryImages.map((item, idx) => ({
-    id: `brand-media-${idx}`,
-    type: "image",
-    title: item.title,
-    category: item.category || "Musculación",
-    src: item.src,
-    description: item.description,
-  }));
-
-  const filteredMedia = mediaList.filter((item) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "photos") return item.type === "image";
-    if (activeTab === "videos") return item.type === "video";
-    if (activeTab === "musculacion") return item.category === "Musculación";
-    if (activeTab === "funcional") return item.category === "Funcional";
-    return true;
-  });
+  const filteredMedia = filter === "all"
+    ? ALL_MEDIA
+    : ALL_MEDIA.filter((item) => item.category.toLowerCase() === filter.toLowerCase());
 
   return (
-    <section id="instalaciones" className="w-full bg-brand-bg px-4 sm:px-6 lg:px-10 py-20 lg:py-24 border-t border-brand-border/60 scroll-mt-20">
-      <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
-        <div className="flex flex-col items-center text-center gap-3 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-surface border border-brand-border">
-            <Sparkles className="w-4 h-4 text-brand-warning" aria-hidden="true" />
-            <span className="text-xs font-bold uppercase tracking-[0.16em] text-brand-warning">Instalaciones y Comunidad</span>
+    <section id="instalaciones" className="py-16 sm:py-20 px-4 sm:px-6 bg-brand-bg border-b border-brand-border">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 pb-6 border-b border-brand-border">
+          <div className="border-l-4 border-brand-primary pl-4">
+            <span className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-primaryText block mb-1.5">
+              ESPACIOS &amp; EQUIPAMIENTO
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-brand-textPrimary uppercase tracking-tight">
+              Conocé Nuestras Instalaciones
+            </h2>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-textPrimary tracking-tight uppercase">
-            Conocé {GYM_BRAND_CONFIG.identity.name} en Acción
-          </h2>
-          <p className="text-base sm:text-lg text-brand-textSecondary leading-relaxed">
-            Explorá nuestras salas de musculación, sectores de cardio, peso libre y el ambiente de entrenamiento en {GYM_BRAND_CONFIG.identity.subdivision}.
-          </p>
+
+          <div className="flex flex-wrap gap-2">
+            {FILTER_TABS.map((tab) => {
+              const active = filter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setFilter(tab.id)}
+                  className={`min-h-[48px] px-4 rounded-md text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-colors cursor-pointer ${
+                    active
+                      ? "bg-brand-primary text-white"
+                      : "bg-brand-surface text-brand-textSecondary border border-brand-border hover:border-brand-primary/50 hover:text-brand-textPrimary"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Filtros de Categoría */}
-        <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 rounded-2xl bg-brand-surface border border-brand-border max-w-full overflow-x-auto">
-          {FILTER_TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all ${
-                  isActive ? "bg-brand-primary text-brand-textPrimary shadow-[0_0_20px_-4px_rgba(37,99,235,0.5)]" : "text-brand-textSecondary hover:text-brand-textPrimary hover:bg-brand-surfaceHover"
-                }`}
-              >
-                <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div className="lg:col-span-9 min-w-0">
+            <Swiper
+              key={filter}
+              onSwiper={(swiper) => { swiperRef.current = swiper; }}
+              modules={[Autoplay, Navigation]}
+              spaceBetween={16}
+              slidesPerView={1}
+              breakpoints={{
+                640: { slidesPerView: 2, spaceBetween: 16 },
+                1024: { slidesPerView: 2, spaceBetween: 20 },
+              }}
+              autoplay={{ delay: 4500, disableOnInteraction: true }}
+              loop={filteredMedia.length > 2}
+              className="w-full"
+            >
+              {filteredMedia.map((item) => (
+                <SwiperSlide key={item.id} className="h-auto">
+                  <MediaItemCard item={item} onSelect={setLightboxItem} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
 
-        {/* Vista Móvil / Tablet */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 lg:hidden">
-          {filteredMedia.map((item) => (
-            <div key={item.id} className="w-full">
-              <MediaItemCard item={item} onSelect={setSelectedMedia} />
+          <aside className="lg:col-span-3 rounded-lg border border-brand-border bg-brand-surface p-5 flex flex-col justify-between gap-5">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-brand-border pb-3">
+                <span className="text-xs font-extrabold uppercase tracking-widest text-brand-textSecondary">
+                  Galería
+                </span>
+                <span className="font-mono text-sm font-bold text-brand-primaryText">
+                  {filteredMedia.length} fotos
+                </span>
+              </div>
+              <p className="text-sm text-brand-textSecondary leading-relaxed">
+                Sector de musculación, pesos libres, cardio y entrenamiento funcional preparados para entrenar sin esperas.
+              </p>
+              <div className="flex items-start gap-2.5 text-xs font-semibold text-brand-textPrimary bg-brand-bg p-3 rounded-md border border-brand-border">
+                <MapPin className="w-4 h-4 text-brand-primaryText shrink-0 mt-0.5" />
+                <span>{GYM_BRAND_CONFIG.contact.address}</span>
+              </div>
             </div>
-          ))}
+
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => swiperRef.current?.slidePrev()}
+                  aria-label="Foto anterior"
+                  className="min-h-[48px] rounded-md border border-brand-border bg-brand-bg hover:border-brand-primary text-brand-textPrimary flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => swiperRef.current?.slideNext()}
+                  aria-label="Siguiente foto"
+                  className="min-h-[48px] rounded-md border border-brand-border bg-brand-bg hover:border-brand-primary text-brand-textPrimary flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full min-h-[48px] px-4 rounded-md bg-brand-primary hover:bg-brand-primaryHover text-white font-bold text-sm inline-flex items-center justify-center gap-2 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Agendar visita</span>
+              </a>
+            </div>
+          </aside>
         </div>
-
-        {/* Vista PC / Escritorio */}
-        <div className="w-full hidden lg:block relative group/carousel">
-          <div className="flex items-center justify-end gap-2 mb-4">
-            <button
-              type="button"
-              className={`${prevBtnClass} inline-flex items-center justify-center w-10 h-10 rounded-xl bg-brand-surface border border-brand-border text-brand-textPrimary hover:border-brand-primary hover:text-brand-primaryText transition-all cursor-pointer`}
-              aria-label="Anterior elemento"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              className={`${nextBtnClass} inline-flex items-center justify-center w-10 h-10 rounded-xl bg-brand-surface border border-brand-border text-brand-textPrimary hover:border-brand-primary hover:text-brand-primaryText transition-all cursor-pointer`}
-              aria-label="Siguiente elemento"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-
-          <Swiper
-            key={activeTab}
-            modules={[Autoplay, Navigation, Pagination]}
-            spaceBetween={24}
-            slidesPerView={3}
-            loop={filteredMedia.length >= 3}
-            autoplay={{ delay: 3500, disableOnInteraction: false, pauseOnMouseEnter: true }}
-            navigation={{ prevEl: `.${prevBtnClass}`, nextEl: `.${nextBtnClass}` }}
-            pagination={{
-              el: `.${paginationClass}`,
-              clickable: true,
-              bulletClass: "inline-block w-2.5 h-2.5 rounded-full bg-brand-border transition-all duration-300 cursor-pointer mx-1.5",
-              bulletActiveClass: "!w-8 !bg-brand-primary !rounded-full shadow-[0_0_10px_rgba(37,99,235,0.5)]",
-            }}
-            className="w-full !pb-12"
-          >
-            {filteredMedia.map((item) => (
-              <SwiperSlide key={item.id} className="!h-auto flex">
-                <div className="w-full h-full flex flex-col">
-                  <MediaItemCard item={item} onSelect={setSelectedMedia} />
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-
-          <div className={`${paginationClass} flex items-center justify-center mt-2`} />
-        </div>
-
-        <MediaLightboxModal item={selectedMedia} onClose={() => setSelectedMedia(null)} />
       </div>
+
+      {lightboxItem && (
+        <MediaLightboxModal item={lightboxItem} onClose={() => setLightboxItem(null)} />
+      )}
     </section>
   );
 }

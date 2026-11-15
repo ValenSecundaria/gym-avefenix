@@ -36,7 +36,7 @@ interface HeaderStatsProps {
 export const NO_PLANS_HINT = "Primero creá un plan en la sección Planes";
 
 const ICON_BTN =
-  "min-h-[48px] min-w-[48px] px-3 rounded-xl bg-fx-base hover:bg-fx-hover border border-fx-border text-sm font-bold text-fx-muted hover:text-fx-text inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50";
+  "min-h-[48px] min-w-[48px] px-3 rounded-md bg-fx-base hover:bg-fx-hover border border-fx-border text-sm font-bold text-fx-muted hover:text-fx-text inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50";
 
 export function HeaderStats({
   stats,
@@ -54,81 +54,86 @@ export function HeaderStats({
   const ThemeIcon = theme === "light" ? Moon : Sun;
 
   return (
-    <header className="w-full flex flex-col gap-4 sm:gap-6">
-      {/* Celular: barra superior simple */}
+    <header className="w-full flex flex-col gap-4">
+      {/* Celular: barra superior compacta */}
       <div className="lg:hidden sticky top-0 z-20 -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 px-4 sm:px-6 py-3 bg-fx-surface/95 backdrop-blur border-b border-fx-border flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-11 h-11 rounded-xl overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-md overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shrink-0">
             <Image
               src={GYM_BRAND_CONFIG.assets.logoMain}
               alt={GYM_BRAND_CONFIG.identity.shortName}
               width={44}
               height={44}
-              className="w-full h-full object-cover"
+              className="object-contain"
             />
           </div>
           <div className="min-w-0">
-            <div className="text-lg font-extrabold text-fx-text leading-tight truncate">{GYM_BRAND_CONFIG.identity.shortName}</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-fx-orangeText">Recepción</div>
+            <h1 className="text-base font-black text-fx-text uppercase tracking-tight truncate">
+              {GYM_BRAND_CONFIG.identity.shortName}
+            </h1>
+            <p className="text-xs font-bold text-fx-green truncate font-mono">
+              Caja mes: {formatCurrencyARS(stats.monthlyRevenue)}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
+          <button type="button" onClick={onToggleTheme} aria-label={themeLabel} className={ICON_BTN}>
+            <ThemeIcon className="w-5 h-5" />
+          </button>
           {onRefresh && (
             <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Actualizar datos" className={ICON_BTN}>
               <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orangeText" : ""}`} />
             </button>
           )}
-          <button type="button" onClick={onToggleTheme} aria-label={themeLabel} title={themeLabel} className={ICON_BTN}>
-            <ThemeIcon className="w-5 h-5" />
-          </button>
         </div>
       </div>
 
-      {/* Escritorio: barra operativa */}
-      <div className="hidden lg:flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-fx-surface border border-fx-border shadow-lg">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shadow-[0_0_18px_rgba(37,99,235,0.45)] shrink-0">
+      {/* Escritorio: Cabecera industrial en 2 bloques */}
+      <div className="hidden lg:flex items-center justify-between gap-4 p-5 rounded-lg bg-fx-surface border border-fx-border border-l-4 border-l-fx-orange shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-md overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shrink-0">
             <Image
               src={GYM_BRAND_CONFIG.assets.logoMain}
-              alt={GYM_BRAND_CONFIG.identity.shortName}
+              alt={GYM_BRAND_CONFIG.identity.name}
               width={48}
               height={48}
-              className="w-full h-full object-cover"
+              className="object-contain"
             />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-fx-text tracking-tight">
-              {GYM_BRAND_CONFIG.identity.shortName} <span className="text-fx-orangeText">• Recepción</span>
-            </h1>
-            <p className="text-sm text-fx-muted">
-              Caja del mes: <b className="font-mono text-fx-text">{formatCurrencyARS(stats.monthlyRevenue)}</b>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-xl font-black text-fx-text uppercase tracking-tight">
+                {GYM_BRAND_CONFIG.identity.name}
+              </h1>
+              <span className="px-2 py-0.5 rounded-sm bg-fx-orange/15 text-fx-orangeText text-[11px] font-extrabold uppercase tracking-wider">
+                Admin
+              </span>
+            </div>
+            <p className="text-sm text-fx-muted flex items-center gap-2 mt-0.5">
+              <span>Cobrado este mes:</span>
+              <span className="font-mono font-extrabold text-fx-green text-base">
+                {formatCurrencyARS(stats.monthlyRevenue)}
+              </span>
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          {checkInScreenOnline ? (
-            <span
-              title="El teclado numérico escribe en la pantalla de ingreso"
-              className="min-h-[48px] px-4 rounded-xl bg-fx-green/10 border border-fx-green/40 text-sm font-bold text-fx-green hidden md:inline-flex items-center gap-2"
-            >
-              <MonitorCheck className="w-5 h-5" />
-              Pantalla de ingreso conectada
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={onOpenCheckInScreen}
-              className="min-h-[48px] px-4 rounded-xl bg-fx-amber/10 border border-fx-amber/50 hover:bg-fx-amber/20 text-sm font-bold text-fx-amber hidden md:inline-flex items-center gap-2 transition-colors cursor-pointer"
-            >
-              <MonitorX className="w-5 h-5" />
-              Abrir pantalla de ingreso
-            </button>
-          )}
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={onOpenCheckInScreen}
+            className={`${ICON_BTN} ${
+              checkInScreenOnline ? "border-fx-green/50 text-fx-green bg-fx-green/10" : ""
+            }`}
+            title={checkInScreenOnline ? "Pantalla de ingreso conectada" : "Abrir pantalla de ingreso"}
+          >
+            {checkInScreenOnline ? <MonitorCheck className="w-4 h-4" /> : <MonitorX className="w-4 h-4" />}
+            <span>{checkInScreenOnline ? "Ingreso en línea" : "Abrir ingreso"}</span>
+          </button>
 
           {onRefresh && (
-            <button type="button" onClick={onRefresh} disabled={isRefreshing} className={ICON_BTN}>
-              <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orangeText" : ""}`} />
+            <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Actualizar datos" className={ICON_BTN}>
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-fx-orangeText" : ""}`} />
               <span>Actualizar</span>
             </button>
           )}
@@ -142,7 +147,7 @@ export function HeaderStats({
             onClick={onOpenNewMember}
             disabled={!canCreateMember}
             title={canCreateMember ? undefined : NO_PLANS_HINT}
-            className="min-h-[52px] px-6 rounded-xl bg-fx-orange hover:bg-fx-orange/90 active:scale-[0.98] text-white font-extrabold text-base inline-flex items-center gap-2.5 shadow-[0_4px_16px_rgba(37,99,235,0.35)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:active:scale-100"
+            className="min-h-[48px] px-5 rounded-md bg-fx-orange hover:bg-fx-orange/90 active:scale-[0.98] text-white font-extrabold text-sm uppercase tracking-wide inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <UserPlus className="w-5 h-5" />
             <span>Nuevo socio</span>
@@ -150,8 +155,8 @@ export function HeaderStats({
         </div>
       </div>
 
-      {/* Tarjetas KPI */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-5">
+      {/* Tarjetas KPI compactas */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           label="Entraron hoy"
           value={stats.todayCheckIns}
