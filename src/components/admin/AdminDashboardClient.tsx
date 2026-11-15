@@ -352,7 +352,7 @@ export function AdminDashboardClient({
   const SectionIcon = section.icon;
 
   return (
-    <div data-theme={theme} className="min-h-screen bg-fx-base text-fx-text flex">
+    <div data-theme={theme} className="min-h-screen bg-fx-base text-fx-text flex flex-col">
       <AdminSidebar
         activeTab={activeTab}
         onSelect={goToTab}
@@ -396,7 +396,7 @@ export function AdminDashboardClient({
             </div>
           )}
 
-          <div className="flex flex-col rounded-2xl bg-fx-surface border border-fx-border shadow-lg p-4 sm:p-6 gap-5 sm:gap-6">
+          <div className="flex flex-col rounded-lg bg-fx-surface border-2 border-fx-border shadow-lg p-4 sm:p-6 gap-5 sm:gap-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 sm:pb-5 border-b border-fx-border">
               <div className="flex items-center gap-3">
                 <span className="w-11 h-11 rounded-xl bg-fx-orange/10 flex items-center justify-center shrink-0">

@@ -31,8 +31,8 @@ export function PaymentsSummaryCards({
       </div>
 
       <div className="bg-[#17171C] border border-[#2C2D35] rounded-xl p-4 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-[#10B981]/15 border border-[#10B981]/30 flex items-center justify-center shrink-0">
-          <Banknote className="w-6 h-6 text-[#10B981]" />
+        <div className="w-12 h-12 rounded-xl bg-[#0057D9]/20 border border-[#0057D9]/50 flex items-center justify-center shrink-0">
+          <Banknote className="w-6 h-6 text-[#4D94FF]" />
         </div>
         <div className="min-w-0">
           <p className="text-[15px] text-[#8A909A] font-medium">Cobros en Efectivo</p>
@@ -46,8 +46,8 @@ export function PaymentsSummaryCards({
       </div>
 
       <div className="bg-[#17171C] border border-[#2C2D35] rounded-xl p-4 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center shrink-0">
-          <Landmark className="w-6 h-6 text-sky-400" />
+        <div className="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-400/40 flex items-center justify-center shrink-0">
+          <Landmark className="w-6 h-6 text-sky-300" />
         </div>
         <div className="min-w-0">
           <p className="text-[15px] text-[#8A909A] font-medium">Cobros por Transferencia</p>

@@ -110,7 +110,7 @@ export function HeaderStats({
           {checkInScreenOnline ? (
             <span
               title="El teclado numérico escribe en la pantalla de ingreso"
-              className="min-h-[48px] px-4 rounded-xl bg-fx-green/10 border border-fx-green/40 text-sm font-bold text-fx-green hidden md:inline-flex items-center gap-2"
+              className="min-h-[48px] px-4 rounded-xl bg-fx-orange/15 border border-fx-orange/50 text-sm font-bold text-fx-orangeText hidden md:inline-flex items-center gap-2"
             >
               <MonitorCheck className="w-5 h-5" />
               Pantalla de ingreso conectada

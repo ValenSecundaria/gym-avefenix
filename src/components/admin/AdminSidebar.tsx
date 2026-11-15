@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   Activity,
   AlertOctagon,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Menu,
   PanelLeftClose,
@@ -206,31 +208,102 @@ export function AdminSidebar({
     return () => window.removeEventListener("keydown", onKey);
   }, [mobileOpen, onCloseMobile]);
 
+  const navScrollRef = useRef<HTMLDivElement>(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  const updateScrollButtons = useCallback(() => {
+    const el = navScrollRef.current;
+    if (!el) return;
+    setHasOverflow(el.scrollWidth > el.clientWidth + 4);
+  }, []);
+
+  useEffect(() => {
+    updateScrollButtons();
+    window.addEventListener("resize", updateScrollButtons);
+    return () => window.removeEventListener("resize", updateScrollButtons);
+  }, [updateScrollButtons]);
+
+  const scrollNav = (dir: -1 | 1) => {
+    const el = navScrollRef.current;
+    if (!el) return;
+    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+    const atStart = el.scrollLeft <= 4;
+    if (dir === 1 && atEnd) {
+      el.scrollTo({ left: 0, behavior: "smooth" });
+    } else if (dir === -1 && atStart) {
+      el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+    } else {
+      el.scrollBy({ left: dir * 240, behavior: "smooth" });
+    }
+  };
+
   return (
     <>
-      {/* Escritorio: barra fija a la izquierda */}
-      <aside
-        className={`hidden lg:flex sticky top-0 h-screen shrink-0 flex-col gap-4 border-r border-fx-border bg-fx-surface p-3 transition-[width] duration-200 ${
-          collapsed ? "w-[80px]" : "w-64"
-        }`}
+      {/* Escritorio: barra horizontal superior estilo carrusel circular con flechas azules */}
+      <nav
+        aria-label="Navegación principal"
+        className="hidden lg:flex sticky top-0 z-20 w-full items-center justify-between gap-2 border-b-2 border-fx-border bg-fx-surface px-4 py-2.5"
       >
-        <button
-          type="button"
-          onClick={onToggleCollapsed}
-          aria-label={collapsed ? "Expandir menú" : "Achicar menú"}
-          title={collapsed ? "Expandir menú" : "Achicar menú"}
-          className={`min-h-[44px] rounded-xl flex items-center gap-3 text-xs font-bold uppercase tracking-wider text-fx-muted hover:text-fx-text hover:bg-fx-hover transition-colors cursor-pointer ${
-            collapsed ? "justify-center" : "px-4"
-          }`}
-        >
-          {collapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
-          {!collapsed && <span>Achicar menú</span>}
-        </button>
-        <NavList activeTab={activeTab} onSelect={onSelect} counts={counts} collapsed={collapsed} />
-        <div className="mt-auto pt-3 border-t border-fx-border">
-          <LogoutButton collapsed={collapsed} />
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          {hasOverflow && (
+            <button
+              type="button"
+              onClick={() => scrollNav(-1)}
+              aria-label="Desplazar módulos a la izquierda"
+              className="shrink-0 w-9 min-h-[44px] rounded-md border border-fx-orange bg-fx-orange hover:bg-fx-orange/90 text-white flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          )}
+          <div
+            ref={navScrollRef}
+            onScroll={updateScrollButtons}
+            className="flex items-center gap-1.5 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden min-w-0 flex-1"
+          >
+            {ADMIN_SECTIONS.map(({ tab, label, icon: Icon, badge }) => {
+              const active = activeTab === tab;
+              const count = counts[tab];
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => onSelect(tab)}
+                  className={`min-h-[48px] px-3.5 rounded-md flex items-center gap-2 text-xs font-bold uppercase tracking-wider whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                    active
+                      ? "bg-fx-orange text-white"
+                      : "text-fx-muted hover:text-fx-text hover:bg-fx-hover"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{label}</span>
+                  {badge && count !== undefined && count > 0 && (
+                    <span
+                      className={`min-w-[20px] h-[20px] px-1.5 rounded-md text-[11px] font-mono font-bold flex items-center justify-center ${
+                        active ? "bg-white/20 text-white" : BADGE_CLS[badge]
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {hasOverflow && (
+            <button
+              type="button"
+              onClick={() => scrollNav(1)}
+              aria-label="Desplazar módulos a la derecha"
+              className="shrink-0 w-9 min-h-[44px] rounded-md border border-fx-orange bg-fx-orange hover:bg-fx-orange/90 text-white flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
-      </aside>
+        <div className="shrink-0 pl-3 border-l border-fx-border">
+          <LogoutButton />
+        </div>
+      </nav>
 
       <MobileBottomBar
         activeTab={activeTab}

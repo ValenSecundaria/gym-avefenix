@@ -43,7 +43,7 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
 
   return (
     <div data-theme={theme} className="min-h-screen bg-fx-base text-fx-text">
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-5">
         <ProfessorHeader
           displayName={user?.name || professorName}
           isRefreshing={d.isRefreshing}
@@ -56,22 +56,27 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
           onOpenCheckInScreen={() => void dispatchScreens()}
         />
 
-        {(userId || user?.id) && <TeacherShiftToggleCard userId={userId || user?.id || ""} />}
-        <PendingPhotosNotice />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            {(userId || user?.id) && <TeacherShiftToggleCard userId={userId || user?.id || ""} />}
+            <PendingPhotosNotice />
 
-        {!canCreate && (
-          <div role="status" className="flex items-center gap-2.5 p-4 rounded-2xl bg-fx-amber/15 border border-fx-amber/50 text-sm font-bold text-fx-amber">
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <span>No hay planes a la venta: la administración debe cargar uno primero.</span>
-          </div>
-        )}
+            {!canCreate && (
+              <div role="status" className="flex items-center gap-2.5 p-4 rounded-lg bg-fx-amber/15 border-2 border-fx-amber/50 text-sm font-bold text-fx-amber">
+                <AlertCircle className="w-5 h-5 shrink-0" />
+                <span>No hay planes a la venta: la administración debe cargar uno primero.</span>
+              </div>
+            )}
 
-        {d.toast && (
-          <div role="status" className="flex items-center gap-2.5 p-4 rounded-2xl bg-fx-green/15 border border-fx-green text-sm font-bold text-fx-green">
-            <CheckCircle2 className="w-5 h-5 shrink-0" />
-            <span>{d.toast}</span>
+            {d.toast && (
+              <div role="status" className="flex items-center gap-2.5 p-4 rounded-lg bg-fx-green/15 border-2 border-fx-green text-sm font-bold text-fx-green">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <span>{d.toast}</span>
+              </div>
+            )}
           </div>
-        )}
+
+          <div className="lg:col-span-8 flex flex-col gap-4">
 
         <div className="flex flex-col rounded-2xl bg-fx-surface border border-fx-border shadow-lg p-4 sm:p-6 gap-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-fx-border">
@@ -138,6 +143,8 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
               <MetricsPanel stats={d.stats} hideMoney onGoToTab={(t) => { setActiveTab("CLIENTS"); d.setStatusFilter(t === "DEBTORS" ? "VENCIDA" : "ALL"); }} />
             </div>
           )}
+            </div>
+          </div>
         </div>
       </div>
 

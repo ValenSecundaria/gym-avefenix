@@ -229,7 +229,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
                               run(p.id, () => setPlanActive(p.id, !p.isActive), p.isActive ? `Plan ${p.name} desactivado: ya no se ofrece en altas ni cobros.` : `Plan ${p.name} activado.`)
                             }
                             disabled={busy}
-                            className={`${SMALL_BTN} ${p.isActive ? "text-fx-amber" : "text-fx-green"}`}
+                            className={`${SMALL_BTN} ${p.isActive ? "text-fx-orangeText border-fx-orange/40" : "text-fx-green"}`}
                           >
                             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Power className="w-3.5 h-3.5" />}
                             {p.isActive ? "Desactivar" : "Activar"}
@@ -245,7 +245,7 @@ export function PlansAdminSection({ onChanged }: PlansAdminSectionProps) {
                                 ? `No se puede borrar: ${p.currentMembersCount} ${p.currentMembersCount === 1 ? "socio activo" : "socios activos"} en este plan`
                                 : undefined
                             }
-                            className={`${SMALL_BTN} text-fx-redText`}
+                            className={`${SMALL_BTN} text-fx-orangeText border-fx-orange/40`}
                           >
                             <Trash2 className="w-3.5 h-3.5" /> Borrar
                           </button>
