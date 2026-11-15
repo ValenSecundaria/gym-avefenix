@@ -7,7 +7,7 @@ export const GYM_BRAND_CONFIG: GymBrandConfig = {
     name: "Palestra GYM - Bahia Blanca",
     shortName: "Palestra GYM",
     heroTitle: "Superá tus límites en Palestra GYM",
-    heroSubtitle: "Entrenamiento de Fuerza y Rendimiento • Bahía Blanca",
+    heroSubtitle: "Entrenamientos personalizados para mejorar tu Rendimiento • Bahía Blanca",
     footerTagline:
       "Centro de entrenamiento de fuerza, musculación y acondicionamiento físico en Bahía Blanca. Técnica, constancia y acompañamiento profesional.",
     city: "Bahía Blanca",
@@ -86,16 +86,14 @@ export const GYM_BRAND_CONFIG: GymBrandConfig = {
   },
   messages: {
     expiredPlan: ({ memberName, planName, validUntil }) =>
-      `¡Hola ${memberName}! Te escribimos de ${GYM_BRAND_CONFIG.identity.name} para recordarte que tu cuota${
-        planName ? ` del plan ${planName}` : ""
+      `¡Hola ${memberName}! Te escribimos de ${GYM_BRAND_CONFIG.identity.name} para recordarte que tu cuota${planName ? ` del plan ${planName}` : ""
       }${validUntil ? ` venció el ${validUntil}` : ""}. ¡Te esperamos en recepción para renovarla!`,
     absentMember: ({ memberName, daysAbsent }) =>
       `¡Hola ${memberName}! Te escribimos de ${GYM_BRAND_CONFIG.identity.name}. Hace ${daysAbsent} días que no te vemos entrenar y queríamos saber cómo estás. ¡Te esperamos esta semana para retomar con toda la energía!`,
     generalInquiry: (params) => {
       if (params?.planName) {
-        return `Hola ${GYM_BRAND_CONFIG.identity.name}! Quiero consultar por el plan ${params.planName}${
-          params.price ? ` (${params.price})` : ""
-        }.`;
+        return `Hola ${GYM_BRAND_CONFIG.identity.name}! Quiero consultar por el plan ${params.planName}${params.price ? ` (${params.price})` : ""
+          }.`;
       }
       if (params?.topic) {
         return `Hola ${GYM_BRAND_CONFIG.identity.name}! Quiero consultar por ${params.topic}.`;

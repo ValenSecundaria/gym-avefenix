@@ -12,7 +12,8 @@ import type {
   PlanOption,
 } from "@/types";
 import { HeaderStats } from "./HeaderStats";
-import { LiveFeedTable } from "./LiveFeedTable";
+import { HistoricalAttendanceSection } from "./attendance/historical-attendance-section";
+import { PaymentsManagerView } from "./payments/payments-manager-view";
 import { DebtorsTable } from "./DebtorsTable";
 import { AbsentMembersTable } from "./AbsentMembersTable";
 import { MetricsPanel } from "./MetricsPanel";
@@ -84,7 +85,7 @@ async function getTodayLocalCheckIns(): Promise<LiveCheckInItem[]> {
   return items;
 }
 
-export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "TEACHER_ATTENDANCE" | "METRICS" | "SETTINGS";
+export type AdminTab = "LIVE_FEED" | "DEBTORS" | "PAYMENTS" | "ABSENT" | "MEMBERS" | "PLANS" | "TEACHER_ATTENDANCE" | "METRICS" | "SETTINGS";
 
 interface AdminDashboardClientProps {
   initialStats: DashboardStats;
@@ -214,6 +215,9 @@ export function AdminDashboardClient({
       if (msg.type === "CHECKIN_LOGGED" && msg.checkIn) {
         // El ingreso ya qued� en la cola local (IndexedDB compartida con la pantalla de Check-in).
         void reloadLocalCheckIns();
+        if (!document.querySelector('[role="dialog"][aria-modal="true"]')) {
+          setActiveTab("LIVE_FEED");
+        }
       } else if (msg.type === "REFRESH_DASHBOARD") {
         refreshAllData();
       } else if (msg.type === "CLOSE_ALL_SCREENS" || msg.type === "SESSION_LOGOUT") {
@@ -401,7 +405,7 @@ export function AdminDashboardClient({
                 <h2 className="text-xl sm:text-2xl font-extrabold text-fx-text">{section.label}</h2>
               </div>
 
-              <div className={`relative w-full lg:w-80 ${activeTab === "METRICS" || activeTab === "PLANS" || activeTab === "SETTINGS" || activeTab === "TEACHER_ATTENDANCE" ? "hidden" : ""}`}>
+              <div className={`relative w-full lg:w-80 ${activeTab === "METRICS" || activeTab === "PLANS" || activeTab === "SETTINGS" || activeTab === "TEACHER_ATTENDANCE" || activeTab === "PAYMENTS" ? "hidden" : ""}`}>
                 <Search className="w-5 h-5 text-fx-muted absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
                   type="search"
@@ -414,11 +418,17 @@ export function AdminDashboardClient({
             </div>
 
             {activeTab === "LIVE_FEED" && (
-              <LiveFeedTable
-                items={checkIns.filter((c) => match(c.fullName, c.dni))}
+              <HistoricalAttendanceSection
+                todayCheckIns={checkIns}
                 onEditMember={setEditingMemberId}
                 onSuccessSync={showToast}
+                searchFilter={(fullName, dni) => match(fullName, dni)}
               />
+            )}
+            {activeTab === "PAYMENTS" && roleOf(user) !== "PROFESOR" && (
+              <div className="hidden lg:block">
+                <PaymentsManagerView plans={plans} />
+              </div>
             )}
             {activeTab === "DEBTORS" && (
               <DebtorsTable

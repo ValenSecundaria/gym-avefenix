@@ -50,14 +50,14 @@ export function Hero({ activeMembers }: HeroProps) {
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#F4F5F7] max-w-4xl leading-[1.08] mb-4 uppercase">
-          Forjá tu mejor versión.{" "}
+          Crea tu mejor versión con nosotros.{" "}
           <span className="bg-gradient-to-r from-[#4D94FF] via-[#4D94FF] to-[#FFB300] bg-clip-text text-transparent">
             {GYM_BRAND_CONFIG.identity.heroTitle}
           </span>
         </h1>
 
         <p className="text-base sm:text-lg lg:text-xl text-[#8A909A] max-w-2xl mx-auto mb-10 leading-relaxed">
-          Entrená fuerza, desarrollá tu potencial y alcanzá tus objetivos en un espacio diseñado para acompañar tu evolución.
+          Entrena con nosotros, desarrollá tu potencial y alcanzá tus objetivos en un espacio diseñado para acompañar tu evolución.
           Contamos con equipamiento de primer nivel y asesoramiento personalizado para que cada entrenamiento marque la diferencia.
         </p>
 
@@ -66,7 +66,7 @@ export function Hero({ activeMembers }: HeroProps) {
             href="#planes"
             className="w-full sm:w-auto min-h-[52px] inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-xl bg-brand-primary hover:bg-brand-primaryHover text-white text-sm sm:text-base font-bold uppercase tracking-wider shadow-[0_0_28px_-4px_rgba(0,87,217,0.55)] transition-all"
           >
-            <span>Empezar a Entrenar</span>
+            <span>Comenzar a Entrenar</span>
             <ArrowRight className="w-5 h-5" aria-hidden="true" />
           </a>
           <a

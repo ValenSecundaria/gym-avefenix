@@ -14,6 +14,7 @@ import {
   UserMinus,
   UserPlus,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import type { AdminTab } from "./AdminDashboardClient";
@@ -31,6 +32,7 @@ export const ADMIN_SECTIONS: {
 }[] = [
   { tab: "LIVE_FEED", label: "Ingresos de hoy", short: "Ingresos", icon: Activity, badge: "default" },
   { tab: "DEBTORS", label: "Cuotas pendientes", short: "Deben", icon: AlertOctagon, badge: "danger" },
+  { tab: "PAYMENTS", label: "Pagos y Planes", short: "Pagos", icon: Wallet, badge: null, desktopOnly: true },
   { tab: "ABSENT", label: "Socios ausentes", short: "Ausentes", icon: UserMinus, badge: "warning" },
   { tab: "MEMBERS", label: "Clientes", short: "Clientes", icon: Users, badge: null },
   { tab: "PLANS", label: "Planes", short: "Planes", icon: Tags, badge: null },

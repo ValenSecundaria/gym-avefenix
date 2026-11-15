@@ -159,14 +159,14 @@ export function Footer() {
         <div className="pt-6 border-t border-[#2C2D35]/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#8A909A]">
           <p>© 2026 {GYM_BRAND_CONFIG.identity.name} — {GYM_BRAND_CONFIG.contact.address}.</p>
           <span className="uppercase tracking-widest font-semibold text-[#8A909A]">
-            {GYM_BRAND_CONFIG.identity.shortName} White-Label
+            {GYM_BRAND_CONFIG.identity.shortName}
           </span>
         </div>
 
         {/* Créditos de Desarrollo */}
         <div className="pt-4 text-center">
           <p className="text-xs text-[#8A909A]/80 tracking-wide">
-            Desarrollado por Valentin Gemetro y Francisco Uyua
+            Desarrollado por Valentin Gemetro
           </p>
         </div>
       </div>
