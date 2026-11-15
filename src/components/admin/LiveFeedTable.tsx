@@ -130,22 +130,24 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync, isHistorical
             <table className="w-full text-left text-sm text-fx-text border-collapse">
               <thead>
                 <tr className="bg-fx-base text-fx-muted font-bold text-xs uppercase tracking-wider border-b border-fx-border">
-                  <th className="py-4 px-5">Hora</th>
-                  <th className="py-4 px-4">Foto</th>
-                  <th className="py-4 px-5">Socio / Documento</th>
-                  <th className="py-4 px-5">Plan Contratado</th>
-                  <th className="py-4 px-5 text-right">Estado Acceso / Cuota</th>
+                  <th className="py-4 px-4 whitespace-nowrap">Hora</th>
+                  <th className="py-4 px-3 w-14 text-center">Foto</th>
+                  <th className="py-4 px-4">Socio / Documento</th>
+                  <th className="py-4 px-4">Plan Contratado</th>
+                  <th className="py-4 px-4 text-center whitespace-nowrap">Estado Acceso / Cuota</th>
                   {!isHistorical && (
-                    <th className="py-4 px-4"><span className="sr-only">Acciones</span></th>
+                    <th className="py-4 px-4 text-right whitespace-nowrap"><span className="sr-only">Acciones</span></th>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-fx-border">
                 {filteredItems.map((item) => (
                   <tr key={item.id} className={`hover:bg-fx-hover transition-colors ${item.status === "CUOTA_VENCIDA" ? "bg-fx-red/5" : ""}`}>
-                    <td className="py-4 px-5 font-mono font-bold text-fx-orange">{formatTimeAR(item.createdAt)} hs</td>
-                    <td className="py-4 px-4">
-                      <div className="w-11 h-11 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center">
+                    <td className="py-4 px-4 font-mono font-bold text-fx-orange whitespace-nowrap align-middle">
+                      {formatTimeAR(item.createdAt)} hs
+                    </td>
+                    <td className="py-4 px-3 align-middle">
+                      <div className="w-11 h-11 rounded-full bg-fx-hover border border-fx-border overflow-hidden flex items-center justify-center shrink-0 mx-auto">
                         {item.photoUrl ? (
                           <MemberPhotoImg memberId={item.memberId} src={item.photoUrl} alt={item.fullName} className="w-full h-full object-cover" />
                         ) : (
@@ -153,21 +155,21 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync, isHistorical
                         )}
                       </div>
                     </td>
-                    <td className="py-4 px-5">
-                      <div className="font-bold text-base text-fx-text">{item.fullName}</div>
-                      <div className="font-mono text-xs text-fx-muted">DNI: {item.dni}</div>
+                    <td className="py-4 px-4 align-middle">
+                      <div className="font-bold text-base text-fx-text whitespace-nowrap">{item.fullName}</div>
+                      <div className="font-mono text-xs text-fx-muted whitespace-nowrap">DNI: {item.dni}</div>
                     </td>
-                    <td className="py-4 px-5">
-                      <span className="px-3 py-1.5 rounded-lg bg-fx-base border border-fx-border text-xs font-semibold text-fx-text">
+                    <td className="py-4 px-4 align-middle">
+                      <span className="inline-block px-3 py-1.5 rounded-lg bg-fx-base border border-fx-border text-xs font-semibold text-fx-text whitespace-nowrap">
                         {item.planName}
                       </span>
                     </td>
-                    <td className="py-4 px-5 text-right">
+                    <td className="py-4 px-4 text-center align-middle whitespace-nowrap">
                       <StatusBadge status={item.status} />
                     </td>
                     {!isHistorical && (
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="py-4 px-4 text-right align-middle whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2 shrink-0">
                           <TemporarySyncPeriodButton memberId={item.memberId} fullName={item.fullName} onSuccess={onSuccessSync} />
                           {onEditMember && <EditMemberButton fullName={item.fullName} onClick={() => onEditMember(item.memberId)} />}
                         </div>
