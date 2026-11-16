@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+<<<<<<< Updated upstream
   --background: #0B0B0C;
   --foreground: #F4F5F7;
   --fenix-dark: #0B0B0C;
@@ -14,6 +15,30 @@
   --fenix-light: #F4F5F7;
   --fenix-success: #10B981;
   --fenix-whatsapp: #25D366;
+=======
+  color-scheme: dark;
+  forced-color-adjust: none;
+
+  /* Brand Tokens White-Label (Valores HEX explícitos para soporte móvil) */
+  --brand-bg: #0D0F12;
+  --brand-surface: #181B20;
+  --brand-surface-hover: #232730;
+  --brand-border: #383F47;
+  --brand-primary: #2563EB;
+  --brand-primary-hover: #F97316;
+  --brand-primary-text: #60A5FA;
+  --brand-alert: #DC2626;
+  --brand-alert-text: #F87171;
+  --brand-warning: #FACC15;
+  --brand-text-primary: #F8FAFC;
+  --brand-text-secondary: #94A3B8;
+  --brand-success: #10B981;
+  --brand-whatsapp: #25D366;
+
+  /* Aliases de compatibilidad */
+  --background: var(--brand-bg);
+  --foreground: var(--brand-text-primary);
+>>>>>>> Stashed changes
 }
 
 @theme inline {
@@ -34,9 +59,15 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html,
 body {
+<<<<<<< Updated upstream
   background-color: #0B0B0C;
   color: #F4F5F7;
+=======
+  background-color: #0D0F12;
+  color: #F8FAFC;
+>>>>>>> Stashed changes
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
