@@ -45,14 +45,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
       style={{ colorScheme: "dark" }}
     >
-<<<<<<< Updated upstream
-      <body className="min-h-full flex flex-col bg-[#0B0B0C] text-[#F4F5F7] selection:bg-[#F95716] selection:text-[#F4F5F7]">
-=======
       <head>
         <meta name="color-scheme" content="dark" />
       </head>
-      <body className="min-h-full flex flex-col bg-[#0D0F12] text-[#F8FAFC] selection:bg-[var(--brand-primary)] selection:text-[var(--brand-text-primary)]">
->>>>>>> Stashed changes
+      <body className="min-h-full flex flex-col bg-[#0B0B0C] text-[#F4F5F7] selection:bg-[#F95716] selection:text-[#F4F5F7]">
         <ServiceWorkerRegister />
         <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>
