@@ -9,6 +9,7 @@ import type { MemberRowItem, MembersPage, MemberStatusFilter } from "@/types";
 import { formatDateAR } from "@/lib/utils";
 import { getMembersPage } from "@/actions/members.actions";
 import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
+import { genericGreetingMessage, overdueReminderMessage } from "@/lib/whatsapp-messages";
 
 interface MembersSectionProps {
   searchQuery: string;
@@ -17,6 +18,7 @@ interface MembersSectionProps {
   onEditMember: (memberId: string) => void;
   /** Regularización +30 días SIN cobro (no registra Payment ni toca la caja). */
   onSynced: (message: string) => void;
+  onWhatsAppDispatched?: (target: WhatsAppMessageTarget) => void;
 }
 
 const STATUS_BADGE: Record<MemberRowItem["membershipStatus"], { text: string; cls: string }> = {
@@ -45,9 +47,9 @@ function lastVisitLabel(iso: string | null, now: number): string {
 
 function whatsAppMessage(m: MemberRowItem): string {
   if (m.membershipStatus === "VENCIDA" && m.validUntil) {
-    return `¡Hola ${m.fullName}! Te escribimos de Gimnasio Ave Fénix para recordarte que tu cuota del plan ${m.planName} venció el ${formatDateAR(m.validUntil)}. ¡Te esperamos en recepción para renovarla!`;
+    return overdueReminderMessage(m);
   }
-  return `¡Hola ${m.fullName}! Te escribimos de Gimnasio Ave Fénix.`;
+  return genericGreetingMessage(m.fullName);
 }
 
 function FilterButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -65,7 +67,7 @@ function FilterButton({ active, onClick, children }: { active: boolean; onClick:
   );
 }
 
-export function MembersSection({ searchQuery, reloadKey, onEditMember, onSynced }: MembersSectionProps) {
+export function MembersSection({ searchQuery, reloadKey, onEditMember, onSynced, onWhatsAppDispatched }: MembersSectionProps) {
   const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
   const [showInactive, setShowInactive] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MemberStatusFilter>("ALL");
@@ -210,6 +212,8 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember, onSynced 
                           fullName: m.fullName,
                           phone: m.phone!,
                           defaultMessage: whatsAppMessage(m),
+                          memberId: m.id,
+                          lastNotifiedAt: m.lastNotifiedAt,
                         })
                       }
                       aria-label={`Contactar por WhatsApp a ${m.fullName}`}
@@ -235,7 +239,7 @@ export function MembersSection({ searchQuery, reloadKey, onEditMember, onSynced 
         </div>
       )}
 
-      <WhatsAppEditModal target={waTarget} onClose={() => setWaTarget(null)} />
+      <WhatsAppEditModal target={waTarget} onClose={() => setWaTarget(null)} onDispatched={onWhatsAppDispatched} />
 
       {data && totalPages > 1 && (
         <nav aria-label="Páginas de clientes" className="flex items-center justify-between gap-3 pt-1">

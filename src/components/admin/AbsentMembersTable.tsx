@@ -2,17 +2,19 @@ import React, { useState } from "react";
 import { MessageCircle, CalendarClock, UserCheck, User } from "lucide-react";
 import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 import type { AbsentMemberItem } from "@/types";
-import { formatDateAR } from "@/lib/utils";
+import { formatDateAR, formatTimeAR } from "@/lib/utils";
+import { absentMemberMessage } from "@/lib/whatsapp-messages";
 import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 import { EditMemberButton } from "./EditMemberButton";
-import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
+import { WhatsAppEditModal, isSameLocalDay, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
 
 interface AbsentMembersTableProps {
   absentMembers: AbsentMemberItem[];
   onEditMember: (memberId: string) => void;
+  onWhatsAppDispatched?: (target: WhatsAppMessageTarget) => void;
 }
 
-export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMembersTableProps) {
+export function AbsentMembersTable({ absentMembers, onEditMember, onWhatsAppDispatched }: AbsentMembersTableProps) {
   const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
 
   if (absentMembers.length === 0) {
@@ -49,8 +51,6 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
       {/* Tarjetas de Recontacto */}
       <div className="flex flex-col gap-3">
         {absentMembers.map((member) => {
-          const waMessage = `¡Hola ${member.fullName}! Te escribimos de Gimnasio Ave Fénix. Hace ${member.daysAbsent} días que no te vemos entrenar y queríamos saber cómo estás. ¡Te esperamos esta semana para retomar con toda la energía!`;
-
           return (
             <div
               key={member.id}
@@ -78,6 +78,12 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
                         <span>Tel: {member.phone}</span>
                       </>
                     )}
+                    {isSameLocalDay(member.lastNotifiedAt) && (
+                      <>
+                        <span>•</span>
+                        <span className="text-[#25D366] font-semibold">Avisado hoy {formatTimeAR(member.lastNotifiedAt)}</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -90,13 +96,15 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
                       setWaTarget({
                         fullName: member.fullName,
                         phone: member.phone!,
-                        defaultMessage: waMessage,
+                        defaultMessage: absentMemberMessage(member.fullName, member.daysAbsent),
+                        memberId: member.id,
+                        lastNotifiedAt: member.lastNotifiedAt,
                       })
                     }
                     className="min-h-[48px] px-5 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4" />
-                    <span>Recontactar por WhatsApp</span>
+                    <span>Aviso WhatsApp</span>
                   </button>
                 ) : null}
                 <EditMemberButton fullName={member.fullName} onClick={() => onEditMember(member.id)} />
@@ -106,7 +114,7 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
         })}
       </div>
 
-      <WhatsAppEditModal target={waTarget} onClose={() => setWaTarget(null)} />
+      <WhatsAppEditModal target={waTarget} onClose={() => setWaTarget(null)} onDispatched={onWhatsAppDispatched} />
     </div>
   );
 }

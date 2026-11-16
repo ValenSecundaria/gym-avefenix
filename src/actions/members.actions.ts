@@ -308,6 +308,7 @@ function toMemberListItem(m: MemberWithLatestMembership, now: Date): MemberListI
     planName: latest?.plan.name || "Sin plan",
     membershipStatus: status,
     validUntil: latest ? latest.validUntil.toISOString() : null,
+    lastNotifiedAt: m.lastNotifiedAt?.toISOString() ?? null,
   };
 }
 
@@ -533,6 +534,28 @@ export async function updateMember(input: UpdateMemberInput): Promise<ActionResp
   } catch (error) {
     console.error("[updateMember] Error:", error);
     return { success: false, error: "No se pudieron guardar los cambios del socio" };
+  }
+}
+
+/**
+ * Deja asentado que se le despachó un aviso por WhatsApp al socio (se abrió el chat con el mensaje cargado),
+ * para no escribirle varias veces el mismo día. No confirma el envío: eso lo hace el operador en WhatsApp.
+ */
+export async function markWhatsAppNotified(memberId: string): Promise<ActionResponse<{ lastNotifiedAt: string }>> {
+  try {
+    if (!(await hasAdminSession())) return { success: false, error: NO_SESSION_ERROR };
+    const id = memberIdSchema.safeParse(memberId);
+    if (!id.success) return { success: false, error: "Socio inválido" };
+
+    const member = await prisma.member.update({
+      where: { id: id.data },
+      data: { lastNotifiedAt: new Date() },
+      select: { lastNotifiedAt: true },
+    });
+    return { success: true, data: { lastNotifiedAt: member.lastNotifiedAt!.toISOString() } };
+  } catch (error) {
+    console.error("[markWhatsAppNotified] Error:", error);
+    return { success: false, error: "No se pudo registrar el aviso" };
   }
 }
 

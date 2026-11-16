@@ -10,7 +10,7 @@ Actualmente, el sistema **no utiliza una API de mensajería automatizada de back
 
 ```
 ┌─────────────────┐       ┌──────────────────────┐       ┌────────────────────────┐
-│  Tabla/Sección  │ ───>  │  WhatsAppEditModal   │ ───>  │  openWhatsApp (Helper) │
+│  Tabla/Sección  │ ───>  │  WhatsAppEditModal   │ ───>  │  whatsapp-dispatcher   │
 │ (Ej: Deudores)  │       │ (Previsualiza y edita│       │                        │
 └─────────────────┘       │      el texto)       │       └───────────┬────────────┘
                           └──────────────────────┘                   │
@@ -18,8 +18,8 @@ Actualmente, el sistema **no utiliza una API de mensajería automatizada de back
                                                    ┌───────────────────────────────────┐
                                                    │ Modo configurado (localStorage):  │
                                                    ├───────────────────────────────────┤
-                                                   │ 1. APP:  whatsapp://send...       │
-                                                   │ 2. WEB:  web.whatsapp.com/send... │
+                                                   │ 1. WEB:  web.whatsapp.com/send... │
+                                                   │ 2. APP:  whatsapp://send...       │
                                                    │ 3. AUTO: wa.me/...                │
                                                    └───────────────────────────────────┘
 ```
@@ -59,50 +59,48 @@ El envío de WhatsApp está implementado en tres áreas principales del sistema:
 
 ## 3. Componentes y Lógica de Código
 
-### 3.1 Normalización de Teléfonos (`src/lib/utils.ts`)
-Para que un enlace a WhatsApp funcione en cualquier dispositivo o navegador, el número debe estar estrictamente en formato internacional sin espacios, signos `+` ni guiones:
+### 3.1 Despachador (`src/lib/whatsapp-dispatcher.ts`)
+Módulo sin dependencias que concentra toda la lógica de enlaces:
 
-```typescript
-export function normalizePhoneForWhatsApp(phone: string): string {
-  const digits = phone.replace(/\D/g, ""); // Remueve todo lo que no sea dígito
-  if (!digits) return "";
-  
-  // Normalización automática para Argentina (+54 9 ...):
-  if (digits.startsWith("549")) return digits;
-  if (digits.startsWith("54")) return "549" + digits.slice(2);
-  
-  // Si ingresó el número local (ej: 3416123456 o 1151234567)
-  return "549" + digits.replace(/^0+/, "");
-}
-```
+- **`normalizeWhatsAppPhone(phone)`**: lleva el teléfono cargado a mano al formato internacional argentino
+  `549 + código de área + número` (solo dígitos). Quita espacios, guiones, paréntesis, `+54`, el `0` del
+  código de área y el `15`. Devuelve `null` si quedan menos de 10 dígitos (sin código de área), sobran
+  dígitos o hay letras u otros caracteres inválidos.
+- **`buildWhatsAppUrl(phone, message, target)`**: URL codificada según el destino:
+  - `'web'`: `https://web.whatsapp.com/send?phone={telefono}&text={mensaje}`
+  - `'app'`: `whatsapp://send?phone={telefono}&text={mensaje}`
+  - `'auto'`: `https://wa.me/{telefono}?text={mensaje}` (abre la app si está instalada; si no, deriva a WhatsApp Web)
+- **`dispatchWhatsApp(phone, message, target)`**: abre el chat.
+  - `web`: reutiliza siempre la misma pestaña (nombre fijo `avefenix_whatsapp_web`).
+  - `app`: dispara el protocolo desde un iframe oculto. No se navega la ventana del panel porque eso
+    dispararía `beforeunload`, que cierra la pantalla de ingreso del segundo monitor.
 
-### 3.2 Construcción del Enlace (`buildWhatsAppLink` en `src/lib/utils.ts`)
-Genera la URL correspondiente según el modo seleccionado:
+El sistema **nunca envía el mensaje**: termina cuando el chat queda abierto con el texto cargado.
 
-- **Modo AUTO:** `https://wa.me/{telefono}?text={mensaje}`
-- **Modo WEB:** `https://web.whatsapp.com/send?phone={telefono}&text={mensaje}`
-- **Modo APP:** `whatsapp://send?phone={telefono}&text={mensaje}`
+### 3.2 Preferencia por computadora (`src/lib/whatsapp-preference.ts`)
+- Se guarda en `localStorage` (clave `gym_whatsapp_mode_v1`), una por equipo.
+- **Por defecto: `web`** (WhatsApp Web en el navegador de recepción, Chrome o Edge).
 
-### 3.3 Gestor de Envío y Pestaña Única (`src/lib/whatsapp-preference.ts`)
-- **Persistencia:** La preferencia de modo se guarda en el navegador local (`localStorage`) bajo la clave:
-  `gym_whatsapp_mode_v1`
-- **Prevención de colapso de pestañas (Modo WEB):**
-  Al abrir WhatsApp Web mediante `window.open(url, "avefenix_whatsapp_web")`, se utiliza un identificador de ventana fijo (`"avefenix_whatsapp_web"`). Esto hace que **se reutilice siempre la misma pestaña** de WhatsApp Web en lugar de abrir 20 pestañas diferentes cuando se envían avisos a varios deudores.
-- **Modo APP (Escritorio):**
-  Usa `window.location.href = url` para invocar el protocolo de Windows de WhatsApp sin abrir una pestaña en blanco innecesaria.
+### 3.3 Mensajes prearmados (`src/lib/whatsapp-messages.ts`)
+- Deudores: nombre, plan, valor de la cuota y fecha de vencimiento.
+- Ausentes: nombre y días sin asistir.
 
 ### 3.4 Modal de Edición Previa (`src/components/admin/WhatsAppEditModal.tsx`)
-- Modal oscuro con la paleta de Ave Fénix (`#17171C`, `#F95716`).
-- Muestra el destinatario y número de teléfono.
-- Cuenta con un `textarea` editable para que el recepcionista pueda personalizar el saludo antes de abrir WhatsApp.
-- Botón "Abrir WhatsApp" y atajo de teclado rápida (`Enter` con Ctrl/Cmd o botón directo).
+- Muestra el destinatario y el número ya normalizado, con un `textarea` editable.
+- Si el número es inválido bloquea "Continuar a WhatsApp" y muestra
+  "Número telefónico incompleto o inválido para WhatsApp".
+- Si ya se despachó un aviso a ese socio hoy, lo advierte (no bloquea).
+- Al continuar abre WhatsApp, guarda la fecha en `Member.lastNotifiedAt`
+  (acción `markWhatsAppNotified`) y el panel muestra "Aviso despachado a WhatsApp".
+  Las tablas de Deudores y Ausentes marcan la fila con "Avisado hoy HH:MM".
 
 ### 3.5 Selector de Modo en Configuración (`src/components/admin/WhatsAppModeSettings.tsx`)
 - **Ubicación:** Panel de Administración > Pestaña Configuración.
-- Permite al encargado del gimnasio elegir cómo quiere que la computadora despache los mensajes:
-  - **Automático (wa.me):** Recomendado si se usa indistintamente o desde celular/tablet.
-  - **WhatsApp Web:** Para computadoras donde se usa Chrome/Edge con la pestaña de WhatsApp abierta.
-  - **WhatsApp App de Escritorio:** Para PCs donde está instalada la aplicación oficial de WhatsApp para Windows.
+- Opciones: **WhatsApp Web** (por defecto), **App de Windows** y **Automático** (wa.me).
+
+### 3.6 Doble pantalla
+Mientras WhatsApp tiene el foco, el teclado numérico escribe en WhatsApp. Al volver a la ventana del
+panel (con el modal ya cerrado) las teclas del numpad se reenvían otra vez a la pantalla de ingreso.
 
 ---
 
@@ -113,7 +111,7 @@ Genera la URL correspondiente según el modo seleccionado:
 | **Intervención humana** | Requerida | El operador debe hacer clic en "Abrir" y luego "Enviar" en WhatsApp. |
 | **Envío masivo automático** | No soportado | No hay un botón de "Enviar a todos los deudores a la vez". |
 | **Disparadores desatendidos (Cron)** | No soportado | No se envían mensajes en la madrugada o a las 8 AM automáticamente si nadie está en la PC. |
-| **Registro de entrega / lectura** | No disponible | El sistema no sabe si el mensaje realmente se envió o si el socio lo leyó. |
+| **Registro de entrega / lectura** | Parcial | Se guarda cuándo se abrió el chat (`lastNotifiedAt`), no si el mensaje se envió o se leyó. |
 | **Costo** | $0 USD | Completamente gratuito; no requiere pagar números comerciales de Meta ni servicios de terceros. |
 | **Riesgo de baneo** | Cero | Al enviarse desde la app nativa o web del operador humano, Meta no lo detecta como spam automatizado. |
 

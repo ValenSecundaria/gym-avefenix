@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Camera, RefreshCw, Upload, CheckCircle2, Check, Move, ZoomIn, ZoomOut } from "lucide-react";
 import { listCameras, openNextCamera, openPreferredCamera } from "@/lib/camera";
 
@@ -14,6 +15,12 @@ interface CropBox {
   y: number; // Porcentaje (0 a 100) respecto a la imagen visible
   size: number; // Porcentaje (0 a 100) del lado menor de la imagen visible
 }
+
+/** Lado en píxeles de la foto recortada que se guarda. */
+const PHOTO_OUTPUT_PX = 400;
+
+/** Encuadre inicial: centrado y abarcando casi toda la foto, para que el socio no quede cortado. */
+const INITIAL_CROP: CropBox = { x: 50, y: 50, size: 90 };
 
 async function getCameraPermission(): Promise<PermissionState | "unknown"> {
   try {
@@ -30,11 +37,14 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const imageElementRef = useRef<HTMLImageElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   // Estados
   const [capturedUrl, setCapturedUrl] = useState<string | null>(photoDataUrl);
   const [rawPhotoUrl, setRawPhotoUrl] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
+  // La ventana de encuadre se dibuja fuera del panel: se le copia el tema (claro/oscuro) del panel.
+  const [overlayTheme, setOverlayTheme] = useState<string | undefined>(undefined);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [cameraLabel, setCameraLabel] = useState("");
@@ -49,7 +59,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
   }>({ width: 0, height: 0, left: 0, top: 0 });
 
   // Recuadro: posición y tamaño en porcentajes (0 a 100) respecto al área visible de la imagen
-  const [crop, setCrop] = useState<CropBox>({ x: 15, y: 15, size: 70 });
+  const [crop, setCrop] = useState<CropBox>(INITIAL_CROP);
 
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef<{ clientX: number; clientY: number; startX: number; startY: number }>({
@@ -177,13 +187,26 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
     });
   }, []);
 
+  const openCropper = () => {
+    setOverlayTheme(rootRef.current?.closest("[data-theme]")?.getAttribute("data-theme") ?? undefined);
+    setCrop(INITIAL_CROP);
+    setIsCropping(true);
+  };
+
+  // Si cambia el tamaño de la ventana mientras se encuadra, el recuadro se recalcula sobre la foto.
+  useEffect(() => {
+    if (!isCropping) return;
+    window.addEventListener("resize", updateImageLayout);
+    return () => window.removeEventListener("resize", updateImageLayout);
+  }, [isCropping, updateImageLayout]);
+
   const handleSnap = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
 
-    const width = video.videoWidth || 640;
-    const height = video.videoHeight || 480;
+    const width = video.videoWidth || 1280;
+    const height = video.videoHeight || 960;
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext("2d");
@@ -196,8 +219,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
     const rawUrl = canvas.toDataURL("image/jpeg", 0.95);
     setRawPhotoUrl(rawUrl);
     stopCamera();
-    setCrop({ x: 15, y: 15, size: 70 });
-    setIsCropping(true);
+    openCropper();
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,8 +233,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
         const result = event.target?.result as string;
         if (result) {
           setRawPhotoUrl(result);
-          setCrop({ x: 15, y: 15, size: 70 });
-          setIsCropping(true);
+          openCropper();
           stopCamera();
         }
       };
@@ -239,12 +260,12 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
     const sy = Math.max(0, boxTopPx * scale);
     const sSide = Math.min(boxPx * scale, img.naturalWidth - sx, img.naturalHeight - sy);
 
-    canvas.width = 400;
-    canvas.height = 400;
+    canvas.width = PHOTO_OUTPUT_PX;
+    canvas.height = PHOTO_OUTPUT_PX;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.drawImage(img, sx, sy, sSide, sSide, 0, 0, 400, 400);
+    ctx.drawImage(img, sx, sy, sSide, sSide, 0, 0, PHOTO_OUTPUT_PX, PHOTO_OUTPUT_PX);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
 
     setCapturedUrl(dataUrl);
@@ -328,7 +349,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
   const boxTopPx = imgLayout.top + (crop.y / 100) * Math.max(0, imgLayout.height - boxPx);
 
   return (
-    <div className="flex flex-col gap-3 w-full select-none">
+    <div ref={rootRef} className="flex flex-col gap-3 w-full select-none">
       <label className="text-xs sm:text-sm text-fx-text font-bold flex items-center justify-between">
         <span className="flex items-center gap-2">
           <Camera className="w-4 h-4 text-fx-orange" />
@@ -340,43 +361,10 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
       {/* Visor de cámara / Recorte */}
       <div className="relative w-full aspect-4/3 rounded-xl bg-black border border-fx-border overflow-hidden flex items-center justify-center">
         {isCropping && rawPhotoUrl ? (
-          <>
-            <img
-              ref={imageElementRef}
-              src={rawPhotoUrl}
-              alt="Foto para encuadrar"
-              onLoad={updateImageLayout}
-              className="w-full h-full object-contain pointer-events-none"
-            />
-            {/* Máscara global */}
-            <div className="absolute inset-0 bg-black/60 pointer-events-none" />
-
-            {/* Recuadro de recorte exacto */}
-            {imgLayout.width > 0 && (
-              <div
-                onMouseDown={handleMouseDown}
-                onTouchStart={handleMouseDown}
-                style={{
-                  left: `${boxLeftPx}px`,
-                  top: `${boxTopPx}px`,
-                  width: `${boxPx}px`,
-                  height: `${boxPx}px`,
-                }}
-                className="absolute border-2 border-fx-orange bg-transparent cursor-move shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] rounded-lg flex flex-col items-center justify-between p-2 z-20 hover:border-white transition-colors"
-              >
-                <div className="w-full flex justify-between items-center opacity-90 pointer-events-none">
-                  <span className="text-[10px] font-bold text-white bg-black/75 px-1.5 py-0.5 rounded">1:1</span>
-                  <Move className="w-4 h-4 text-white drop-shadow" />
-                </div>
-                <span className="text-[11px] font-bold text-white bg-fx-orange/95 px-2 py-0.5 rounded shadow pointer-events-none">
-                  Arrastrar para encuadrar
-                </span>
-                <div className="w-full text-right opacity-80 pointer-events-none">
-                  <span className="text-[9px] text-white">Ave Fénix</span>
-                </div>
-              </div>
-            )}
-          </>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-fx-base text-fx-muted">
+            <Move className="w-6 h-6 text-fx-orange" />
+            <p className="text-xs px-4 text-center">Encuadrando la foto en la ventana grande…</p>
+          </div>
         ) : capturedUrl ? (
           <img src={capturedUrl} alt="Vista previa del socio" className="w-full h-full object-cover" />
         ) : cameraActive ? (
@@ -401,57 +389,7 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
       </div>
 
       {/* Controles */}
-      {isCropping ? (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between px-3 py-2 bg-fx-surface rounded-xl border border-fx-border text-xs">
-            <span className="text-fx-muted flex items-center gap-1.5 font-medium">
-              <Move className="w-3.5 h-3.5 text-fx-orange" />
-              <span>Tamaño del encuadre:</span>
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => changeCropSize(15)}
-                disabled={crop.size >= 100}
-                className="px-2.5 py-1.5 rounded-lg bg-fx-base hover:bg-fx-hover text-fx-text border border-fx-border flex items-center gap-1.5 disabled:opacity-30 cursor-pointer font-semibold"
-                title="Abarcar más imagen"
-              >
-                <ZoomOut className="w-3.5 h-3.5 text-fx-orange" />
-                <span>Más amplio</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => changeCropSize(-15)}
-                disabled={crop.size <= 35}
-                className="px-2.5 py-1.5 rounded-lg bg-fx-base hover:bg-fx-hover text-fx-text border border-fx-border flex items-center gap-1.5 disabled:opacity-30 cursor-pointer font-semibold"
-                title="Acercar rostro"
-              >
-                <ZoomIn className="w-3.5 h-3.5 text-fx-orange" />
-                <span>Más de cerca</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={handleRetake}
-              className="min-h-[46px] rounded-xl bg-fx-hover hover:bg-fx-border border border-fx-border text-xs sm:text-sm font-bold text-fx-text inline-flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <RefreshCw className="w-4 h-4 text-fx-muted" />
-              <span>Cancelar / Descartar</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleApplyCrop}
-              className="min-h-[46px] rounded-xl bg-fx-green hover:bg-fx-green/90 text-white text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(22,163,74,0.3)] cursor-pointer"
-            >
-              <Check className="w-4 h-4" />
-              <span>Confirmar Encuadre</span>
-            </button>
-          </div>
-        </div>
-      ) : capturedUrl ? (
+      {isCropping ? null : capturedUrl ? (
         <button
           type="button"
           onClick={handleRetake}
@@ -507,6 +445,106 @@ export function WebcamCapture({ photoDataUrl = null, onPhotoCapture }: WebcamCap
           </button>
         </div>
       )}
+
+      {/* Encuadre en una ventana grande: en la columna del formulario la foto quedaba muy chica para recortar. */}
+      {isCropping && rawPhotoUrl &&
+        createPortal(
+          <div data-theme={overlayTheme} className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 select-none">
+            <div className="bg-fx-surface border border-fx-border w-full max-w-4xl max-h-full rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-4 sm:p-5 flex flex-col gap-3 text-fx-text">
+              <div className="flex items-center gap-2 text-sm sm:text-base font-extrabold">
+                <Camera className="w-5 h-5 text-fx-orange" />
+                <span>Encuadrar la foto del socio</span>
+              </div>
+              <div className="relative w-full h-[min(68vh,720px)] rounded-xl bg-black border border-fx-border overflow-hidden flex items-center justify-center">
+              <img
+                ref={imageElementRef}
+                src={rawPhotoUrl}
+                alt="Foto para encuadrar"
+                onLoad={updateImageLayout}
+                className="w-full h-full object-contain pointer-events-none"
+              />
+              {/* Máscara global */}
+              <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+
+              {/* Recuadro de recorte exacto */}
+              {imgLayout.width > 0 && (
+                <div
+                  onMouseDown={handleMouseDown}
+                  onTouchStart={handleMouseDown}
+                  style={{
+                    left: `${boxLeftPx}px`,
+                    top: `${boxTopPx}px`,
+                    width: `${boxPx}px`,
+                    height: `${boxPx}px`,
+                  }}
+                  className="absolute border-2 border-fx-orange bg-transparent cursor-move shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] rounded-lg flex flex-col items-center justify-between p-2 z-20 hover:border-white transition-colors"
+                >
+                  <div className="w-full flex justify-between items-center opacity-90 pointer-events-none">
+                    <span className="text-[10px] font-bold text-white bg-black/75 px-1.5 py-0.5 rounded">1:1</span>
+                    <Move className="w-4 h-4 text-white drop-shadow" />
+                  </div>
+                  <span className="text-[11px] font-bold text-white bg-fx-orange/95 px-2 py-0.5 rounded shadow pointer-events-none">
+                    Arrastrar para encuadrar
+                  </span>
+                  <div className="w-full text-right opacity-80 pointer-events-none">
+                    <span className="text-[9px] text-white">Ave Fénix</span>
+                  </div>
+                </div>
+              )}
+              </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between px-3 py-2 bg-fx-surface rounded-xl border border-fx-border text-xs">
+                <span className="text-fx-muted flex items-center gap-1.5 font-medium">
+                  <Move className="w-3.5 h-3.5 text-fx-orange" />
+                  <span>Tamaño del encuadre:</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => changeCropSize(15)}
+                    disabled={crop.size >= 100}
+                    className="px-2.5 py-1.5 rounded-lg bg-fx-base hover:bg-fx-hover text-fx-text border border-fx-border flex items-center gap-1.5 disabled:opacity-30 cursor-pointer font-semibold"
+                    title="Abarcar más imagen"
+                  >
+                    <ZoomOut className="w-3.5 h-3.5 text-fx-orange" />
+                    <span>Más amplio</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changeCropSize(-15)}
+                    disabled={crop.size <= 30}
+                    className="px-2.5 py-1.5 rounded-lg bg-fx-base hover:bg-fx-hover text-fx-text border border-fx-border flex items-center gap-1.5 disabled:opacity-30 cursor-pointer font-semibold"
+                    title="Acercar rostro"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5 text-fx-orange" />
+                    <span>Más de cerca</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handleRetake}
+                  className="min-h-[46px] rounded-xl bg-fx-hover hover:bg-fx-border border border-fx-border text-xs sm:text-sm font-bold text-fx-text inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className="w-4 h-4 text-fx-muted" />
+                  <span>Cancelar / Descartar</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApplyCrop}
+                  className="min-h-[46px] rounded-xl bg-fx-green hover:bg-fx-green/90 text-white text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(22,163,74,0.3)] cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Confirmar Encuadre</span>
+                </button>
+              </div>
+            </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
