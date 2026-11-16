@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import type { CheckInVerificationResult, ToggleShiftResult } from "@/types";
-import { type CheckInKey } from "@/lib/screens/broadcast-channel";
+import { gymBroadcast, type CheckInKey } from "@/lib/screens/broadcast-channel";
 import { writeCheckInDisplayCache } from "@/lib/screens/checkin-display-cache";
 import { useCheckIn } from "@/hooks/use-checkin";
 import { useCheckInDisplay, requestFullscreen } from "@/hooks/use-checkin-display";
@@ -92,6 +92,7 @@ export function CheckInMonitorClient({
     if (loadingRef.current) return;
     if (teacherResult) setTeacherResult(null);
     const current = dniRef.current;
+    gymBroadcast.postMessage({ type: "CHECKIN_TYPING" });
     if (key === "Enter") return void handleVerifySubmit(current);
     if (errorMsg) setErrorMsg(null);
     if (key === "Clear") setDni("");

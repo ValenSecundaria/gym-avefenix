@@ -15,6 +15,7 @@ import { WebcamCapture } from "./WebcamCapture";
 import { sanitizeNameInput, sanitizePhoneInput } from "@/lib/validations/member.schema";
 import { MemberHistory, MemberSummary } from "./MemberHistory";
 import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
+import { genericGreetingMessage, overdueReminderMessage } from "@/lib/whatsapp-messages";
 import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 import { savePhotoLocally } from "@/lib/offline/photo-store";
 import { useLocalMemberPhoto } from "@/lib/offline/use-local-photos";
@@ -378,8 +379,10 @@ function MemberEditDialog({ memberId, plans = [], onClose, onChanged }: { member
                           phone: phone.trim(),
                           defaultMessage:
                             member.membershipStatus === "VENCIDA" && member.validUntil
-                              ? `¡Hola ${fullName.trim() || member.fullName}! Te escribimos de Gimnasio Ave Fénix para recordarte que tu cuota del plan ${member.planName} venció el ${formatDateAR(member.validUntil)}. ¡Te esperamos en recepción para renovarla!`
-                              : `¡Hola ${fullName.trim() || member.fullName}! Te escribimos de Gimnasio Ave Fénix.`,
+                              ? overdueReminderMessage({ ...member, fullName: fullName.trim() || member.fullName })
+                              : genericGreetingMessage(fullName.trim() || member.fullName),
+                          memberId: member.id,
+                          lastNotifiedAt: member.lastNotifiedAt,
                         })
                       }
                       className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-sm font-extrabold inline-flex items-center gap-2 transition-colors cursor-pointer"

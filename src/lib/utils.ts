@@ -1,3 +1,5 @@
+import { buildWhatsAppUrl } from "@/lib/whatsapp-dispatcher";
+
 export function cn(...classes: Array<string | undefined | null | false>): string {
   return classes.filter(Boolean).join(" ");
 }
@@ -35,30 +37,11 @@ export function formatTimeAR(dateInput: Date | string | null | undefined): strin
 }
 
 /**
- * Cómo se abre WhatsApp:
- * - AUTO: wa.me (el sistema elige: app en el celular, página intermedia en la PC). Es el de la web pública.
- * - WEB: WhatsApp Web en el navegador (web.whatsapp.com).
- * - APP: WhatsApp Desktop instalado en Windows (protocolo whatsapp://).
+ * Enlace wa.me de la web pública (escribirle al gimnasio). Sin un teléfono válido abre WhatsApp para elegir
+ * el contacto. Los avisos a socios del panel usan lib/whatsapp-dispatcher.
  */
-export type WhatsAppMode = "AUTO" | "WEB" | "APP";
-
-export function buildWhatsAppLink(phone: string | null | undefined, message: string, mode: WhatsAppMode = "AUTO"): string {
-  const cleanPhone = (phone || "").replace(/\D/g, "");
-  const normalizedPhone = cleanPhone.startsWith("54")
-    ? cleanPhone
-    : cleanPhone
-      ? `549${cleanPhone}`
-      : "";
-  const encodedMsg = encodeURIComponent(message);
-  if (mode === "WEB") {
-    return `https://web.whatsapp.com/send?${normalizedPhone ? `phone=${normalizedPhone}&` : ""}text=${encodedMsg}`;
-  }
-  if (mode === "APP") {
-    return `whatsapp://send?${normalizedPhone ? `phone=${normalizedPhone}&` : ""}text=${encodedMsg}`;
-  }
-  return normalizedPhone
-    ? `https://wa.me/${normalizedPhone}?text=${encodedMsg}`
-    : `https://wa.me/?text=${encodedMsg}`;
+export function buildWhatsAppLink(phone: string | null | undefined, message: string): string {
+  return buildWhatsAppUrl(phone, message, "auto") ?? `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
 
 export function getMemberPhotoUrl(dni: string, photoFilename?: string | null): string {

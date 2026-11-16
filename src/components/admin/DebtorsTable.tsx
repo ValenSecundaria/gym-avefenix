@@ -2,17 +2,19 @@ import React, { useState } from "react";
 import { MessageCircle, CreditCard, CheckCircle2, Wallet, User } from "lucide-react";
 import { MemberPhotoImg } from "@/components/ui/MemberPhotoImg";
 import type { DebtorMemberItem } from "@/types";
-import { formatCurrencyARS, formatDateAR } from "@/lib/utils";
+import { formatCurrencyARS, formatDateAR, formatTimeAR } from "@/lib/utils";
+import { overdueReminderMessage } from "@/lib/whatsapp-messages";
 import { EditMemberButton } from "./EditMemberButton";
-import { WhatsAppEditModal, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
+import { WhatsAppEditModal, isSameLocalDay, type WhatsAppMessageTarget } from "./WhatsAppEditModal";
 
 interface DebtorsTableProps {
   debtors: DebtorMemberItem[];
   onRegisterPayment: (debtor: DebtorMemberItem) => void;
   onEditMember: (memberId: string) => void;
+  onWhatsAppDispatched?: (target: WhatsAppMessageTarget) => void;
 }
 
-export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: DebtorsTableProps) {
+export function DebtorsTable({ debtors, onRegisterPayment, onEditMember, onWhatsAppDispatched }: DebtorsTableProps) {
   const [waTarget, setWaTarget] = useState<WhatsAppMessageTarget | null>(null);
 
   if (debtors.length === 0) {
@@ -52,8 +54,6 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
       {/* Lista de Deudores */}
       <div className="flex flex-col gap-3">
         {debtors.map((debtor) => {
-          const waMessage = `¡Hola ${debtor.fullName}! Te escribimos de Gimnasio Ave Fénix para recordarte que tu cuota del plan ${debtor.planName} venció el ${formatDateAR(debtor.validUntil)}. ¡Te esperamos en recepción para renovarla!`;
-
           return (
             <div
               key={debtor.id}
@@ -81,6 +81,12 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
                         <span>Tel: {debtor.phone}</span>
                       </>
                     )}
+                    {isSameLocalDay(debtor.lastNotifiedAt) && (
+                      <>
+                        <span>•</span>
+                        <span className="text-[#25D366] font-semibold">Avisado hoy {formatTimeAR(debtor.lastNotifiedAt)}</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -97,7 +103,9 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
                         setWaTarget({
                           fullName: debtor.fullName,
                           phone: debtor.phone!,
-                          defaultMessage: waMessage,
+                          defaultMessage: overdueReminderMessage(debtor),
+                          memberId: debtor.id,
+                          lastNotifiedAt: debtor.lastNotifiedAt,
                         })
                       }
                       className="min-h-[48px] px-4 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-[#0B0B0C] text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer"
@@ -122,7 +130,7 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
         })}
       </div>
 
-      <WhatsAppEditModal target={waTarget} onClose={() => setWaTarget(null)} />
+      <WhatsAppEditModal target={waTarget} onClose={() => setWaTarget(null)} onDispatched={onWhatsAppDispatched} />
     </div>
   );
 }

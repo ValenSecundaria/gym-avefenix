@@ -1,36 +1,31 @@
 // Preferencia de cómo abrir WhatsApp desde el panel. Se guarda en cada computadora (localStorage):
-// la de recepción puede tener WhatsApp Desktop instalado y el celular de la dueña no.
-import { buildWhatsAppLink, type WhatsAppMode } from "@/lib/utils";
+// la de recepción puede tener WhatsApp Desktop instalado y otra usar solo el navegador.
+import { dispatchWhatsApp, WHATSAPP_TARGETS, type WhatsAppTarget } from "@/lib/whatsapp-dispatcher";
 
 const STORAGE_KEY = "gym_whatsapp_mode_v1";
-const MODES: WhatsAppMode[] = ["AUTO", "WEB", "APP"];
 
-export function getWhatsAppMode(): WhatsAppMode {
+/** Sin preferencia guardada, recepción usa WhatsApp Web en su navegador (Chrome o Edge). */
+export const DEFAULT_WHATSAPP_TARGET: WhatsAppTarget = "web";
+
+export function getWhatsAppTarget(): WhatsAppTarget {
   try {
-    const saved = window.localStorage.getItem(STORAGE_KEY) as WhatsAppMode | null;
-    return saved && MODES.includes(saved) ? saved : "AUTO";
+    // toLowerCase: las versiones anteriores guardaban "AUTO" / "WEB" / "APP".
+    const saved = window.localStorage.getItem(STORAGE_KEY)?.toLowerCase() as WhatsAppTarget | undefined;
+    return saved && WHATSAPP_TARGETS.includes(saved) ? saved : DEFAULT_WHATSAPP_TARGET;
   } catch {
-    return "AUTO";
+    return DEFAULT_WHATSAPP_TARGET;
   }
 }
 
-export function setWhatsAppMode(mode: WhatsAppMode): void {
+export function setWhatsAppTarget(target: WhatsAppTarget): void {
   try {
-    window.localStorage.setItem(STORAGE_KEY, mode);
+    window.localStorage.setItem(STORAGE_KEY, target);
   } catch {
-    // Almacenamiento bloqueado: se usa el modo automático.
+    // Almacenamiento bloqueado: se usa el modo por defecto.
   }
 }
 
-/** Abre la conversación según la preferencia de esta computadora. */
-export function openWhatsApp(phone: string, message: string): void {
-  const mode = getWhatsAppMode();
-  const url = buildWhatsAppLink(phone, message, mode);
-  if (mode === "APP") {
-    // whatsapp:// lo abre Windows con la app instalada: en una pestaña nueva quedaría una pestaña en blanco.
-    window.location.href = url;
-    return;
-  }
-  // WhatsApp Web reutiliza su pestaña (nombre fijo) en lugar de abrir una nueva sesión cada vez.
-  window.open(url, mode === "WEB" ? "whatsapp_web" : "_blank", "noopener,noreferrer");
+/** Abre la conversación según la preferencia de esta computadora. Devuelve false si el teléfono es inválido. */
+export function openWhatsApp(phone: string, message: string): boolean {
+  return dispatchWhatsApp(phone, message, getWhatsAppTarget());
 }

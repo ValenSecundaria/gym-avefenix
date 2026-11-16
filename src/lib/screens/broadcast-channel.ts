@@ -17,7 +17,9 @@ export type GymBroadcastMessage =
   // Teclas del teclado numérico capturadas en otra ventana y reenviadas al Check-In.
   | { type: "CHECKIN_KEY"; key: CheckInKey }
   // Latido de la ventana de Check-In: avisa que está abierta para recibir teclas.
-  | { type: "CHECKIN_ALIVE" };
+  | { type: "CHECKIN_ALIVE" }
+  // Notificación de que alguien está interactuando o tecleando su DNI en la segunda pantalla.
+  | { type: "CHECKIN_TYPING" };
 
 export type CheckInKey = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "Backspace" | "Clear" | "Enter";
 
