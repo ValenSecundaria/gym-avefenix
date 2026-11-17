@@ -43,7 +43,11 @@ export default function RootLayout({
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      style={{ colorScheme: "dark" }}
     >
+      <head>
+        <meta name="color-scheme" content="dark" />
+      </head>
       <body className="min-h-full flex flex-col bg-[#0B0B0C] text-[#F4F5F7] selection:bg-[#F95716] selection:text-[#F4F5F7]">
         <ServiceWorkerRegister />
         <AuthSessionProvider>{children}</AuthSessionProvider>

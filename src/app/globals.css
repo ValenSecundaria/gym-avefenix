@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: dark;
+  forced-color-adjust: none;
+
   --background: #0B0B0C;
   --foreground: #F4F5F7;
   --fenix-dark: #0B0B0C;
@@ -34,6 +37,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html,
 body {
   background-color: #0B0B0C;
   color: #F4F5F7;
