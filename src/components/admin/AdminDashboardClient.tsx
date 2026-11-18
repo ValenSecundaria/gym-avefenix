@@ -12,7 +12,7 @@ import type {
   PlanOption,
 } from "@/types";
 import { HeaderStats } from "./HeaderStats";
-import { LiveFeedTable } from "./LiveFeedTable";
+import { HistoricalAttendanceSection } from "./attendance/historical-attendance-section";
 import { DebtorsTable } from "./DebtorsTable";
 import { AbsentMembersTable } from "./AbsentMembersTable";
 import { MetricsPanel } from "./MetricsPanel";
@@ -23,6 +23,7 @@ import { PendingMembersBanner } from "./PendingMembersBanner";
 import { MembersSection } from "./MembersSection";
 import { MemberEditModal } from "./MemberEditModal";
 import { PlansAdminSection } from "./PlansAdminSection";
+import { PaymentsManagerView } from "./payments/payments-manager-view";
 import { GymPhoneSettings } from "./gym-phone-settings";
 import { SystemTutorialsCard } from "./SystemTutorialsCard";
 import { WhatsAppModeSettings } from "./WhatsAppModeSettings";
@@ -84,7 +85,7 @@ async function getTodayLocalCheckIns(): Promise<LiveCheckInItem[]> {
   return items;
 }
 
-export type AdminTab = "LIVE_FEED" | "DEBTORS" | "ABSENT" | "MEMBERS" | "PLANS" | "TEACHER_ATTENDANCE" | "METRICS" | "SETTINGS";
+export type AdminTab = "LIVE_FEED" | "DEBTORS" | "PAYMENTS" | "ABSENT" | "MEMBERS" | "PLANS" | "TEACHER_ATTENDANCE" | "METRICS" | "SETTINGS";
 
 interface AdminDashboardClientProps {
   initialStats: DashboardStats;
@@ -401,7 +402,7 @@ export function AdminDashboardClient({
                 <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-fx-text">{section.label}</h2>
               </div>
 
-              <div className={`relative w-full lg:w-80 ${activeTab === "METRICS" || activeTab === "PLANS" || activeTab === "SETTINGS" || activeTab === "TEACHER_ATTENDANCE" ? "hidden" : ""}`}>
+              <div className={`relative w-full lg:w-80 ${activeTab === "METRICS" || activeTab === "PAYMENTS" || activeTab === "PLANS" || activeTab === "SETTINGS" || activeTab === "TEACHER_ATTENDANCE" ? "hidden" : ""}`}>
                 <Search className="w-5 h-5 text-fx-muted absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
                   type="search"
@@ -414,10 +415,11 @@ export function AdminDashboardClient({
             </div>
 
             {activeTab === "LIVE_FEED" && (
-              <LiveFeedTable
-                items={checkIns.filter((c) => match(c.fullName, c.dni))}
+              <HistoricalAttendanceSection
+                todayCheckIns={checkIns}
                 onEditMember={setEditingMemberId}
                 onSuccessSync={showToast}
+                searchFilter={(fullName, dni) => match(fullName, dni)}
               />
             )}
             {activeTab === "DEBTORS" && (
@@ -440,6 +442,11 @@ export function AdminDashboardClient({
                 onEditMember={setEditingMemberId}
                 onSynced={handleMemberSynced}
               />
+            )}
+            {activeTab === "PAYMENTS" && roleOf(user) !== "PROFESOR" && (
+              <div className="hidden lg:block">
+                <PaymentsManagerView plans={plans} />
+              </div>
             )}
             {activeTab === "PLANS" && (
               <PlansAdminSection
