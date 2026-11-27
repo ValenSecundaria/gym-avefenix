@@ -114,7 +114,7 @@ export function DebtorsTable({ debtors, onRegisterPayment, onEditMember }: Debto
                   <button
                     type="button"
                     onClick={() => onRegisterPayment(debtor)}
-                    className="min-h-[48px] px-5 rounded-xl bg-fx-orange hover:bg-fx-orange/90 text-white text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all cursor-pointer"
+                    className="min-h-[48px] px-5 rounded-2xl bg-fx-orange hover:bg-fx-orange/90 text-white text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-md shadow-fx-orange/25 transition-all cursor-pointer"
                   >
                     <CreditCard className="w-4 h-4" />
                     <span>Cobrar Cuota</span>

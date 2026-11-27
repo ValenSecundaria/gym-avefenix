@@ -9,38 +9,42 @@ export interface ModalityItem {
   accent: string;
 }
 
-const STANDARD_SCHEDULE = "Lun a Vie 06:30–22:00 • Sáb 16:00–19:00";
+const STANDARD_SCHEDULE = "Lunes a Viernes • 08:00 a 22:00 hs";
 
 export const MODALITIES: ModalityItem[] = [
   {
     name: "Sala de Musculación",
     schedule: STANDARD_SCHEDULE,
-    level: "Fuerza e Hipertrofia",
-    description: "Zona completa de peso libre, mancuernas, racks y maquinaria biomecánica guiada para sobrecarga progresiva con profesores capacitados en sala.",
+    level: "Fuerza y Tonificación",
+    description:
+      "Zona de peso libre, mancuernas, barras y equipamiento guiado para trabajar sobrecarga progresiva con acompañamiento docente.",
     icon: Dumbbell,
     accent: "text-brand-primaryText",
   },
   {
-    name: "Entrenamiento Funcional",
+    name: "Funcional & HIIT",
     schedule: STANDARD_SCHEDULE,
-    level: "Acondicionamiento Físico",
-    description: "Circuitos metabólicos y ejercicios multiarticulares orientados a potencia, agilidad, coordinación, core y resistencia cardiovascular.",
+    level: "Potencia y Metabolismo",
+    description:
+      "Circuitos intermitentes de alta intensidad para mejorar agilidad, coordinación, zona media y resistencia general.",
     icon: Flame,
     accent: "text-brand-warning",
   },
   {
-    name: "Cardio",
+    name: "Ejercicio y Salud Activa",
     schedule: STANDARD_SCHEDULE,
-    level: "Salud y Resistencia",
-    description: "Cintas de alto rendimiento, bicicletas y sector aeróbico para maximizar la resistencia pulmonar y el gasto calórico.",
+    level: "Bienestar Integral",
+    description:
+      "Rutinas adaptadas para fortalecer articulaciones, mejorar la postura corporal y sostener un estilo de vida saludable.",
     icon: HeartPulse,
     accent: "text-[#10B981]",
   },
   {
-    name: "Entrenamiento Híbrido",
+    name: "Acondicionamiento Aeróbico",
     schedule: STANDARD_SCHEDULE,
-    level: "Alto Rendimiento",
-    description: "La sinergia ideal entre la fuerza y sobrecarga de la musculación con la intensidad metabólica del funcional para atletas integrales.",
+    level: "Capacidad Cardiorrespiratoria",
+    description:
+      "Trabajo cardiovascular complementario para entrada en calor, recuperación activa y salud cardíaca.",
     icon: Zap,
     accent: "text-brand-primaryText",
   },

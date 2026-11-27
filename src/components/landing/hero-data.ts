@@ -3,7 +3,7 @@ import {
   Award,
   ScanLine,
   Activity,
-  ClipboardCheck,
+  HeartPulse,
   Shield,
   type LucideIcon,
 } from "lucide-react";
@@ -24,34 +24,56 @@ export interface PillarItem {
 }
 
 export const STATIC_METRICS: MetricItem[] = [
-  { value: "100% Pro", label: "Equipamiento Biomecánico", sub: "Línea Importada Calibrada", icon: Dumbbell, accent: "text-brand-warning" },
-  { value: "Élite", label: "Entrenadores en Sala", sub: "Profesores Certificados y de Primer Nivel", icon: Award, accent: "text-[#10B981]" },
-  { value: "DNI Ágil", label: "Ingreso Automático", sub: "Ingreso Rápido y Seguro", icon: ScanLine, accent: "text-brand-primaryText" },
+  {
+    value: "Lun–Vie",
+    label: "08:00 a 22:00 hs",
+    sub: "Horario corrido semanal",
+    icon: Dumbbell,
+    accent: "text-brand-primaryText",
+  },
+  {
+    value: "100%",
+    label: "Guía Profesional",
+    sub: "Seguimiento en sala",
+    icon: Award,
+    accent: "text-[#10B981]",
+  },
+  {
+    value: "DNI Ágil",
+    label: "Acceso Instantáneo",
+    sub: "Terminal sin esperas",
+    icon: ScanLine,
+    accent: "text-brand-warning",
+  },
 ];
 
 export const PILLARS: PillarItem[] = [
   {
-    title: "Zona Musculación y Fuerza",
-    description: "Equipamiento completo de peso libre, racks olímpicos y mancuernas de alto rendimiento para desarrollar fuerza y superar tus límites.",
-    tag: "Entrenamiento de Fuerza",
+    title: "Musculación y Fuerza",
+    description:
+      "Peso libre, bancos y máquinas seleccionadas para ganar fuerza muscular cuidando la técnica en cada repetición.",
+    tag: "Fuerza Progresiva",
     icon: Dumbbell,
   },
   {
-    title: "Sector Cardio & HIIT",
-    description: "Equipamiento aeróbico y entrenamiento de alta intensidad para mejorar tu resistencia, capacidad cardiovascular y rendimiento físico.",
-    tag: "Resistencia y Rendimiento",
+    title: "Funcional & HIIT",
+    description:
+      "Circuitos dinámicos de alta intensidad pensados para mejorar resistencia, agilidad y capacidad metabólica.",
+    tag: "Energía & Ritmo",
     icon: Activity,
   },
   {
-    title: "Rutinas Personalizadas",
-    description: "Planes de entrenamiento adaptados a tus objetivos, con acompañamiento y supervisión profesional en cada etapa.",
-    tag: "Seguimiento Continuo",
-    icon: ClipboardCheck,
+    title: "Ejercicio y Salud Activa",
+    description:
+      "Planes adaptados a tu condición inicial, priorizando movilidad, bienestar articular y hábitos sostenibles.",
+    tag: "Salud Integral",
+    icon: HeartPulse,
   },
   {
-    title: "Acceso Rápido y Seguro",
-    description: "Ingresá fácilmente con tu DNI mediante un sistema de acceso ágil y seguro, sin demoras ni esperas.",
-    tag: "Tecnología Ágil",
+    title: "Ingreso Rápido con DNI",
+    description:
+      "Registrá tu asistencia en segundos en recepción con control automático de vigencia y frecuencia semanal.",
+    tag: "Sin Demoras",
     icon: Shield,
   },
 ];

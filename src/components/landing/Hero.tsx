@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MessageCircle, ArrowDownRight, ShieldCheck, Dumbbell, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Clock,
+  MapPin,
+  MessageCircle,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { useAuth } from "@/context/auth-session-context";
 import { buildWhatsAppLink } from "@/lib/utils";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
-import { STATIC_METRICS, PILLARS } from "./hero-data";
-import { MagneticTiltCard } from "./MagneticTiltCard";
+import { PILLARS } from "./hero-data";
 
 interface HeroProps {
   activeMembers?: number;
@@ -16,180 +23,175 @@ interface HeroProps {
 
 export function Hero({ activeMembers }: HeroProps) {
   const { user } = useAuth();
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const gymPhone = user?.gymPhone || GYM_BRAND_CONFIG.contact.defaultWhatsapp;
-  const whatsappUrl = buildWhatsAppLink(
-    gymPhone,
-    GYM_BRAND_CONFIG.messages.generalInquiry()
-  );
-  const showcaseImage = GYM_BRAND_CONFIG.assets.heroCover;
-  const activeMembersValue = typeof activeMembers === "number" ? String(activeMembers) : "0";
+  const gymPhone = (user?.gymPhone || GYM_BRAND_CONFIG.contact.defaultWhatsapp).trim();
+  const hasWhatsapp = gymPhone.length > 0;
+  const whatsappUrl = hasWhatsapp
+    ? buildWhatsAppLink(gymPhone, GYM_BRAND_CONFIG.messages.generalInquiry())
+    : "";
 
-  const metrics = [
-    { value: activeMembersValue, label: "Socios Activos", icon: Users },
-    ...STATIC_METRICS.slice(0, 2),
-  ];
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLElement>) => {
-    if (e.pointerType !== "mouse" || !sectionRef.current) return;
-    const rect = sectionRef.current.getBoundingClientRect();
-    sectionRef.current.style.setProperty("--mx", `${(e.clientX - rect.left).toFixed(1)}px`);
-    sectionRef.current.style.setProperty("--my", `${(e.clientY - rect.top).toFixed(1)}px`);
-    sectionRef.current.style.setProperty("--grid-glow", "1");
-  };
-
-  const handlePointerLeave = () => {
-    sectionRef.current?.style.setProperty("--grid-glow", "0");
-  };
+  const activeCount = typeof activeMembers === "number" ? activeMembers : 0;
+  const mainSchedule = GYM_BRAND_CONFIG.contact.schedule[0];
 
   return (
     <section
-      ref={sectionRef}
       id="inicio"
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-      className="relative min-h-[88vh] flex items-center pt-24 pb-14 px-4 sm:px-6 overflow-hidden bg-brand-bg border-b border-brand-border"
+      className="relative overflow-hidden bg-brand-bg pt-10 pb-16 sm:pt-14 sm:pb-24 px-4 sm:px-6 lg:px-8 border-b border-brand-border"
     >
-      {/* Fondo industrial sutil con grilla técnica */}
+      {/* Resplandor ambiental suave */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-20"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, var(--brand-border) 1px, transparent 1px), linear-gradient(to bottom, var(--brand-border) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-        }}
-      />
-      {/* Grilla reactiva al movimiento del mouse */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 hidden lg:block"
-        style={{
-          opacity: "var(--grid-glow, 0)",
-          transition: "opacity 350ms ease",
-          backgroundImage:
-            "linear-gradient(to right, color-mix(in srgb, var(--brand-primary) 45%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--brand-primary) 45%, transparent) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-          maskImage: "radial-gradient(340px circle at var(--mx, 50%) var(--my, 40%), black, transparent 75%)",
-          WebkitMaskImage: "radial-gradient(340px circle at var(--mx, 50%) var(--my, 40%), black, transparent 75%)",
-        }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-brand-primary/10 blur-[120px]"
+        className="pointer-events-none absolute -top-32 right-1/4 w-[480px] h-[480px] rounded-full bg-brand-primary/12 blur-[130px]"
       />
 
-      <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-        {/* Columna izquierda: Tipografía asimétrica y acciones */}
-        <div className="lg:col-span-7 flex flex-col items-start text-left">
-          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-md border border-brand-border bg-brand-surface text-xs font-extrabold uppercase tracking-[0.18em] text-brand-primaryText mb-6">
-            <span className="w-2 h-2 rounded-sm bg-brand-primary" />
-            <span>{GYM_BRAND_CONFIG.identity.name} · {GYM_BRAND_CONFIG.contact.address}</span>
-          </div>
+      <div className="relative z-10 max-w-7xl mx-auto flex flex-col gap-12 lg:gap-14">
+        {/* Bloque superior: División editorial 6 / 6 */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          <div className="lg:col-span-6 flex flex-col items-start text-left">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-brand-surface border border-brand-border shadow-sm mb-6">
+              <span className="w-2.5 h-2.5 rounded-full bg-brand-primary animate-pulse" />
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-textPrimary">
+                Salud • Fuerza • HIIT en {GYM_BRAND_CONFIG.contact.address}
+              </span>
+            </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-brand-textPrimary leading-[1.03] tracking-tight uppercase mb-5">
-            {GYM_BRAND_CONFIG.identity.heroTitle}
-          </h1>
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] font-black text-brand-textPrimary leading-[1.08] tracking-tight mb-5">
+              {GYM_BRAND_CONFIG.identity.heroTitle}
+            </h1>
 
-          <div className="w-20 h-1.5 bg-brand-primary rounded-sm mb-6" />
+            <p className="text-base sm:text-lg text-brand-textSecondary max-w-xl mb-8 leading-relaxed">
+              {GYM_BRAND_CONFIG.identity.heroSubtitle}
+            </p>
 
-          <p className="text-base sm:text-lg text-brand-textSecondary max-w-2xl mb-8 leading-relaxed">
-            {GYM_BRAND_CONFIG.identity.heroSubtitle}
-          </p>
+            <div className="flex flex-wrap items-center gap-3.5 w-full sm:w-auto mb-8">
+              {hasWhatsapp ? (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-h-[52px] px-7 rounded-2xl bg-brand-primary hover:bg-brand-primaryHover text-white font-bold text-base inline-flex items-center justify-center gap-2.5 shadow-lg shadow-brand-primary/25 transition-all"
+                >
+                  <MessageCircle className="w-5 h-5 shrink-0" aria-hidden="true" />
+                  <span>Consultar por WhatsApp</span>
+                </a>
+              ) : (
+                <a
+                  href="#planes"
+                  className="min-h-[52px] px-7 rounded-2xl bg-brand-primary hover:bg-brand-primaryHover text-white font-bold text-base inline-flex items-center justify-center gap-2.5 shadow-lg shadow-brand-primary/25 transition-all"
+                >
+                  <span>Ver Planes y Modalidades</span>
+                  <ArrowRight className="w-5 h-5 shrink-0" aria-hidden="true" />
+                </a>
+              )}
 
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto mb-9">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="min-h-[52px] px-6 rounded-lg bg-brand-primary hover:bg-brand-primaryHover text-white font-extrabold text-sm sm:text-base uppercase tracking-wide inline-flex items-center justify-center gap-2.5 transition-colors"
-            >
-              <MessageCircle className="w-5 h-5" />
-              <span>Empezar hoy por WhatsApp</span>
-            </a>
-
-            <a
-              href="#instalaciones"
-              className="min-h-[52px] px-5 rounded-lg border border-brand-border bg-brand-surface hover:bg-brand-surface/80 text-brand-textPrimary font-bold text-sm sm:text-base inline-flex items-center justify-center gap-2 transition-colors"
-            >
-              <span>Ver instalaciones</span>
-              <ArrowDownRight className="w-4 h-4 text-brand-primaryText" />
-            </a>
-
-            {user && (
-              <Link
-                href={user.role === "ADMIN" ? "/admin" : "/profesor"}
-                className="min-h-[52px] px-5 rounded-lg border border-brand-primary/50 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primaryText font-bold text-sm inline-flex items-center gap-2 transition-colors"
+              <a
+                href={GYM_BRAND_CONFIG.contact.googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-[52px] px-6 rounded-2xl bg-brand-surface hover:bg-brand-surfaceHover border border-brand-border hover:border-brand-primary/50 text-brand-textPrimary font-semibold text-base inline-flex items-center justify-center gap-2 transition-colors"
               >
-                <ShieldCheck className="w-4 h-4" />
-                <span>Mi Panel ({user.name})</span>
-              </Link>
-            )}
-          </div>
+                <MapPin className="w-5 h-5 text-brand-primaryText shrink-0" aria-hidden="true" />
+                <span>Cómo llegar ({GYM_BRAND_CONFIG.contact.address})</span>
+              </a>
 
-          {/* Barra de métricas técnicas */}
-          <div className="w-full grid grid-cols-3 border border-brand-border rounded-lg bg-brand-surface/90 divide-x divide-brand-border overflow-hidden">
-            {metrics.map((m) => (
-              <div key={m.label} className="p-3.5 sm:p-4 flex flex-col">
-                <span className="text-xl sm:text-2xl font-black font-mono text-brand-textPrimary leading-none mb-1.5">
-                  {m.value}
-                </span>
-                <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-brand-textSecondary">
-                  {m.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+              {user && (
+                <Link
+                  href={user.role === "ADMIN" ? "/admin" : "/profesor"}
+                  className="min-h-[52px] px-5 rounded-2xl border border-brand-primary/50 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primaryText font-bold text-sm inline-flex items-center gap-2 transition-colors"
+                >
+                  <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>Mi Panel ({user.name})</span>
+                </Link>
+              )}
+            </div>
 
-        {/* Columna derecha: Tarjeta visual destacada + Pilares */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
-          <div className="relative rounded-lg border-2 border-brand-border bg-brand-surface overflow-hidden shadow-2xl">
-            <div className="relative aspect-[4/3] w-full">
-              <Image
-                src={showcaseImage}
-                alt={`Instalaciones de ${GYM_BRAND_CONFIG.identity.name}`}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 42vw"
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-bg/90 via-brand-bg/20 to-transparent" />
-              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-md bg-brand-bg/85 backdrop-blur-sm border border-brand-border">
-                <div className="flex items-center gap-2">
-                  <Dumbbell className="w-4 h-4 text-brand-primaryText shrink-0" />
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-brand-textPrimary">
-                    {GYM_BRAND_CONFIG.contact.schedule[0]?.days}: {GYM_BRAND_CONFIG.contact.schedule[0]?.hours}
-                  </span>
+            {/* Indicadores rápidos redondeados */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
+              <div className="p-4 rounded-2xl bg-brand-surface border border-brand-border">
+                <div className="flex items-center gap-1.5 text-brand-primaryText text-xs font-bold uppercase tracking-wider mb-1">
+                  <Users className="w-4 h-4" aria-hidden="true" />
+                  <span>Comunidad</span>
                 </div>
-                <span className="text-[11px] font-mono font-bold text-brand-primaryText uppercase">
-                  {GYM_BRAND_CONFIG.identity.city}
-                </span>
+                <p className="text-2xl font-black font-mono text-brand-textPrimary">{activeCount}</p>
+                <p className="text-xs text-brand-textSecondary">Socios activos</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-brand-surface border border-brand-border">
+                <div className="flex items-center gap-1.5 text-[#10B981] text-xs font-bold uppercase tracking-wider mb-1">
+                  <Clock className="w-4 h-4" aria-hidden="true" />
+                  <span>Atención</span>
+                </div>
+                <p className="text-lg sm:text-xl font-black text-brand-textPrimary leading-tight">08 a 22 hs</p>
+                <p className="text-xs text-brand-textSecondary">Lunes a Viernes</p>
+              </div>
+              <div className="col-span-2 sm:col-span-1 p-4 rounded-2xl bg-brand-surface border border-brand-border">
+                <div className="flex items-center gap-1.5 text-brand-warning text-xs font-bold uppercase tracking-wider mb-1">
+                  <Sparkles className="w-4 h-4" aria-hidden="true" />
+                  <span>Sede</span>
+                </div>
+                <p className="text-lg sm:text-xl font-black text-brand-textPrimary leading-tight truncate">
+                  {GYM_BRAND_CONFIG.contact.address}
+                </p>
+                <p className="text-xs text-brand-textSecondary">{GYM_BRAND_CONFIG.identity.city}</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {PILLARS.map((pillar) => {
-              const Icon = pillar.icon;
-              return (
-                <MagneticTiltCard
-                  key={pillar.title}
-                  className="p-3.5 rounded-lg border border-brand-border bg-brand-surface hover:border-brand-primary/50"
-                >
-                  <div className="flex items-center gap-2 text-brand-primaryText mb-1">
-                    <Icon className="w-4 h-4 shrink-0" />
-                    <h2 className="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-brand-textPrimary">
-                      {pillar.title}
-                    </h2>
+          {/* Columna derecha: Tarjeta visual destacada con acento superior */}
+          <div className="lg:col-span-6">
+            <div className="relative rounded-3xl bg-brand-surface border border-brand-border border-t-4 border-t-brand-primary p-3 sm:p-4 shadow-2xl">
+              <div className="relative aspect-[16/11] w-full rounded-2xl overflow-hidden bg-brand-bg">
+                <Image
+                  src={GYM_BRAND_CONFIG.assets.heroCover}
+                  alt={`Instalaciones de ${GYM_BRAND_CONFIG.identity.name}`}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-bg/90 via-transparent to-transparent" />
+                <div className="absolute bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-4 p-4 rounded-2xl bg-brand-surface/95 backdrop-blur-md border border-brand-border flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-brand-primaryText">
+                      {GYM_BRAND_CONFIG.identity.name}
+                    </p>
+                    <p className="text-sm sm:text-base font-extrabold text-brand-textPrimary">
+                      {mainSchedule ? `${mainSchedule.days}: ${mainSchedule.hours}` : GYM_BRAND_CONFIG.contact.address}
+                    </p>
                   </div>
-                  <p className="text-xs text-brand-textSecondary leading-snug line-clamp-3">
-                    {pillar.description}
-                  </p>
-                </MagneticTiltCard>
-              );
-            })}
+                  <a
+                    href="#instalaciones"
+                    className="min-h-[48px] px-4 rounded-xl bg-brand-bg hover:bg-brand-surfaceHover border border-brand-border text-xs font-bold uppercase tracking-wider text-brand-textPrimary inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    <span>Explorar sectores</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-brand-primaryText" aria-hidden="true" />
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* Banda inferior Bento de 4 pilares */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {PILLARS.map((pillar) => {
+            const Icon = pillar.icon;
+            return (
+              <article
+                key={pillar.title}
+                className="p-6 rounded-2xl bg-brand-surface border border-brand-border border-t-2 border-t-brand-primary/70 hover:border-brand-primary/60 shadow-md transition-all flex flex-col gap-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="w-10 h-10 rounded-xl bg-brand-primary/15 text-brand-primaryText flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5" aria-hidden="true" />
+                  </span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-bg border border-brand-border text-brand-textSecondary">
+                    {pillar.tag}
+                  </span>
+                </div>
+                <h2 className="text-base font-extrabold text-brand-textPrimary">{pillar.title}</h2>
+                <p className="text-sm text-brand-textSecondary leading-relaxed">{pillar.description}</p>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

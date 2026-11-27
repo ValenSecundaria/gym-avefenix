@@ -56,8 +56,8 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync, isHistorical
         <button
           type="button"
           onClick={() => setFilter("ALL")}
-          className={`min-h-[40px] px-4 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-            filter === "ALL" ? "bg-fx-orange text-white" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"
+          className={`min-h-[48px] px-4 rounded-full text-sm font-bold transition-colors cursor-pointer ${
+            filter === "ALL" ? "bg-fx-orange text-white" : "bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text"
           }`}
         >
           Todos ({items.length})
@@ -65,24 +65,24 @@ export function LiveFeedTable({ items, onEditMember, onSuccessSync, isHistorical
         <button
           type="button"
           onClick={() => setFilter("DUE")}
-          className={`min-h-[40px] px-4 rounded-lg text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${
-            filter === "DUE" ? "bg-fx-red text-white" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"
+          className={`min-h-[48px] px-4 rounded-full text-sm font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${
+            filter === "DUE" ? "bg-fx-red text-white" : "bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text"
           }`}
         >
           <span>Cuota Vencida</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${filter === "DUE" ? "bg-white/20 text-white" : "bg-fx-red/20 text-fx-red"}`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs ${filter === "DUE" ? "bg-white/20 text-white" : "bg-fx-red/20 text-fx-red"}`}>
             {dueCount}
           </span>
         </button>
         <button
           type="button"
           onClick={() => setFilter("LIMIT")}
-          className={`min-h-[40px] px-4 rounded-lg text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${
-            filter === "LIMIT" ? "bg-fx-amber text-fx-base" : "bg-fx-surface border border-fx-border text-fx-muted hover:text-fx-text"
+          className={`min-h-[48px] px-4 rounded-full text-sm font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${
+            filter === "LIMIT" ? "bg-fx-amber text-fx-base" : "bg-fx-base border border-fx-border text-fx-muted hover:text-fx-text"
           }`}
         >
           <span>Límite Semanal</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${filter === "LIMIT" ? "bg-black/20 text-fx-base font-extrabold" : "bg-fx-amber/20 text-fx-amber"}`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs ${filter === "LIMIT" ? "bg-black/20 text-fx-base font-extrabold" : "bg-fx-amber/20 text-fx-amber"}`}>
             {limitCount}
           </span>
         </button>

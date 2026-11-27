@@ -1,24 +1,20 @@
 import React from "react";
 import Image from "next/image";
 import {
-  UserPlus,
-  RefreshCw,
   MonitorCheck,
   MonitorX,
-  Users,
-  DoorOpen,
-  AlertTriangle,
-  UserX,
-  Sun,
   Moon,
+  RefreshCw,
+  Sun,
+  UserPlus,
+  Wallet,
 } from "lucide-react";
 import type { AdminTheme } from "@/lib/use-admin-theme";
 import type { DashboardStats } from "@/types";
 import type { AdminTab } from "./AdminDashboardClient";
 import { formatCurrencyARS } from "@/lib/utils";
-import { ABSENT_DAYS_THRESHOLD } from "@/lib/constants";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
-import { KpiCard } from "./KpiCard";
+import { LogoutButton } from "./logout-button";
 
 interface HeaderStatsProps {
   stats: DashboardStats;
@@ -35,8 +31,8 @@ interface HeaderStatsProps {
 
 export const NO_PLANS_HINT = "Primero creá un plan en la sección Planes";
 
-const ICON_BTN =
-  "min-h-[48px] min-w-[48px] px-3 rounded-md bg-fx-base hover:bg-fx-hover border border-fx-border text-sm font-bold text-fx-muted hover:text-fx-text inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50";
+const ACTION_BTN =
+  "min-h-[48px] min-w-[48px] px-3.5 rounded-2xl bg-fx-base hover:bg-fx-hover border border-fx-border text-[15px] font-semibold text-fx-muted hover:text-fx-text inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50";
 
 export function HeaderStats({
   stats,
@@ -54,75 +50,85 @@ export function HeaderStats({
   const ThemeIcon = theme === "light" ? Moon : Sun;
 
   return (
-    <header className="w-full flex flex-col gap-4">
-      {/* Celular: barra superior compacta */}
+    <header className="w-full">
+      {/* Celular: barra superior redondeada y limpia */}
       <div className="lg:hidden sticky top-0 z-20 -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 px-4 sm:px-6 py-3 bg-fx-surface/95 backdrop-blur border-b border-fx-border flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-11 h-11 rounded-md overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-2xl overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shrink-0">
             <Image
               src={GYM_BRAND_CONFIG.assets.logoMain}
               alt={GYM_BRAND_CONFIG.identity.shortName}
               width={44}
               height={44}
-              className="object-contain"
+              className="w-full h-full object-cover"
             />
           </div>
           <div className="min-w-0">
-            <h1 className="text-base font-black text-fx-text uppercase tracking-tight truncate">
+            <h1 className="text-base font-extrabold text-fx-text truncate">
               {GYM_BRAND_CONFIG.identity.shortName}
             </h1>
             <p className="text-xs font-bold text-fx-green truncate font-mono">
-              Caja mes: {formatCurrencyARS(stats.monthlyRevenue)}
+              Mes: {formatCurrencyARS(stats.monthlyRevenue)}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button type="button" onClick={onToggleTheme} aria-label={themeLabel} className={ICON_BTN}>
+          <button type="button" onClick={onToggleTheme} aria-label={themeLabel} className={ACTION_BTN}>
             <ThemeIcon className="w-5 h-5" />
           </button>
           {onRefresh && (
-            <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Actualizar datos" className={ICON_BTN}>
+            <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Actualizar datos" className={ACTION_BTN}>
               <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orangeText" : ""}`} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Escritorio: Cabecera industrial en 2 bloques */}
-      <div className="hidden lg:flex items-center justify-between gap-4 p-5 rounded-lg bg-fx-surface border border-fx-border border-l-4 border-l-fx-orange shadow-sm">
+      {/* Escritorio: Cabecera unificada con placa de caja mensual, control dual-screen y alta */}
+      <div className="hidden lg:flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-fx-surface border border-fx-border border-t-4 border-t-fx-orange shadow-md">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-md overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shrink-0">
+          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-brand-bg border border-fx-border flex items-center justify-center shrink-0 shadow-sm">
             <Image
               src={GYM_BRAND_CONFIG.assets.logoMain}
               alt={GYM_BRAND_CONFIG.identity.name}
-              width={48}
-              height={48}
-              className="object-contain"
+              width={56}
+              height={56}
+              className="w-full h-full object-cover"
             />
           </div>
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-xl font-black text-fx-text uppercase tracking-tight">
+              <h1 className="text-xl font-black text-fx-text tracking-tight">
                 {GYM_BRAND_CONFIG.identity.name}
               </h1>
-              <span className="px-2 py-0.5 rounded-sm bg-fx-orange/15 text-fx-orangeText text-[11px] font-extrabold uppercase tracking-wider">
-                Admin
+              <span className="px-3 py-0.5 rounded-full bg-fx-orange/15 border border-fx-orange/30 text-fx-orangeText text-xs font-bold">
+                Recepción
               </span>
             </div>
-            <p className="text-sm text-fx-muted flex items-center gap-2 mt-0.5">
-              <span>Cobrado este mes:</span>
-              <span className="font-mono font-extrabold text-fx-green text-base">
-                {formatCurrencyARS(stats.monthlyRevenue)}
-              </span>
+            <p className="text-sm text-fx-muted mt-0.5">
+              {GYM_BRAND_CONFIG.contact.address} • {GYM_BRAND_CONFIG.identity.city}
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => onGoToTab("PAYMENTS")}
+            title="Ir al módulo de Pagos y Planes"
+            className="ml-2 min-h-[48px] px-4 rounded-2xl bg-fx-base hover:bg-fx-hover border border-fx-border inline-flex items-center gap-2.5 transition-colors cursor-pointer"
+          >
+            <Wallet className="w-4 h-4 text-fx-green shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-wider text-fx-muted">Caja mes:</span>
+            <span className="font-mono font-extrabold text-base text-fx-green">
+              {formatCurrencyARS(stats.monthlyRevenue)}
+            </span>
+          </button>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
             onClick={onOpenCheckInScreen}
-            className={`${ICON_BTN} ${
+            className={`${ACTION_BTN} ${
               checkInScreenOnline ? "border-fx-green/50 text-fx-green bg-fx-green/10" : ""
             }`}
             title={checkInScreenOnline ? "Pantalla de ingreso conectada" : "Abrir pantalla de ingreso"}
@@ -132,13 +138,13 @@ export function HeaderStats({
           </button>
 
           {onRefresh && (
-            <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Actualizar datos" className={ICON_BTN}>
+            <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Actualizar datos" className={ACTION_BTN}>
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-fx-orangeText" : ""}`} />
               <span>Actualizar</span>
             </button>
           )}
 
-          <button type="button" onClick={onToggleTheme} aria-label={themeLabel} title={themeLabel} className={ICON_BTN}>
+          <button type="button" onClick={onToggleTheme} aria-label={themeLabel} title={themeLabel} className={ACTION_BTN}>
             <ThemeIcon className="w-5 h-5" />
           </button>
 
@@ -147,52 +153,14 @@ export function HeaderStats({
             onClick={onOpenNewMember}
             disabled={!canCreateMember}
             title={canCreateMember ? undefined : NO_PLANS_HINT}
-            className="min-h-[48px] px-5 rounded-md bg-fx-orange hover:bg-fx-orange/90 active:scale-[0.98] text-white font-extrabold text-sm uppercase tracking-wide inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="min-h-[48px] px-5 rounded-2xl bg-fx-orange hover:bg-fx-orange/90 active:scale-[0.98] text-white font-bold text-[15px] inline-flex items-center gap-2 shadow-md shadow-fx-orange/25 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <UserPlus className="w-5 h-5" />
             <span>Nuevo socio</span>
           </button>
-        </div>
-      </div>
 
-      {/* Tarjetas KPI compactas */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
-        <KpiCard
-          label="Entraron hoy"
-          value={stats.todayCheckIns}
-          unit="socios"
-          hint="Ver ingresos de hoy"
-          icon={DoorOpen}
-          tone="orange"
-          onClick={() => onGoToTab("LIVE_FEED")}
-        />
-        <KpiCard
-          label="Al día"
-          value={stats.activeMembers}
-          unit="socios"
-          hint="Ver clientes"
-          icon={Users}
-          tone="neutral"
-          onClick={() => onGoToTab("MEMBERS")}
-        />
-        <KpiCard
-          label="Deben la cuota"
-          value={stats.debtorsCount}
-          unit="personas"
-          hint="Cobrar cuotas"
-          icon={AlertTriangle}
-          tone="red"
-          onClick={() => onGoToTab("DEBTORS")}
-        />
-        <KpiCard
-          label={`No vienen (+${ABSENT_DAYS_THRESHOLD} días)`}
-          value={stats.absentCount}
-          unit="personas"
-          hint="Escribirles por WhatsApp"
-          icon={UserX}
-          tone="amber"
-          onClick={() => onGoToTab("ABSENT")}
-        />
+          <LogoutButton collapsed={false} />
+        </div>
       </div>
     </header>
   );

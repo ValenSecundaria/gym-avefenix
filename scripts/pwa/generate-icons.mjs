@@ -7,8 +7,8 @@ import sharp from "sharp";
 const ROOT = process.cwd();
 const SOURCE = path.join(ROOT, "public", "brand", "logo.png");
 const OUT_DIR = path.join(ROOT, "public", "icons");
-// Fondo carbón pizarra oficial de Punto Bahia GYM (#0D0F12) para integrar el logo sin bordes visibles.
-const BACKGROUND = { r: 13, g: 15, b: 18, alpha: 1 };
+// Fondo negro mate oficial de EJERCICIO SALUD GYM (#0A0A0B) para integrar el logo sin bordes visibles.
+const BACKGROUND = { r: 10, g: 10, b: 11, alpha: 1 };
 
 async function renderIcon(size, fileName, safeZoneRatio = 1) {
   const inner = Math.round(size * safeZoneRatio);
