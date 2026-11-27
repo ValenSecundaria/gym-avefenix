@@ -1,25 +1,23 @@
 "use client";
 
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import { Clock, ExternalLink, MapPin, MessageCircle } from "lucide-react";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 import { buildWhatsAppLink } from "@/lib/utils";
 import { useAuth } from "@/context/auth-session-context";
 import { MODALITIES } from "./modalities-data";
 
+const subscribeNoop = () => () => {};
+
 export function ScheduleSection() {
-  const { user } = useAuth();
-  const gymPhone = (user?.gymPhone || GYM_BRAND_CONFIG.contact.defaultWhatsapp).trim();
+  const { user: rawUser } = useAuth();
+  const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  const gymPhone = ((hydrated ? rawUser?.gymPhone : undefined) || GYM_BRAND_CONFIG.contact.defaultWhatsapp).trim();
   const hasWhatsapp = gymPhone.length > 0;
-  const whatsappUrl = hasWhatsapp
-    ? buildWhatsAppLink(gymPhone, GYM_BRAND_CONFIG.messages.generalInquiry())
-    : "";
+  const whatsappUrl = hasWhatsapp ? buildWhatsAppLink(gymPhone, GYM_BRAND_CONFIG.messages.generalInquiry()) : "";
 
   return (
-    <section
-      id="horarios"
-      className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-brand-bg border-b border-brand-border"
-    >
+    <section id="horarios" className="py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-brand-bg border-b border-brand-border">
       <div className="max-w-7xl mx-auto flex flex-col gap-10">
         <div className="max-w-2xl space-y-2">
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-brand-primaryText block">
@@ -33,7 +31,6 @@ export function ScheduleSection() {
           </p>
         </div>
 
-        {/* Layout invertido: Tarjeta de Sede y Horarios a la izquierda (5) + Grilla de Modalidades a la derecha (7) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           <div className="lg:col-span-5 p-6 sm:p-8 rounded-3xl bg-brand-surface border border-brand-border border-t-4 border-t-brand-primary shadow-xl flex flex-col justify-between gap-6">
             <div className="space-y-5">
@@ -57,11 +54,9 @@ export function ScheduleSection() {
                       key={row.days}
                       className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-brand-bg border border-brand-border"
                     >
-                      <span className="text-sm sm:text-[15px] font-bold text-brand-textPrimary">
-                        {row.days}
-                      </span>
+                      <span className="text-sm sm:text-[15px] font-bold text-brand-textPrimary">{row.days}</span>
                       <span
-                        className={`px-3 py-1 rounded-full font-mono text-xs sm:text-sm font-extrabold ${
+                        className={`px-3 py-1 rounded-full font-mono text-xs sm:text-sm font-extrabold whitespace-nowrap ${
                           isClosed
                             ? "bg-brand-surface text-brand-textSecondary border border-brand-border"
                             : "bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/40"

@@ -53,24 +53,25 @@ export function KpiCard({
     <button
       type="button"
       onClick={onClick}
-      className={`group w-full text-left p-4 sm:p-5 rounded-2xl bg-fx-surface border border-fx-border border-t-4 shadow-sm flex items-center justify-between gap-3 transition-all cursor-pointer min-h-[94px] ${toneCls.top} ${toneCls.ring}`}
+      className={`group w-full text-left p-4 rounded-2xl bg-fx-surface border border-fx-border border-t-4 shadow-sm flex flex-col justify-between gap-2 transition-all cursor-pointer min-h-[96px] ${toneCls.top} ${toneCls.ring}`}
     >
-      <div className="min-w-0 flex flex-col gap-1">
-        <span className="text-xs font-bold uppercase tracking-wider text-fx-muted truncate">
+      <div className="w-full flex items-center justify-between gap-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-fx-muted leading-tight">
           {label}
         </span>
-        <div className={`flex items-baseline gap-1.5 font-black tracking-tight ${toneCls.value}`}>
-          <span className="text-3xl font-mono leading-none">{value}</span>
-          <span className="text-sm font-semibold opacity-80">{unit}</span>
-        </div>
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-fx-muted group-hover:text-fx-text transition-colors mt-0.5">
-          <span className="truncate">{hint}</span>
-          <ArrowUpRight className="w-3.5 h-3.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
+        <span className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 ${toneCls.icon}`}>
+          <Icon className="w-4 h-4" />
         </span>
       </div>
 
-      <span className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${toneCls.icon}`}>
-        <Icon className="w-5 h-5" />
+      <div className={`flex items-baseline gap-1.5 font-black tracking-tight ${toneCls.value}`}>
+        <span className="text-2xl sm:text-3xl font-mono leading-none">{value}</span>
+        <span className="text-xs sm:text-sm font-semibold opacity-80 truncate">{unit}</span>
+      </div>
+
+      <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-fx-muted group-hover:text-fx-text transition-colors">
+        <span className="truncate">{hint}</span>
+        <ArrowUpRight className="w-3.5 h-3.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
       </span>
     </button>
   );

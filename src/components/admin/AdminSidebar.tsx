@@ -74,22 +74,21 @@ export function AdminSidebar({
 
   return (
     <>
-      {/* Escritorio: Dock horizontal de cápsulas redondeadas visibles simultáneamente */}
       <nav
         aria-label="Secciones del panel"
-        className="hidden lg:block rounded-3xl bg-fx-surface border border-fx-border p-2 shadow-sm"
+        className="hidden lg:block rounded-3xl bg-fx-surface border border-fx-border p-1.5 shadow-sm"
       >
-        <ul className="flex flex-wrap items-center gap-1.5">
+        <ul className="flex flex-wrap xl:flex-nowrap items-center justify-between gap-1">
           {ADMIN_SECTIONS.map(({ tab, label, icon: Icon, badge }) => {
             const active = activeTab === tab;
             const count = counts[tab];
             return (
-              <li key={tab}>
+              <li key={tab} className="shrink-0">
                 <button
                   type="button"
                   onClick={() => onSelect(tab)}
                   aria-current={active ? "page" : undefined}
-                  className={`min-h-[48px] px-4 rounded-2xl inline-flex items-center gap-2 text-[15px] font-bold transition-all cursor-pointer ${
+                  className={`min-h-[48px] px-2.5 xl:px-3 rounded-2xl inline-flex items-center justify-center gap-1.5 text-xs xl:text-[13px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                     active
                       ? "bg-fx-orange text-white shadow-md shadow-fx-orange/25"
                       : "text-fx-muted hover:text-fx-text hover:bg-fx-hover"
@@ -99,7 +98,7 @@ export function AdminSidebar({
                   <span>{label}</span>
                   {badge && count !== undefined && count > 0 && (
                     <span
-                      className={`font-mono font-bold rounded-full px-2 py-0.5 text-xs ${
+                      className={`font-mono font-bold rounded-full px-1.5 py-0.5 text-[11px] shrink-0 ${
                         active ? "bg-black/25 text-white" : BADGE_CLS[badge]
                       }`}
                     >

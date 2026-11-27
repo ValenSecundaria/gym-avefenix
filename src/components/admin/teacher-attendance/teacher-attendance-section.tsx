@@ -97,10 +97,10 @@ export function TeacherAttendanceSection() {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="min-h-[44px] px-4 rounded-xl bg-brand-primary hover:bg-brand-primaryHover hover:text-brand-bg text-white text-sm font-bold flex items-center gap-2 shadow-lg shadow-brand-primary/25 transition-all cursor-pointer"
+            className="min-h-[48px] px-4 rounded-2xl bg-brand-primary hover:bg-brand-primaryHover text-white text-sm font-bold flex items-center gap-2 shadow-lg shadow-brand-primary/25 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Fichar Profesor Manualmente</span>
+            <span>Fichar Profesor Manualmente</span>
           </button>
         </div>
       </div>

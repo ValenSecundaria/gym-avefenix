@@ -60,7 +60,7 @@ export function AdminMobileNav({
     <>
       <nav
         aria-label="Navegación principal móvil"
-        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-fx-surface/95 backdrop-blur border-t border-fx-border shadow-[0_-4px_20px_rgba(0,0,0,0.25)] pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-fx-surface border-t border-fx-border shadow-[0_-4px_20px_rgba(0,0,0,0.4)] pb-[env(safe-area-inset-bottom)]"
       >
         <div className="flex items-stretch gap-1 px-2 h-[76px] py-1.5">
           {tabButton(barSections[0])}

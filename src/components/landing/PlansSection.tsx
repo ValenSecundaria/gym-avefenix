@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import { CalendarDays, MapPin, MessageCircle, Percent, Tags } from "lucide-react";
 import { buildWhatsAppLink } from "@/lib/utils";
 import { useAuth } from "@/context/auth-session-context";
@@ -14,30 +14,24 @@ export interface PlansSectionProps {
   plans?: PlanOption[];
 }
 
+const subscribeNoop = () => () => {};
+
 export function PlansSection({ plans }: PlansSectionProps = {}) {
-  const { user } = useAuth();
-  const gymPhone = (user?.gymPhone || GYM_BRAND_CONFIG.contact.defaultWhatsapp).trim();
+  const { user: rawUser } = useAuth();
+  const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  const gymPhone = ((hydrated ? rawUser?.gymPhone : undefined) || GYM_BRAND_CONFIG.contact.defaultWhatsapp).trim();
   const hasWhatsapp = gymPhone.length > 0;
   const groups = plans ? groupPlansByDiscipline(plans) : [];
 
   const waLinkDiscount = hasWhatsapp
-    ? buildWhatsAppLink(
-        gymPhone,
-        `Hola ${GYM_BRAND_CONFIG.identity.name}! Quiero consultar por beneficios y descuentos disponibles.`
-      )
+    ? buildWhatsAppLink(gymPhone, `Hola ${GYM_BRAND_CONFIG.identity.name}! Quiero consultar por beneficios y descuentos disponibles.`)
     : "";
   const waLinkInfo = hasWhatsapp
-    ? buildWhatsAppLink(
-        gymPhone,
-        `Hola ${GYM_BRAND_CONFIG.identity.name}! Quiero consultar por los planes y aranceles vigentes.`
-      )
+    ? buildWhatsAppLink(gymPhone, `Hola ${GYM_BRAND_CONFIG.identity.name}! Quiero consultar por los planes y aranceles vigentes.`)
     : "";
 
   return (
-    <section
-      id="planes"
-      className="w-full bg-brand-bg px-4 sm:px-6 lg:px-8 py-20 lg:py-24 border-b border-brand-border"
-    >
+    <section id="planes" className="w-full bg-brand-bg px-4 sm:px-6 lg:px-8 py-20 lg:py-24 border-b border-brand-border">
       <div className="max-w-7xl mx-auto flex flex-col gap-12">
         <div className="flex flex-col items-center text-center gap-3 max-w-2xl mx-auto">
           <span className="px-3.5 py-1 rounded-full bg-brand-surface border border-brand-border text-xs font-bold uppercase tracking-[0.16em] text-brand-primaryText">
@@ -117,7 +111,6 @@ export function PlansSection({ plans }: PlansSectionProps = {}) {
           </div>
         )}
 
-        {/* Tarjeta de atención personalizada en sede */}
         <div className="w-full rounded-3xl bg-brand-surface border border-brand-border p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-lg">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-brand-warning/15 border border-brand-warning/40 flex items-center justify-center text-brand-warning shrink-0">

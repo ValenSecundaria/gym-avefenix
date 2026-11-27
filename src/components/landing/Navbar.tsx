@@ -14,12 +14,11 @@ const NAV_LINKS = [
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-50 w-full bg-brand-bg/90 backdrop-blur-xl border-b border-brand-border/80">
-      <div className="max-w-7xl mx-auto h-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-        {/* Identidad del gimnasio */}
+    <header className="sticky top-0 z-50 w-full bg-brand-bg/95 backdrop-blur-xl border-b border-brand-border/80 overflow-x-clip">
+      <div className="max-w-7xl mx-auto h-20 px-3.5 sm:px-6 lg:px-8 flex items-center justify-between gap-2.5 sm:gap-4">
         <Link
           href="/"
-          className="flex items-center gap-3.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-2xl pr-2"
+          className="min-w-0 flex-1 lg:flex-none flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-2xl pr-1"
         >
           <div className="relative w-11 h-11 rounded-2xl overflow-hidden bg-brand-surface border border-brand-border group-hover:border-brand-primary/70 shadow-sm flex items-center justify-center shrink-0 transition-colors">
             <Image
@@ -37,12 +36,11 @@ export function Navbar() {
             </span>
             <span className="text-xs text-brand-textSecondary inline-flex items-center gap-1 mt-0.5 truncate">
               <MapPin className="w-3 h-3 text-brand-primaryText shrink-0" aria-hidden="true" />
-              <span>{GYM_BRAND_CONFIG.contact.address} • {GYM_BRAND_CONFIG.identity.city}</span>
+              <span className="truncate">{GYM_BRAND_CONFIG.contact.address} • {GYM_BRAND_CONFIG.identity.city}</span>
             </span>
           </div>
         </Link>
 
-        {/* Cápsula central de navegación */}
         <nav
           aria-label="Navegación principal"
           className="hidden lg:flex items-center gap-1 p-1.5 rounded-full bg-brand-surface/90 border border-brand-border shadow-inner"
@@ -58,10 +56,9 @@ export function Navbar() {
           ))}
         </nav>
 
-        {/* Acceso / Login en esquina superior derecha */}
         <Link
           href="/login"
-          className="inline-flex items-center justify-center gap-2 min-h-[48px] px-5 rounded-full bg-brand-primary hover:bg-brand-primaryHover text-white text-sm font-bold tracking-wide shadow-md shadow-brand-primary/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 sm:gap-2 min-h-[48px] px-4 sm:px-5 rounded-full bg-brand-primary hover:bg-brand-primaryHover text-white text-xs sm:text-sm font-bold tracking-wide whitespace-nowrap shadow-md shadow-brand-primary/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary shrink-0"
         >
           <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
           <span>Acceso</span>

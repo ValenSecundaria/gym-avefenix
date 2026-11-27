@@ -65,10 +65,9 @@ export function PaymentsManagerView({ plans }: { plans: PlanOption[] }) {
 
   return (
     <div className="space-y-5 text-fx-text">
-      <div>
-        <h1 className="text-2xl font-bold">Pagos y Planes</h1>
-        <p className="text-[15px] text-fx-muted">Consultá y filtrá el historial de cobros realizados por plan, socio o fecha.</p>
-      </div>
+      <p className="text-[15px] text-fx-muted">
+        Consultá y filtrá el historial de cobros realizados por plan, socio o fecha.
+      </p>
 
       <PaymentsSummaryCards {...data.totals} />
 
@@ -93,7 +92,7 @@ export function PaymentsManagerView({ plans }: { plans: PlanOption[] }) {
               key={key}
               type="button"
               onClick={() => setDatePreset(key)}
-              className={`min-h-[48px] px-4 rounded-xl border text-[15px] font-medium transition ${
+              className={`min-h-[48px] px-4 rounded-xl border text-[15px] font-medium whitespace-nowrap transition ${
                 datePreset === key ? "bg-fx-orange border-fx-orange text-white" : "bg-fx-surface border-fx-border text-fx-muted hover:text-fx-text"
               }`}
             >{label}</button>

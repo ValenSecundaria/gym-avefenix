@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Clock, MapPin, MessageCircle, ShieldCheck } from "lucide-react";
@@ -10,16 +10,17 @@ import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 import { InstagramIcon, FacebookIcon } from "./footer-icons";
 import { FooterContactBanner } from "./FooterContactBanner";
 
+const subscribeNoop = () => () => {};
+
 export function Footer() {
-  const { user } = useAuth();
-  const gymPhone = (user?.gymPhone || GYM_BRAND_CONFIG.contact.defaultWhatsapp).trim();
+  const { user: rawUser } = useAuth();
+  const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  const gymPhone = ((hydrated ? rawUser?.gymPhone : undefined) || GYM_BRAND_CONFIG.contact.defaultWhatsapp).trim();
   const hasWhatsapp = gymPhone.length > 0;
   const hasInstagram = GYM_BRAND_CONFIG.contact.instagramUrl.trim().length > 0;
   const hasFacebook = Boolean(GYM_BRAND_CONFIG.contact.facebookUrl?.trim());
 
-  const whatsappUrl = hasWhatsapp
-    ? buildWhatsAppLink(gymPhone, GYM_BRAND_CONFIG.messages.generalInquiry())
-    : "";
+  const whatsappUrl = hasWhatsapp ? buildWhatsAppLink(gymPhone, GYM_BRAND_CONFIG.messages.generalInquiry()) : "";
 
   return (
     <footer id="contacto" className="w-full bg-brand-bg text-brand-textPrimary">
@@ -27,7 +28,6 @@ export function Footer() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-brand-border">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-10 border-b border-brand-border">
-          {/* Identidad */}
           <div className="md:col-span-5 space-y-4">
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl overflow-hidden bg-brand-surface border border-brand-border shrink-0">
@@ -92,11 +92,8 @@ export function Footer() {
             )}
           </div>
 
-          {/* Navegación y Horarios */}
           <div className="md:col-span-4 space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-brand-primaryText">
-              Sede y Horarios
-            </h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-brand-primaryText">Sede y Horarios</h3>
             <a
               href={GYM_BRAND_CONFIG.contact.googleMapsUrl}
               target="_blank"
@@ -118,7 +115,6 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Acceso al Sistema */}
           <div className="md:col-span-3 p-5 rounded-2xl bg-brand-surface border border-brand-border flex flex-col justify-between gap-4">
             <div className="space-y-1.5">
               <span className="text-xs font-bold uppercase tracking-wider text-brand-primaryText block">
@@ -130,23 +126,20 @@ export function Footer() {
             </div>
             <Link
               href="/login"
-              className="min-h-[48px] px-4 rounded-xl bg-brand-bg hover:bg-brand-surfaceHover border border-brand-border hover:border-brand-primary text-xs font-bold uppercase tracking-wider text-brand-textPrimary inline-flex items-center justify-between transition-colors"
+              className="min-h-[48px] px-4 rounded-xl bg-brand-bg hover:bg-brand-surfaceHover border border-brand-border hover:border-brand-primary text-xs font-bold uppercase tracking-wider text-brand-textPrimary whitespace-nowrap inline-flex items-center justify-between gap-2 transition-colors"
             >
               <span className="inline-flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-brand-primaryText" />
-                <span>Ingresar al Panel</span>
+                <ShieldCheck className="w-4 h-4 text-brand-primaryText shrink-0" />
+                <span>Ingresar</span>
               </span>
-              <ArrowUpRight className="w-4 h-4" />
+              <ArrowUpRight className="w-4 h-4 shrink-0" />
             </Link>
           </div>
         </div>
 
-        {/* Barra inferior de derechos */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-brand-textSecondary">
           <span>{GYM_BRAND_CONFIG.identity.footerTagline}</span>
-          <span>
-            {GYM_BRAND_CONFIG.identity.name} • {GYM_BRAND_CONFIG.contact.address}
-          </span>
+          <span>{GYM_BRAND_CONFIG.identity.name} • {GYM_BRAND_CONFIG.contact.address}</span>
         </div>
       </div>
     </footer>

@@ -1,17 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowRight,
-  Clock,
-  MapPin,
-  MessageCircle,
-  ShieldCheck,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { ArrowRight, Clock, MapPin, MessageCircle, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { useAuth } from "@/context/auth-session-context";
 import { buildWhatsAppLink } from "@/lib/utils";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
@@ -21,13 +13,15 @@ interface HeroProps {
   activeMembers?: number;
 }
 
+const subscribeNoop = () => () => {};
+
 export function Hero({ activeMembers }: HeroProps) {
-  const { user } = useAuth();
+  const { user: rawUser } = useAuth();
+  const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  const user = hydrated ? rawUser : null;
   const gymPhone = (user?.gymPhone || GYM_BRAND_CONFIG.contact.defaultWhatsapp).trim();
   const hasWhatsapp = gymPhone.length > 0;
-  const whatsappUrl = hasWhatsapp
-    ? buildWhatsAppLink(gymPhone, GYM_BRAND_CONFIG.messages.generalInquiry())
-    : "";
+  const whatsappUrl = hasWhatsapp ? buildWhatsAppLink(gymPhone, GYM_BRAND_CONFIG.messages.generalInquiry()) : "";
 
   const activeCount = typeof activeMembers === "number" ? activeMembers : 0;
   const mainSchedule = GYM_BRAND_CONFIG.contact.schedule[0];
@@ -37,14 +31,12 @@ export function Hero({ activeMembers }: HeroProps) {
       id="inicio"
       className="relative overflow-hidden bg-brand-bg pt-10 pb-16 sm:pt-14 sm:pb-24 px-4 sm:px-6 lg:px-8 border-b border-brand-border"
     >
-      {/* Resplandor ambiental suave */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-32 right-1/4 w-[480px] h-[480px] rounded-full bg-brand-primary/12 blur-[130px]"
       />
 
       <div className="relative z-10 max-w-7xl mx-auto flex flex-col gap-12 lg:gap-14">
-        {/* Bloque superior: División editorial 6 / 6 */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           <div className="lg:col-span-6 flex flex-col items-start text-left">
             <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-brand-surface border border-brand-border shadow-sm mb-6">
@@ -68,7 +60,7 @@ export function Hero({ activeMembers }: HeroProps) {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-h-[52px] px-7 rounded-2xl bg-brand-primary hover:bg-brand-primaryHover text-white font-bold text-base inline-flex items-center justify-center gap-2.5 shadow-lg shadow-brand-primary/25 transition-all"
+                  className="w-full sm:w-auto min-h-[52px] px-7 rounded-2xl bg-brand-primary hover:bg-brand-primaryHover text-white font-bold text-base inline-flex items-center justify-center gap-2.5 shadow-lg shadow-brand-primary/25 transition-all"
                 >
                   <MessageCircle className="w-5 h-5 shrink-0" aria-hidden="true" />
                   <span>Consultar por WhatsApp</span>
@@ -76,7 +68,7 @@ export function Hero({ activeMembers }: HeroProps) {
               ) : (
                 <a
                   href="#planes"
-                  className="min-h-[52px] px-7 rounded-2xl bg-brand-primary hover:bg-brand-primaryHover text-white font-bold text-base inline-flex items-center justify-center gap-2.5 shadow-lg shadow-brand-primary/25 transition-all"
+                  className="w-full sm:w-auto min-h-[52px] px-7 rounded-2xl bg-brand-primary hover:bg-brand-primaryHover text-white font-bold text-base inline-flex items-center justify-center gap-2.5 shadow-lg shadow-brand-primary/25 transition-all"
                 >
                   <span>Ver Planes y Modalidades</span>
                   <ArrowRight className="w-5 h-5 shrink-0" aria-hidden="true" />
@@ -87,7 +79,7 @@ export function Hero({ activeMembers }: HeroProps) {
                 href={GYM_BRAND_CONFIG.contact.googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-h-[52px] px-6 rounded-2xl bg-brand-surface hover:bg-brand-surfaceHover border border-brand-border hover:border-brand-primary/50 text-brand-textPrimary font-semibold text-base inline-flex items-center justify-center gap-2 transition-colors"
+                className="w-full sm:w-auto min-h-[52px] px-6 rounded-2xl bg-brand-surface hover:bg-brand-surfaceHover border border-brand-border hover:border-brand-primary/50 text-brand-textPrimary font-semibold text-base inline-flex items-center justify-center gap-2 transition-colors"
               >
                 <MapPin className="w-5 h-5 text-brand-primaryText shrink-0" aria-hidden="true" />
                 <span>Cómo llegar ({GYM_BRAND_CONFIG.contact.address})</span>
@@ -96,7 +88,7 @@ export function Hero({ activeMembers }: HeroProps) {
               {user && (
                 <Link
                   href={user.role === "ADMIN" ? "/admin" : "/profesor"}
-                  className="min-h-[52px] px-5 rounded-2xl border border-brand-primary/50 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primaryText font-bold text-sm inline-flex items-center gap-2 transition-colors"
+                  className="w-full sm:w-auto min-h-[52px] px-5 rounded-2xl border border-brand-primary/50 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primaryText font-bold text-sm inline-flex items-center justify-center gap-2 transition-colors"
                 >
                   <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
                   <span>Mi Panel ({user.name})</span>
@@ -104,7 +96,6 @@ export function Hero({ activeMembers }: HeroProps) {
               )}
             </div>
 
-            {/* Indicadores rápidos redondeados */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
               <div className="p-4 rounded-2xl bg-brand-surface border border-brand-border">
                 <div className="flex items-center gap-1.5 text-brand-primaryText text-xs font-bold uppercase tracking-wider mb-1">
@@ -135,7 +126,6 @@ export function Hero({ activeMembers }: HeroProps) {
             </div>
           </div>
 
-          {/* Columna derecha: Tarjeta visual destacada con acento superior */}
           <div className="lg:col-span-6">
             <div className="relative rounded-3xl bg-brand-surface border border-brand-border border-t-4 border-t-brand-primary p-3 sm:p-4 shadow-2xl">
               <div className="relative aspect-[16/11] w-full rounded-2xl overflow-hidden bg-brand-bg">
@@ -170,7 +160,6 @@ export function Hero({ activeMembers }: HeroProps) {
           </div>
         </div>
 
-        {/* Banda inferior Bento de 4 pilares */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PILLARS.map((pillar) => {
             const Icon = pillar.icon;
