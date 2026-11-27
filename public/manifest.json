@@ -1,16 +1,16 @@
 {
   "id": "/",
-  "name": "Punto Bahia GYM",
-  "short_name": "Punto Bahia",
-  "description": "Sistema de gestión y control de acceso de Punto Bahia GYM: panel de recepción y terminal de check-in para doble pantalla.",
+  "name": "LA ROCA GYM",
+  "short_name": "Roca GYM",
+  "description": "Sistema de gestión y control de acceso de LA ROCA GYM (Córdoba 535, Bahía Blanca): panel de recepción y terminal de check-in para doble pantalla.",
   "lang": "es-AR",
   "dir": "ltr",
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0D0F12",
-  "theme_color": "#2563EB",
+  "background_color": "#0A0B0D",
+  "theme_color": "#EAB308",
   "categories": ["business", "productivity", "health"],
   "launch_handler": {
     "client_mode": "focus-existing"

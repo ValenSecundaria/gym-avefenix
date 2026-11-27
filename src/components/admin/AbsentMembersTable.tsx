@@ -18,10 +18,10 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
 
   if (absentMembers.length === 0) {
     return (
-      <div className="bg-fx-surface border border-fx-border rounded-2xl p-10 text-center">
+      <div className="bg-fx-base border border-fx-border rounded-lg p-10 text-center">
         <CalendarClock className="w-10 h-10 text-fx-green mx-auto mb-3" />
         <h3 className="text-lg font-bold text-fx-text">Sin socios ausentes prolongados</h3>
-        <p className="text-sm text-fx-muted mt-1">
+        <p className="text-[15px] text-fx-muted mt-1">
           No hay socios con más de {ABSENT_DAYS_THRESHOLD} días sin asistir al gimnasio.
         </p>
       </div>
@@ -30,24 +30,22 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Banner de Recuperación (Stitch Screen 2 Tab C) */}
-      <div className="flex items-center justify-between p-4 rounded-xl bg-fx-amber/10 border border-fx-amber/40 text-fx-text">
+      <div className="flex items-center justify-between p-4 rounded-lg bg-fx-amber/10 border border-fx-amber/40 border-l-4 border-l-fx-amber text-fx-text">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-fx-amber/20 flex items-center justify-center text-fx-amber shrink-0">
+          <div className="w-11 h-11 rounded-md bg-fx-amber/20 flex items-center justify-center text-fx-amber shrink-0">
             <UserCheck className="w-6 h-6" />
           </div>
           <div>
-            <div className="font-bold text-base sm:text-lg text-fx-text">
-              {absentMembers.length} Socios Ausentes (+{ABSENT_DAYS_THRESHOLD} días sin marcar ingreso)
+            <div className="font-black uppercase tracking-tight text-base sm:text-lg text-fx-text">
+              {absentMembers.length} Socios Ausentes (+{ABSENT_DAYS_THRESHOLD} días sin asistir)
             </div>
-            <div className="text-xs text-fx-muted">
-              Dejaron de venir al gimnasio. Campaña de reactivación recomendada.
+            <div className="text-xs sm:text-sm text-fx-muted">
+              Dejaron de entrenar recientemente. Recontacto rápido recomendado.
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tarjetas de Recontacto */}
       <div className="flex flex-col gap-3">
         {absentMembers.map((member) => {
           const waMessage = GYM_BRAND_CONFIG.messages.absentMember({
@@ -58,10 +56,10 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
           return (
             <div
               key={member.id}
-              className="p-4 sm:p-5 rounded-xl bg-fx-base border border-fx-border hover:border-fx-amber/40 flex flex-wrap items-center justify-between gap-4 transition-colors"
+              className="p-4 sm:p-5 rounded-lg bg-fx-base border border-fx-border border-l-4 border-l-fx-amber hover:border-fx-amber/70 flex flex-wrap items-center justify-between gap-4 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-fx-amber/15 border border-fx-amber/40 overflow-hidden flex items-center justify-center text-fx-amber shrink-0">
+                <div className="w-12 h-12 rounded-md bg-fx-amber/15 border border-fx-amber/40 overflow-hidden flex items-center justify-center text-fx-amber shrink-0">
                   {member.photoUrl ? (
                     <MemberPhotoImg memberId={member.id} src={member.photoUrl} alt={member.fullName} className="w-full h-full object-cover" />
                   ) : (
@@ -71,8 +69,8 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
                 <div>
                   <div className="font-bold text-base sm:text-lg text-fx-text">{member.fullName}</div>
                   <div className="font-mono text-xs text-fx-muted mt-0.5 flex flex-wrap items-center gap-x-2">
-                    <span className="text-fx-amber font-semibold">
-                      Último ingreso: {member.daysAbsent} días atrás ({member.lastCheckInAt ? formatDateAR(member.lastCheckInAt) : "Sin ingresos"})
+                    <span className="text-fx-amber font-bold">
+                      Último ingreso: {member.daysAbsent}d atrás ({member.lastCheckInAt ? formatDateAR(member.lastCheckInAt) : "Sin ingresos"})
                     </span>
                     <span>•</span>
                     <span>Plan: {member.planName}</span>
@@ -86,7 +84,7 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
                 </div>
               </div>
 
-              <div className="w-full sm:w-auto flex items-center gap-2.5 [&>button:not(:last-child)]:flex-1 sm:[&>button]:flex-none [&>button]:justify-center">
+              <div className="w-full sm:w-auto flex items-center gap-2 [&>button:not(:last-child)]:flex-1 sm:[&>button]:flex-none [&>button]:justify-center">
                 {member.phone ? (
                   <button
                     type="button"
@@ -97,10 +95,10 @@ export function AbsentMembersTable({ absentMembers, onEditMember }: AbsentMember
                         defaultMessage: waMessage,
                       })
                     }
-                    className="min-h-[48px] px-5 rounded-xl bg-[#25D366] hover:bg-[#25D366]/90 text-brand-bg text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                    className="min-h-[48px] px-5 rounded-md bg-[#25D366] hover:bg-[#25D366]/90 text-[#0A0B0D] text-xs sm:text-sm font-black uppercase tracking-wide inline-flex items-center gap-2 transition-all cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4" />
-                    <span>Recontactar por WhatsApp</span>
+                    <span>Recontactar WhatsApp</span>
                   </button>
                 ) : null}
                 <EditMemberButton fullName={member.fullName} onClick={() => onEditMember(member.id)} />

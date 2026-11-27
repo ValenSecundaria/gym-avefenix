@@ -1,4 +1,4 @@
-import { Dumbbell, Flame, HeartPulse, Zap, type LucideIcon } from "lucide-react";
+import { Dumbbell, Flame, Gauge, Zap, type LucideIcon } from "lucide-react";
 
 export interface ModalityItem {
   name: string;
@@ -9,39 +9,43 @@ export interface ModalityItem {
   accent: string;
 }
 
-const STANDARD_SCHEDULE = "Lun a Vie 06:30–22:00 • Sáb 16:00–19:00";
+const WEEK_SHIFTS = "Lun a Vie 07:30–11:30 / 19:00–23:00 • Sáb 19:00–21:00";
 
 export const MODALITIES: ModalityItem[] = [
   {
-    name: "Sala de Musculación",
-    schedule: STANDARD_SCHEDULE,
-    level: "Fuerza e Hipertrofia",
-    description: "Zona completa de peso libre, mancuernas, racks y maquinaria biomecánica guiada para sobrecarga progresiva con profesores capacitados en sala.",
+    name: "Peso Libre & Fuerza Olímpica",
+    schedule: WEEK_SHIFTS,
+    level: "Sobrecarga Progresiva",
+    description:
+      "Racks de sentadilla, press plano e inclinado, peso muerto y mancuernas pesadas con seguimiento técnico en sala.",
     icon: Dumbbell,
     accent: "text-brand-primaryText",
   },
   {
-    name: "Entrenamiento Funcional",
-    schedule: STANDARD_SCHEDULE,
-    level: "Acondicionamiento Físico",
-    description: "Circuitos metabólicos y ejercicios multiarticulares orientados a potencia, agilidad, coordinación, core y resistencia cardiovascular.",
+    name: "Musculación en Máquinas",
+    schedule: WEEK_SHIFTS,
+    level: "Hipertrofia Guiada",
+    description:
+      "Equipamiento de acero guiado y estaciones de poleas para aislar cada grupo muscular con máxima estabilidad.",
+    icon: Gauge,
+    accent: "text-brand-primaryText",
+  },
+  {
+    name: "Acondicionamiento & Potencia",
+    schedule: WEEK_SHIFTS,
+    level: "Capacidad Atlética",
+    description:
+      "Circuitos dinámicos de empuje, tracción, zona media y resistencia metabólica adaptados a tu nivel.",
     icon: Flame,
     accent: "text-brand-warning",
   },
   {
-    name: "Cardio",
-    schedule: STANDARD_SCHEDULE,
-    level: "Salud y Resistencia",
-    description: "Cintas de alto rendimiento, bicicletas y sector aeróbico para maximizar la resistencia pulmonar y el gasto calórico.",
-    icon: HeartPulse,
-    accent: "text-[#10B981]",
-  },
-  {
-    name: "Entrenamiento Híbrido",
-    schedule: STANDARD_SCHEDULE,
-    level: "Alto Rendimiento",
-    description: "La sinergia ideal entre la fuerza y sobrecarga de la musculación con la intensidad metabólica del funcional para atletas integrales.",
+    name: "Cardio & Preparación Física",
+    schedule: WEEK_SHIFTS,
+    level: "Resistencia Aeróbica",
+    description:
+      "Cintas, bicicletas de aire y remos para entrada en calor, gasto calórico y salud cardiorrespiratoria.",
     icon: Zap,
-    accent: "text-brand-primaryText",
+    accent: "text-[#10B981]",
   },
 ];

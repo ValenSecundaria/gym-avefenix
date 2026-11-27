@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand Tokens White-Label (Valores HEX explícitos para soporte móvil) */
-  --brand-bg: #0D0F12;
-  --brand-surface: #181B20;
-  --brand-surface-hover: #232730;
-  --brand-border: #383F47;
-  --brand-primary: #2563EB;
-  --brand-primary-hover: #F97316;
-  --brand-primary-text: #60A5FA;
+  /* Brand Tokens White-Label — LA ROCA GYM (HEX explícitos de ficha) */
+  --brand-bg: #0A0B0D;
+  --brand-surface: #16181D;
+  --brand-surface-hover: #1F232B;
+  --brand-border: #2A2E37;
+  --brand-primary: #EAB308;
+  --brand-primary-hover: #CA8A04;
+  --brand-primary-text: #FACC15;
   --brand-alert: #DC2626;
   --brand-alert-text: #F87171;
-  --brand-warning: #FACC15;
+  --brand-warning: #F97316;
   --brand-text-primary: #F8FAFC;
   --brand-text-secondary: #94A3B8;
   --brand-success: #10B981;
@@ -49,9 +49,19 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+::selection {
+  background-color: #EAB308;
+  color: #0A0B0D;
+}
+
+/* Contraste WCAG AAA (10.27:1): tinta negra industrial sobre amarillo eléctrico #EAB308 */
+.bg-brand-primary,
+.bg-fx-orange {
+  color: #0A0B0D;
+}
+
 /* -------------------------------------------------------------
-   Tema del panel de administración (oscuro por defecto, claro opcional).
-   Los componentes de /admin usan solo estas variables (--fx-*).
+   Tema del panel de administración y profesores (--fx-*).
    ------------------------------------------------------------- */
 :root {
   --fx-base: var(--brand-bg);
@@ -69,17 +79,17 @@ body {
 }
 
 [data-theme="light"] {
-  --fx-base: #FAFAFA;
+  --fx-base: #F3F4F6;
   --fx-surface: #FFFFFF;
-  --fx-hover: #F4F4F5;
-  --fx-border: #E4E4E7;
-  --fx-text: #0D0F12;
-  --fx-muted: #52525B;
-  --fx-orange: #2563EB;
-  --fx-orange-text: #1D4ED8;
+  --fx-hover: #E5E7EB;
+  --fx-border: #CBD5E1;
+  --fx-text: #0A0B0D;
+  --fx-muted: #475569;
+  --fx-orange: #EAB308;
+  --fx-orange-text: #854D0E;
   --fx-red: #DC2626;
   --fx-red-text: #B91C1C;
-  --fx-amber: #B45309;
+  --fx-amber: #C2410C;
   --fx-green: #047857;
 }
 
@@ -99,10 +109,9 @@ body {
 }
 
 body:has([data-theme="light"]) {
-  background-color: #FAFAFA;
+  background-color: #F3F4F6;
 }
 
-/* Celulares: color-scheme dark fijo y prevención de desajustes */
 html {
   color-scheme: only dark;
   background-color: var(--brand-bg);
@@ -132,20 +141,19 @@ select:-webkit-autofill {
 [data-theme="light"] input:-webkit-autofill:focus,
 [data-theme="light"] textarea:-webkit-autofill,
 [data-theme="light"] select:-webkit-autofill {
-  -webkit-text-fill-color: #0D0F12;
-  caret-color: #0D0F12;
-  -webkit-box-shadow: 0 0 0 1000px #FAFAFA inset;
-  box-shadow: 0 0 0 1000px #FAFAFA inset;
+  -webkit-text-fill-color: #0A0B0D;
+  caret-color: #0A0B0D;
+  -webkit-box-shadow: 0 0 0 1000px #F3F4F6 inset;
+  box-shadow: 0 0 0 1000px #F3F4F6 inset;
 }
 
-/* Fallback para navegadores sin color-mix() */
 @supports not (color: color-mix(in srgb, red 50%, transparent)) {
-  [class^="bg-fx-orange/"], [class*=" bg-fx-orange/"] { background-color: rgba(37, 99, 235, 0.15); }
+  [class^="bg-fx-orange/"], [class*=" bg-fx-orange/"] { background-color: rgba(234, 179, 8, 0.16); }
   [class^="bg-fx-green/"], [class*=" bg-fx-green/"] { background-color: rgba(16, 185, 129, 0.15); }
   [class^="bg-fx-red/"], [class*=" bg-fx-red/"] { background-color: rgba(220, 38, 38, 0.15); }
-  [class^="bg-fx-amber/"], [class*=" bg-fx-amber/"] { background-color: rgba(250, 204, 21, 0.15); }
-  [class^="border-fx-orange/"], [class*=" border-fx-orange/"] { border-color: rgba(37, 99, 235, 0.5); }
+  [class^="bg-fx-amber/"], [class*=" bg-fx-amber/"] { background-color: rgba(249, 115, 22, 0.15); }
+  [class^="border-fx-orange/"], [class*=" border-fx-orange/"] { border-color: rgba(234, 179, 8, 0.5); }
   [class^="border-fx-green/"], [class*=" border-fx-green/"] { border-color: rgba(16, 185, 129, 0.5); }
   [class^="border-fx-red/"], [class*=" border-fx-red/"] { border-color: rgba(220, 38, 38, 0.5); }
-  [class^="border-fx-amber/"], [class*=" border-fx-amber/"] { border-color: rgba(250, 204, 21, 0.5); }
+  [class^="border-fx-amber/"], [class*=" border-fx-amber/"] { border-color: rgba(249, 115, 22, 0.5); }
 }

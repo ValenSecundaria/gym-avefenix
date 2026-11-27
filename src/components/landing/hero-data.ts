@@ -1,57 +1,50 @@
 import {
   Dumbbell,
-  Award,
+  Flame,
+  Gauge,
   ScanLine,
-  Activity,
-  ClipboardCheck,
-  Shield,
   type LucideIcon,
 } from "lucide-react";
 
-export interface MetricItem {
-  value: string;
-  label: string;
-  sub: string;
-  icon: LucideIcon;
-  accent: string;
-}
-
 export interface PillarItem {
+  code: string;
   title: string;
   description: string;
   tag: string;
   icon: LucideIcon;
 }
 
-export const STATIC_METRICS: MetricItem[] = [
-  { value: "100% Pro", label: "Equipamiento Biomecánico", sub: "Línea Importada Calibrada", icon: Dumbbell, accent: "text-brand-warning" },
-  { value: "Élite", label: "Entrenadores en Sala", sub: "Profesores Certificados y de Primer Nivel", icon: Award, accent: "text-[#10B981]" },
-  { value: "DNI Ágil", label: "Ingreso Automático", sub: "Ingreso Rápido y Seguro", icon: ScanLine, accent: "text-brand-primaryText" },
-];
-
 export const PILLARS: PillarItem[] = [
   {
-    title: "Zona Musculación y Fuerza",
-    description: "Equipamiento completo de peso libre, racks olímpicos y mancuernas de alto rendimiento para desarrollar fuerza y superar tus límites.",
-    tag: "Entrenamiento de Fuerza",
+    code: "01",
+    title: "Hierro Real & Peso Libre",
+    description:
+      "Jaulas olímpicas, barras calibradas, bancos de competencia y mancuernas pesadas para progresar carga semana a semana.",
+    tag: "Fuerza Pura",
     icon: Dumbbell,
   },
   {
-    title: "Sector Cardio & HIIT",
-    description: "Equipamiento aeróbico y entrenamiento de alta intensidad para mejorar tu resistencia, capacidad cardiovascular y rendimiento físico.",
-    tag: "Resistencia y Rendimiento",
-    icon: Activity,
+    code: "02",
+    title: "Parque de Máquinas",
+    description:
+      "Línea completa de máquinas biomecánicas y torres de poleas en acero industrial para hipertrofia localizada y segura.",
+    tag: "Musculación",
+    icon: Gauge,
   },
   {
-    title: "Rutinas Personalizadas",
-    description: "Planes de entrenamiento adaptados a tus objetivos, con acompañamiento y supervisión profesional en cada etapa.",
-    tag: "Seguimiento Continuo",
-    icon: ClipboardCheck,
+    code: "03",
+    title: "Potencia & Metabolismo",
+    description:
+      "Sector de acondicionamiento físico, resistencia muscular y trabajo cardiovascular para un rendimiento atlético completo.",
+    tag: "Acondicionamiento",
+    icon: Flame,
   },
   {
-    title: "Acceso Rápido y Seguro",
-    description: "Ingresá fácilmente con tu DNI mediante un sistema de acceso ágil y seguro, sin demoras ni esperas.",
-    tag: "Tecnología Ágil",
-    icon: Shield,
+    code: "04",
+    title: "Terminal DNI sin Demoras",
+    description:
+      "Ingreso directo con tu documento en mostrador con verificación instantánea de cuota vigente y cupo semanal.",
+    tag: "Control Ágil",
+    icon: ScanLine,
   },
 ];

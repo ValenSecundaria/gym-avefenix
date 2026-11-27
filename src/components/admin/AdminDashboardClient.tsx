@@ -1,91 +1,37 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { BarChart3, CheckCircle2, Search } from "lucide-react";
+import React, { useState, useCallback } from "react";
+import { CheckCircle2 } from "lucide-react";
 import type {
   AbsentMemberItem,
-  CachedMember,
   DashboardStats,
   DebtorMemberItem,
   LiveCheckInItem,
-  PaymentMethodType,
   PlanOption,
 } from "@/types";
 import { HeaderStats } from "./HeaderStats";
-import { HistoricalAttendanceSection } from "./attendance/historical-attendance-section";
-import { DebtorsTable } from "./DebtorsTable";
-import { AbsentMembersTable } from "./AbsentMembersTable";
-import { MetricsPanel } from "./MetricsPanel";
-import { ADMIN_SECTIONS, AdminSidebar } from "./AdminSidebar";
-import { NewMemberModal, type NewMemberFormValues } from "./NewMemberModal";
+import { AdminKpiStrip } from "./AdminKpiStrip";
+import { AdminSidebar } from "./AdminSidebar";
+import { AdminActiveModule } from "./AdminActiveModule";
+import { NewMemberModal } from "./NewMemberModal";
 import { PaymentModal } from "./PaymentModal";
-import { PendingMembersBanner } from "./PendingMembersBanner";
-import { MembersSection } from "./MembersSection";
 import { MemberEditModal } from "./MemberEditModal";
-import { PlansAdminSection } from "./PlansAdminSection";
-import { PaymentsManagerView } from "./payments/payments-manager-view";
-import { GymPhoneSettings } from "./gym-phone-settings";
-import { SystemTutorialsCard } from "./SystemTutorialsCard";
-import { WhatsAppModeSettings } from "./WhatsAppModeSettings";
-import { ProfessorAccountsSettings } from "./ProfessorAccountsSettings";
-import { TeacherAttendanceSection } from "./teacher-attendance/teacher-attendance-section";
-import { PROFESOR_HOME, roleOf } from "@/lib/auth/auth-constants";
-import { enqueuePendingMember, PendingDniError } from "@/lib/offline/pending-members-store";
-import { usePendingMembers } from "@/lib/offline/use-pending-members";
-import { usePhotoSync } from "@/lib/offline/use-local-photos";
-import {
-  attachStashedPhotoToMember,
-  attachStashedPhotoToPendingMember,
-  discardStashedPhoto,
-  stashNewMemberPhoto,
-} from "@/lib/offline/new-member-photo";
+import { PendingMembersBanner } from "./PendingMembersBanner";
 import { PendingPhotosNotice } from "./PendingPhotosNotice";
-import type { MemberSyncSummary } from "@/lib/offline/member-sync";
-import { createMember } from "@/actions/members.actions";
-import { registerPayment } from "@/actions/payments.actions";
-import { getDashboardOverview } from "@/actions/dashboard.actions";
-import { getTodayCheckIns } from "@/actions/checkin.actions";
 import { useAdminTheme, type AdminTheme } from "@/lib/use-admin-theme";
-import { gymBroadcast } from "@/lib/screens/broadcast-channel";
-import { useCheckInKeyForwarding } from "@/hooks/use-checkin-key-forwarding";
-import { dispatchScreens, closeSecondaryScreen, closeCurrentScreen } from "@/lib/screens/screen-dispatcher";
-import { useAuthSession } from "@/context/auth-session-context";
-import { matchesSearch } from "@/lib/text";
-import { useBatchSync } from "@/hooks/use-batch-sync";
-import {
-  saveMembersToCache,
-  updateMemberInCache,
-  getMemberFromCache,
-  getPendingCheckIns,
-} from "@/lib/db/indexed-db";
-import { getMemberPhotoUrl } from "@/lib/utils";
+import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
+import { useAdminDashboard } from "./use-admin-dashboard";
 
-// Ingresos de hoy que siguen en la cola local (todavía no subidos a la base en el lote horario).
-// La lista del servidor no los tiene: sin esto, cada refresco "borraba" los ingresos del día.
-async function getTodayLocalCheckIns(): Promise<LiveCheckInItem[]> {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const pending = await getPendingCheckIns();
-  const items: LiveCheckInItem[] = [];
-  for (const p of pending) {
-    if (new Date(p.createdAt) < startOfToday) continue;
-    // Ingresos encolados antes de que la cola guardara el nombre: se completan con la caché de socios.
-    const cached = p.fullName ? undefined : await getMemberFromCache(p.dni);
-    items.push({
-      id: `pending_${p.id}`,
-      memberId: p.memberId,
-      dni: p.dni,
-      fullName: p.fullName ?? cached?.fullName ?? `DNI ${p.dni}`,
-      photoUrl: getMemberPhotoUrl(p.dni, p.photoFilename ?? cached?.photoFilename),
-      planName: p.planName ?? cached?.planName ?? "Sin plan",
-      status: p.status,
-      createdAt: p.createdAt,
-    });
-  }
-  return items;
-}
-
-export type AdminTab = "LIVE_FEED" | "DEBTORS" | "PAYMENTS" | "ABSENT" | "MEMBERS" | "PLANS" | "TEACHER_ATTENDANCE" | "METRICS" | "SETTINGS";
+export type AdminTab =
+  | "LIVE_FEED"
+  | "DEBTORS"
+  | "PAYMENTS"
+  | "ABSENT"
+  | "MEMBERS"
+  | "PLANS"
+  | "TEACHER_ATTENDANCE"
+  | "METRICS"
+  | "SETTINGS";
 
 interface AdminDashboardClientProps {
   initialStats: DashboardStats;
@@ -104,382 +50,104 @@ export function AdminDashboardClient({
   plans: initialPlans,
   initialTheme,
 }: AdminDashboardClientProps) {
-  const [plans, setPlans] = useState<PlanOption[]>(initialPlans);
   const [activeTab, setActiveTab] = useState<AdminTab>("LIVE_FEED");
-  const [stats, setStats] = useState<DashboardStats>(initialStats);
-  const [serverCheckIns, setServerCheckIns] = useState<LiveCheckInItem[]>(initialCheckIns);
-  const [localCheckIns, setLocalCheckIns] = useState<LiveCheckInItem[]>([]);
-  const [debtors, setDebtors] = useState<DebtorMemberItem[]>(initialDebtors);
-  const [absentMembers, setAbsentMembers] = useState<AbsentMemberItem[]>(initialAbsent);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isNewMemberOpen, setIsNewMemberOpen] = useState(false);
   const [newMemberFormKey, setNewMemberFormKey] = useState(0);
-  const [selectedDebtor, setSelectedDebtor] = useState<DebtorMemberItem | null>(null);
-  const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
-  const [membersReloadKey, setMembersReloadKey] = useState(0);
-  const { theme, toggleTheme } = useAdminTheme(initialTheme);
-  const { status: authStatus, refreshSession, user } = useAuthSession();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
+  const { theme, toggleTheme } = useAdminTheme(initialTheme);
 
-  // Sigue enviando los ingresos por lote en segundo plano; ya no se muestra en pantalla.
-  useBatchSync();
-  // Sube en segundo plano las fotos de socios guardadas en esta PC (también las sacadas sin internet).
-  usePhotoSync();
+  const d = useAdminDashboard({
+    initialStats,
+    initialCheckIns,
+    initialDebtors,
+    initialAbsent,
+    initialPlans,
+  });
 
-  // Pantalla de ingreso (Check-In) en el otro monitor: estado y reenvío del teclado numérico.
-  const checkInScreenOnline = useCheckInKeyForwarding();
-
+  const canCreateMember = d.plans.length > 0;
   const goToTab = useCallback((tab: AdminTab) => {
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // Sin planes a la venta no hay alta posible: el botón se desactiva hasta crear uno.
-  const canCreateMember = plans.length > 0;
   const openNewMember = useCallback(() => {
     if (!canCreateMember) return;
     setNewMemberFormKey((k) => k + 1);
     setIsNewMemberOpen(true);
   }, [canCreateMember]);
 
-  useEffect(() => {
-    if (authStatus === "UNAUTHENTICATED") {
-      window.location.replace("/login");
-      return;
-    }
-    // Sin conexión el proxy no corre: la cuenta de profesor podría llegar acá desde la caché.
-    if (authStatus === "AUTHENTICATED" && roleOf(user) === "PROFESOR") {
-      window.location.replace(PROFESOR_HOME);
-      return;
-    }
-    const handlePageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) {
-        refreshSession().then((s) => {
-          if (!s) window.location.replace("/login");
-        });
-      }
-    };
-    window.addEventListener("pageshow", handlePageShow);
-    return () => window.removeEventListener("pageshow", handlePageShow);
-  }, [authStatus, refreshSession, user]);
-
-  // Las Server Actions se ejecutan en fila: si una actualización quedó esperando (red lenta),
-  // no se encolan más cada 15 s, porque trabarían todo lo demás del panel detrás de ellas.
-  const refreshInFlightRef = useRef(false);
-
-  const reloadLocalCheckIns = useCallback(async () => {
-    try {
-      setLocalCheckIns(await getTodayLocalCheckIns());
-    } catch {
-      // IndexedDB no disponible: solo se ven los ingresos ya subidos
-    }
-  }, []);
-
-  const refreshAllData = useCallback(async () => {
-    if (refreshInFlightRef.current) return;
-    refreshInFlightRef.current = true;
-    setIsRefreshing(true);
-    try {
-      const [overviewRes, checkInsRes] = await Promise.all([getDashboardOverview(), getTodayCheckIns()]);
-      if (overviewRes.success && overviewRes.data) {
-        setStats(overviewRes.data.stats);
-        setDebtors(overviewRes.data.debtors);
-        setAbsentMembers(overviewRes.data.absentMembers);
-        setPlans(overviewRes.data.plans);
-      }
-      if (checkInsRes.success && checkInsRes.data) setServerCheckIns(checkInsRes.data);
-    } catch {
-      // Sin conexión: se mantienen los datos previos
-    } finally {
-      // La cola se lee después de la consulta al servidor: si el lote se subió en el medio, no se duplica.
-      await reloadLocalCheckIns();
-      refreshInFlightRef.current = false;
-      setIsRefreshing(false);
-    }
-  }, [reloadLocalCheckIns]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      gymBroadcast.postMessage({ type: "CLOSE_ALL_SCREENS" });
-      closeSecondaryScreen();
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    const kickoffId = window.setTimeout(() => void reloadLocalCheckIns(), 0);
-    const interval = window.setInterval(refreshAllData, 15000);
-    const unsubscribe = gymBroadcast.subscribe((msg) => {
-      if (msg.type === "CHECKIN_LOGGED" && msg.checkIn) {
-        // El ingreso ya qued� en la cola local (IndexedDB compartida con la pantalla de Check-in).
-        void reloadLocalCheckIns();
-      } else if (msg.type === "REFRESH_DASHBOARD") {
-        refreshAllData();
-      } else if (msg.type === "CLOSE_ALL_SCREENS" || msg.type === "SESSION_LOGOUT") {
-        closeSecondaryScreen();
-        closeCurrentScreen();
-      }
-    });
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.clearTimeout(kickoffId);
-      window.clearInterval(interval);
-      unsubscribe();
-    };
-  }, [refreshAllData, reloadLocalCheckIns]);
-
-  const checkIns = [...localCheckIns, ...serverCheckIns].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const displayStats: DashboardStats = { ...stats, todayCheckIns: stats.todayCheckIns + localCheckIns.length };
-
-  const toastTimerRef = useRef<number | null>(null);
-  const showToast = useCallback((msg: string) => {
-    setFeedbackBanner(msg);
-    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = window.setTimeout(() => setFeedbackBanner(null), 5000);
-  }, []);
-
-  const handleMembersSynced = useCallback(
-    (summary: MemberSyncSummary) => {
-      const total = summary.created + summary.alreadySynced;
-      showToast(
-        total === 1
-          ? "Volvió la conexión: se subió 1 socio guardado en esta PC."
-          : `Volvió la conexión: se subieron ${total} socios guardados en esta PC.`
-      );
-      void refreshAllData();
-    },
-    [refreshAllData, showToast]
-  );
-  const pendingMembers = usePendingMembers(handleMembersSynced);
-
-  const handleCreateMember = async (v: NewMemberFormValues) => {
-    // La foto se guarda primero en esta PC y se sube aparte (ver lib/offline/photo-sync).
-    const stash = await stashNewMemberPhoto(v.photoBase64, v.dni);
-    const input = { ...v, photoBase64: stash.inlinePhoto };
-
-    const saveOffline = async () => {
-      try {
-        const pending = await enqueuePendingMember(input);
-        await attachStashedPhotoToPendingMember(stash, pending.clientId);
-        showToast(`Sin conexión: ${v.fullName} quedó guardado en esta PC y se subirá solo al volver internet.`);
-        return { success: true };
-      } catch (error) {
-        await discardStashedPhoto(stash);
-        return {
-          success: false,
-          error: error instanceof PendingDniError ? error.message : "No se pudo guardar el alta en esta PC.",
-        };
-      }
-    };
-
-    if (typeof navigator !== "undefined" && navigator.onLine === false) return saveOffline();
-
-    let res;
-    try {
-      res = await createMember(input);
-    } catch {
-      return saveOffline();
-    }
-    if (!res.success) await discardStashedPhoto(stash);
-    if (res.success && res.data) {
-      const createdItem = res.data;
-      await attachStashedPhotoToMember(stash, createdItem.id, createdItem.dni);
-      const cached: CachedMember = {
-        id: createdItem.id,
-        dni: createdItem.dni,
-        fullName: createdItem.fullName,
-        photoFilename: createdItem.photoFilename,
-        planName: createdItem.planName,
-        allowedDays: plans.find((p) => p.id === v.planId)?.allowedDaysPerWeek ?? null,
-        validUntil: createdItem.validUntil,
-        weeklyCheckIns: 0,
-        lastCheckInAt: null,
-      };
-      saveMembersToCache([cached]).catch(() => { });
-      gymBroadcast.postMessage({ type: "MEMBER_UPDATED", member: cached });
-      showToast(
-        v.planId
-          ? `Socio ${v.fullName} registrado y habilitado con éxito.`
-          : `Socio ${v.fullName} registrado sin plan: cobrale desde Deudores para habilitarlo.`
-      );
-      await refreshAllData();
-    }
-    return { success: res.success, error: res.error };
-  };
-
-  const handleConfirmPayment = async (payload: {
-    memberId: string;
-    planId: string;
-    amount: number;
-    method: PaymentMethodType;
-    notes?: string;
-  }) => {
-    const res = await registerPayment(payload);
-    if (res.success && res.data) {
-      if (selectedDebtor) {
-        updateMemberInCache(selectedDebtor.dni, {
-          validUntil: res.data.validUntil,
-          planName: res.data.planName,
-          allowedDays: plans.find((p) => p.id === payload.planId)?.allowedDaysPerWeek ?? null,
-        })
-          .then(() => getMemberFromCache(selectedDebtor.dni))
-          .then((updated) => {
-            if (updated) gymBroadcast.postMessage({ type: "MEMBER_UPDATED", member: updated });
-          })
-          .catch(() => { });
-      }
-      showToast(`Pago registrado (${res.data.planName}). Membresía renovada.`);
-      await refreshAllData();
-    }
-    return { success: res.success, error: res.error };
-  };
-
-  // TODO [TEMPORARY-TRANSITION]: regularización +30 días sin cobro (no registra Payment ni toca la caja).
-  const handleMemberSynced = (message: string) => {
-    showToast(message);
-    setMembersReloadKey((k) => k + 1);
-    void refreshAllData();
-  };
-
-  const q = searchQuery.trim();
-  const match = (name: string, dni: string) => !q || matchesSearch(name, q) || dni.includes(q);
-  const section = ADMIN_SECTIONS.find((s) => s.tab === activeTab) || ADMIN_SECTIONS[0];
-  const SectionIcon = section.icon;
-
   return (
     <div data-theme={theme} className="min-h-screen bg-fx-base text-fx-text flex flex-col">
-      <AdminSidebar
-        activeTab={activeTab}
-        onSelect={goToTab}
-        counts={{ LIVE_FEED: checkIns.length, DEBTORS: debtors.length, ABSENT: absentMembers.length }}
-        collapsed={sidebarCollapsed}
-        onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
-        mobileOpen={mobileMenuOpen}
-        onOpenMobile={() => setMobileMenuOpen(true)}
-        onCloseMobile={closeMobileMenu}
-        onOpenNewMember={openNewMember}
-        canCreateMember={canCreateMember}
-      />
-
-      <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-6 pb-28 lg:pb-10">
-        <div className="max-w-7xl mx-auto space-y-5">
+      <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-7 pb-28 lg:pb-12">
+        <div className="max-w-7xl mx-auto space-y-4">
           <HeaderStats
-            stats={displayStats}
+            stats={d.displayStats}
             onOpenNewMember={openNewMember}
-            onRefresh={refreshAllData}
-            isRefreshing={isRefreshing}
+            onRefresh={d.refreshAllData}
+            isRefreshing={d.isRefreshing}
             theme={theme}
             onToggleTheme={toggleTheme}
             onGoToTab={goToTab}
-            checkInScreenOnline={checkInScreenOnline}
+            checkInScreenOnline={d.checkInScreenOnline}
             onOpenCheckInScreen={() => void dispatchScreens()}
             canCreateMember={canCreateMember}
           />
 
+          <AdminKpiStrip stats={d.displayStats} activeTab={activeTab} onGoToTab={goToTab} />
+
+          <AdminSidebar
+            activeTab={activeTab}
+            onSelect={goToTab}
+            counts={{
+              LIVE_FEED: d.checkIns.length,
+              DEBTORS: d.debtors.length,
+              ABSENT: d.absentMembers.length,
+            }}
+            collapsed={sidebarCollapsed}
+            onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
+            mobileOpen={mobileMenuOpen}
+            onOpenMobile={() => setMobileMenuOpen(true)}
+            onCloseMobile={() => setMobileMenuOpen(false)}
+            onOpenNewMember={openNewMember}
+            canCreateMember={canCreateMember}
+          />
+
           <PendingMembersBanner
-            pending={pendingMembers.pending}
-            isSyncing={pendingMembers.isSyncing}
-            onSyncNow={() => void pendingMembers.syncNow()}
-            onDiscard={(clientId) => void pendingMembers.discard(clientId)}
+            pending={d.pendingMembers.pending}
+            isSyncing={d.pendingMembers.isSyncing}
+            onSyncNow={() => void d.pendingMembers.syncNow()}
+            onDiscard={(clientId) => void d.pendingMembers.discard(clientId)}
           />
           <PendingPhotosNotice />
 
-          {feedbackBanner && (
-            <div className="flex items-center gap-2.5 p-4 rounded-lg bg-fx-green/15 border border-fx-green text-sm font-bold text-fx-green">
+          {d.feedbackBanner && (
+            <div role="status" className="flex items-center gap-2.5 p-4 rounded-lg bg-fx-green/15 border border-fx-green text-[15px] font-bold text-fx-green">
               <CheckCircle2 className="w-5 h-5 shrink-0" />
-              <span>{feedbackBanner}</span>
+              <span>{d.feedbackBanner}</span>
             </div>
           )}
 
-          <div className="flex flex-col rounded-lg bg-fx-surface border-2 border-fx-border shadow-md p-4 sm:p-6 gap-5 sm:gap-6">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 sm:pb-5 border-b border-fx-border">
-              <div className="flex items-center gap-3 border-l-4 border-fx-orange pl-3">
-                <span className="w-10 h-10 rounded-md bg-fx-orange/15 flex items-center justify-center shrink-0">
-                  <SectionIcon className="w-5 h-5 text-fx-orangeText" />
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-fx-text">{section.label}</h2>
-              </div>
-
-              <div className={`relative w-full lg:w-80 ${activeTab === "METRICS" || activeTab === "PAYMENTS" || activeTab === "PLANS" || activeTab === "SETTINGS" || activeTab === "TEACHER_ATTENDANCE" ? "hidden" : ""}`}>
-                <Search className="w-5 h-5 text-fx-muted absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar por nombre o DNI..."
-                  className="w-full min-h-[48px] pl-12 pr-4 rounded-md bg-fx-base border-2 border-fx-border focus:border-fx-orange focus:outline-none text-base text-fx-text"
-                />
-              </div>
-            </div>
-
-            {activeTab === "LIVE_FEED" && (
-              <HistoricalAttendanceSection
-                todayCheckIns={checkIns}
-                onEditMember={setEditingMemberId}
-                onSuccessSync={showToast}
-                searchFilter={(fullName, dni) => match(fullName, dni)}
-              />
-            )}
-            {activeTab === "DEBTORS" && (
-              <DebtorsTable
-                debtors={debtors.filter((d) => match(d.fullName, d.dni))}
-                onRegisterPayment={setSelectedDebtor}
-                onEditMember={setEditingMemberId}
-              />
-            )}
-            {activeTab === "ABSENT" && (
-              <AbsentMembersTable
-                absentMembers={absentMembers.filter((a) => match(a.fullName, a.dni))}
-                onEditMember={setEditingMemberId}
-              />
-            )}
-            {activeTab === "MEMBERS" && (
-              <MembersSection
-                searchQuery={searchQuery}
-                reloadKey={membersReloadKey}
-                onEditMember={setEditingMemberId}
-                onSynced={handleMemberSynced}
-              />
-            )}
-            {activeTab === "PAYMENTS" && roleOf(user) !== "PROFESOR" && (
-              <div className="hidden lg:block">
-                <PaymentsManagerView plans={plans} />
-              </div>
-            )}
-            {activeTab === "PLANS" && (
-              <PlansAdminSection
-                onChanged={(msg) => {
-                  showToast(msg);
-                  void refreshAllData();
-                }}
-              />
-            )}
-            {activeTab === "TEACHER_ATTENDANCE" && <TeacherAttendanceSection />}
-            {activeTab === "METRICS" && (
-              <>
-                {/* Los gráficos no entran bien en el celular: ahí no se muestran. */}
-                <div className="hidden lg:block">
-                  <MetricsPanel stats={displayStats} onGoToTab={goToTab} />
-                </div>
-                <div className="lg:hidden p-8 text-center rounded-2xl bg-fx-base border border-fx-border">
-                  <BarChart3 className="w-10 h-10 text-fx-muted mx-auto mb-3" />
-                  <p className="text-lg font-bold text-fx-text">Las métricas se ven en la computadora</p>
-                </div>
-              </>
-            )}
-            {activeTab === "SETTINGS" && (
-              <div className="flex flex-col gap-10">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                  <GymPhoneSettings />
-                  <SystemTutorialsCard />
-                </div>
-                <WhatsAppModeSettings />
-                <ProfessorAccountsSettings />
-              </div>
-            )}
-          </div>
+          <AdminActiveModule
+            activeTab={activeTab}
+            user={d.user}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            checkIns={d.checkIns}
+            debtors={d.debtors}
+            absentMembers={d.absentMembers}
+            plans={d.plans}
+            displayStats={d.displayStats}
+            membersReloadKey={d.membersReloadKey}
+            onEditMember={setEditingMemberId}
+            onSelectDebtor={d.setSelectedDebtor}
+            onShowToast={d.showToast}
+            onRefreshAll={d.refreshAllData}
+            onMemberSynced={d.handleMemberSynced}
+            onGoToTab={goToTab}
+          />
         </div>
       </div>
 
@@ -487,25 +155,25 @@ export function AdminDashboardClient({
         key={newMemberFormKey}
         isOpen={isNewMemberOpen && canCreateMember}
         onClose={() => setIsNewMemberOpen(false)}
-        plans={plans}
-        onSubmitMember={handleCreateMember}
+        plans={d.plans}
+        onSubmitMember={d.handleCreateMember}
       />
       <MemberEditModal
         memberId={editingMemberId}
-        plans={plans}
+        plans={d.plans}
         onClose={() => setEditingMemberId(null)}
         onChanged={(msg) => {
-          showToast(msg);
-          setMembersReloadKey((k) => k + 1);
-          void refreshAllData();
+          d.showToast(msg);
+          d.setMembersReloadKey((k) => k + 1);
+          void d.refreshAllData();
         }}
       />
       <PaymentModal
-        key={selectedDebtor?.id ?? "none"}
-        debtor={selectedDebtor}
-        plans={plans}
-        onClose={() => setSelectedDebtor(null)}
-        onConfirmPayment={handleConfirmPayment}
+        key={d.selectedDebtor?.id ?? "none"}
+        debtor={d.selectedDebtor}
+        plans={d.plans}
+        onClose={() => d.setSelectedDebtor(null)}
+        onConfirmPayment={d.handleConfirmPayment}
       />
     </div>
   );

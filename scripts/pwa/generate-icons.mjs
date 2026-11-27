@@ -7,8 +7,8 @@ import sharp from "sharp";
 const ROOT = process.cwd();
 const SOURCE = path.join(ROOT, "public", "brand", "logo.png");
 const OUT_DIR = path.join(ROOT, "public", "icons");
-// Fondo carbón pizarra oficial de Punto Bahia GYM (#0D0F12) para integrar el logo sin bordes visibles.
-const BACKGROUND = { r: 13, g: 15, b: 18, alpha: 1 };
+// Fondo negro mate oficial de LA ROCA GYM (#0A0B0D) para integrar el emblema sin bordes visibles.
+const BACKGROUND = { r: 10, g: 11, b: 13, alpha: 1 };
 
 async function renderIcon(size, fileName, safeZoneRatio = 1) {
   const inner = Math.round(size * safeZoneRatio);
@@ -27,5 +27,4 @@ async function renderIcon(size, fileName, safeZoneRatio = 1) {
 await mkdir(OUT_DIR, { recursive: true });
 await renderIcon(192, "icon-192x192.png");
 await renderIcon(512, "icon-512x512.png");
-// Maskable: el contenido debe quedar dentro de la "safe zone" (80% central) para no recortarse.
 await renderIcon(512, "icon-maskable-512x512.png", 0.8);

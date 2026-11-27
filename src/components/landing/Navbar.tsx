@@ -1,72 +1,73 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShieldCheck } from "lucide-react";
+import { MapPin, ShieldCheck } from "lucide-react";
 import { GYM_BRAND_CONFIG } from "@/config/brand.config";
 
 const NAV_LINKS = [
-  { num: "01", label: "Inicio", href: "#inicio" },
-  { num: "02", label: "Espacios", href: "#instalaciones" },
-  { num: "03", label: "Planes", href: "#planes" },
-  { num: "04", label: "Horarios", href: "#horarios" },
-  { num: "05", label: "Contacto", href: "#contacto" },
+  { label: "Inicio", href: "#inicio" },
+  { label: "Instalaciones", href: "#instalaciones" },
+  { label: "Planes", href: "#planes" },
+  { label: "Horarios", href: "#horarios" },
+  { label: "Ubicación", href: "#contacto" },
 ];
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-50 w-full px-3 sm:px-6 pt-3 pointer-events-none">
-      <div className="pointer-events-auto max-w-7xl mx-auto h-[72px] px-4 sm:px-5 rounded-lg bg-brand-bg/90 backdrop-blur-xl border-2 border-brand-border shadow-2xl flex items-center justify-between gap-4">
-        {/* Identidad con acento lateral industrial */}
+    <header className="sticky top-0 z-50 w-full bg-brand-bg/95 backdrop-blur-md border-b-2 border-brand-primary/85">
+      <div className="max-w-7xl mx-auto h-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
         <Link
           href="/"
-          className="flex items-center gap-3 pl-2.5 border-l-4 border-brand-primary group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-sm"
+          className="flex items-center gap-3.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-md pr-2"
         >
-          <div className="relative w-10 h-10 rounded-md overflow-hidden bg-brand-surface border border-brand-border flex items-center justify-center shrink-0 group-hover:border-brand-primary transition-colors">
+          <div className="relative w-12 h-12 rounded-md overflow-hidden bg-brand-surface border-2 border-brand-border group-hover:border-brand-primary flex items-center justify-center shrink-0 transition-colors">
             <Image
               src={GYM_BRAND_CONFIG.assets.logoMain}
               alt={GYM_BRAND_CONFIG.identity.name}
-              width={40}
-              height={40}
+              width={48}
+              height={48}
               className="w-full h-full object-cover"
               priority
             />
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm sm:text-base font-black tracking-tight text-brand-textPrimary uppercase leading-none">
-              {GYM_BRAND_CONFIG.identity.shortName}
+          <div className="flex flex-col min-w-0">
+            <span className="text-base sm:text-lg font-black uppercase tracking-wider text-brand-textPrimary leading-none truncate">
+              {GYM_BRAND_CONFIG.identity.name}
             </span>
-            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-brand-primaryText mt-1">
-              {GYM_BRAND_CONFIG.identity.subdivision}
+            <span className="font-mono text-[11px] sm:text-xs text-brand-textSecondary inline-flex items-center gap-1 mt-1 truncate">
+              <MapPin className="w-3.5 h-3.5 text-brand-primaryText shrink-0" aria-hidden="true" />
+              <span>{GYM_BRAND_CONFIG.contact.address} {"//"} {GYM_BRAND_CONFIG.identity.city}</span>
             </span>
           </div>
         </Link>
 
-        {/* Navegación numerada estilo técnico */}
-        <nav aria-label="Navegación principal" className="hidden lg:flex items-center gap-1">
-          {NAV_LINKS.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="group px-3 py-2 rounded-md text-xs font-extrabold uppercase tracking-wider text-brand-textSecondary hover:text-brand-textPrimary hover:bg-brand-surface transition-colors inline-flex items-center gap-1.5"
-            >
-              <span className="font-mono text-[10px] text-brand-primaryText opacity-75 group-hover:opacity-100">
-                {item.num}
-              </span>
-              <span>{item.label}</span>
-            </a>
+        <nav
+          aria-label="Navegación principal"
+          className="hidden lg:flex items-center bg-brand-surface border border-brand-border rounded-md px-2 py-1"
+        >
+          {NAV_LINKS.map((item, idx) => (
+            <React.Fragment key={item.href}>
+              {idx > 0 && (
+                <span aria-hidden="true" className="text-brand-border font-mono text-xs select-none px-1">
+                  /
+                </span>
+              )}
+              <a
+                href={item.href}
+                className="min-h-[40px] px-3.5 inline-flex items-center rounded-sm text-xs font-extrabold uppercase tracking-wider text-brand-textSecondary hover:text-brand-primaryText hover:bg-brand-surfaceHover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              >
+                {item.label}
+              </a>
+            </React.Fragment>
           ))}
         </nav>
 
-        {/* Botón Login superior derecho */}
         <Link
           href="/login"
-          className="group relative inline-flex items-center justify-center gap-2 min-h-[48px] px-4 sm:px-5 rounded-full bg-brand-surface/90 hover:bg-brand-primary/15 border border-brand-primary/50 hover:border-brand-primary text-brand-textPrimary text-xs sm:text-sm font-extrabold uppercase tracking-wider shadow-sm hover:shadow-[0_0_18px_-3px_var(--color-brand-primary,#ef4444)] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+          className="inline-flex items-center justify-center gap-2 min-h-[48px] px-5 rounded-md bg-brand-primary hover:bg-brand-primaryHover text-[#0A0B0D] text-xs sm:text-sm font-black uppercase tracking-wider border border-brand-primary shadow-md shadow-brand-primary/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg shrink-0"
         >
-          <ShieldCheck
-            className="w-4 h-4 shrink-0 text-brand-primary transition-transform duration-200 group-hover:scale-110"
-            aria-hidden="true"
-          />
-          <span>Login</span>
+          <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span>Acceso</span>
         </Link>
       </div>
     </header>
