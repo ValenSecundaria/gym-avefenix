@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import {
   Clock,
   Dumbbell,
@@ -179,7 +178,7 @@ export function ScheduleSection() {
               </p>
             </div>
 
-            <div className="lg:col-span-5 flex flex-col p-6 rounded-2xl bg-[#0B0B0C] border border-[#2C2D35]">
+            <div className="lg:col-span-5 flex flex-col justify-between p-6 rounded-2xl bg-[#0B0B0C] border border-[#2C2D35]">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#8A909A]">Estado en Vivo</span>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#10B981]/15 text-[#10B981] text-xs font-bold uppercase">
@@ -187,17 +186,13 @@ export function ScheduleSection() {
                   Sede Operativa
                 </span>
               </div>
-              <div className="flex flex-col items-center text-center py-5 px-4 rounded-xl bg-[#17171C] border border-[#2C2D35] mb-4">
+              <div className="flex flex-col items-center text-center py-6 px-4 rounded-xl bg-[#17171C] border border-[#2C2D35]">
                 <QrCode className="w-10 h-10 text-[#F95716] mb-2" aria-hidden="true" />
                 <span className="text-sm font-bold uppercase tracking-wider text-[#F4F5F7]">Terminal de Autoconsulta Activa</span>
-                <span className="text-xs text-[#8A909A] mt-0.5">Validación instantánea de ingreso con tu DNI</span>
+                <span className="text-xs text-[#8A909A] mt-1 leading-relaxed">
+                  Validación instantánea de ingreso con tu DNI directamente en el molinete de recepción.
+                </span>
               </div>
-              <Link
-                href="/check-in"
-                className="w-full min-h-[48px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#23232A] hover:bg-[#F95716] text-[#F4F5F7] text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors"
-              >
-                Ir a Terminal de Check-In
-              </Link>
             </div>
           </div>
         </GlowCard>

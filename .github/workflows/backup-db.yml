@@ -1,0 +1,46 @@
+name: Backup Semanal Base de Datos (Neon -> Cloudflare R2)
+
+on:
+  # Permite ejecutar el backup manualmente en cualquier momento desde la pestaña Actions
+  workflow_dispatch:
+  # Se ejecuta automáticamente 1 vez por semana: todos los domingos a las 04:00 UTC (01:00 AM Argentina)
+  schedule:
+    - cron: '0 2 * * 0'
+
+jobs:
+  backup-postgres:
+    name: Extraer Dump y Subir a R2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Instalar cliente PostgreSQL (pg_dump) y AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client awscli
+
+      - name: Generar respaldo comprimido desde Neon
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M")
+          BACKUP_FILE="backup_gym_${TIMESTAMP}.sql.gz"
+          echo "BACKUP_FILE=${BACKUP_FILE}" >> $GITHUB_ENV
+          
+          pg_dump "$DATABASE_URL" --no-owner --no-acl | gzip > "$BACKUP_FILE"
+          
+          # Verificar que el archivo pesa más de 0 bytes
+          if [ ! -s "$BACKUP_FILE" ]; then
+            echo "Error: El archivo de backup está vacío."
+            exit 1
+          fi
+          ls -lh "$BACKUP_FILE"
+
+      - name: Subir archivo a Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: |
+          aws s3 cp "$BACKUP_FILE" "s3://${R2_BUCKET_NAME}/${BACKUP_FILE}" --endpoint-url "$R2_ENDPOINT"

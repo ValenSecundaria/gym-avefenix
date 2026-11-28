@@ -88,7 +88,9 @@ model Member {
   fullName       String
   phone          String?
   photoFilename  String?
-  isActive       Boolean       @default(true)
+  // Momento en que se sacó la foto actual (en el dispositivo). Una foto sacada sin internet que se sube
+  // tarde no reemplaza a una más nueva cargada mientras tanto.
+isActive       Boolean       @default(true)
   notes          String?
   lastNotifiedAt DateTime?
 

@@ -60,6 +60,8 @@ export interface DebtorMemberItem {
   planPrice: number;
   validUntil: string | null;
   daysOverdue: number;
+  /** Último aviso por WhatsApp despachado desde el panel. */
+  lastNotifiedAt: string | null;
 }
 
 export interface AbsentMemberItem {
@@ -71,6 +73,8 @@ export interface AbsentMemberItem {
   planName: string;
   lastCheckInAt: string | null;
   daysAbsent: number;
+  /** Último aviso por WhatsApp despachado desde el panel. */
+  lastNotifiedAt: string | null;
 }
 
 // -------------------------------------------------------------
@@ -172,9 +176,13 @@ export interface MemberListItem {
   photoFilename: string | null;
   photoUrl: string | null;
   isActive: boolean;
+  /** Plan de la última membresía (null si nunca tuvo). */
+  planId: string | null;
   planName: string;
   membershipStatus: MembershipStatusType | "SIN_MEMBRESIA";
   validUntil: string | null;
+  /** Último aviso por WhatsApp despachado desde el panel. */
+  lastNotifiedAt?: string | null;
 }
 
 export type MemberStatusFilter = "ALL" | "ACTIVA" | "VENCIDA" | "SIN_MEMBRESIA";

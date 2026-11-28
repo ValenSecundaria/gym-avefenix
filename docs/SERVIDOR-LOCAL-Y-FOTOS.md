@@ -44,3 +44,34 @@ powershell -ExecutionPolicy Bypass -File scripts\local\start-server.ps1 -Rebuild
 ## Fotos que ya estaban cargadas
 
 Las fotos subidas mientras el sistema corría en Vercel no se pueden recuperar (ese disco ya se borró). Esos socios muestran la imagen por defecto; se les puede sacar la foto de nuevo desde **Editar socio → Cambiar foto**.
+
+## Fotos offline-first + Supabase Storage (bucket privado)
+
+### Cómo funciona
+1. **Primero en el dispositivo.** Al sacar o subir una foto (alta o "Cambiar foto"), se achica a 400×400 WebP (~30 KB) y se guarda en el navegador (IndexedDB `gym_photo_store`). Recién después se intenta subir. Si no hay internet, la foto se ve igual en el panel y en la pantalla de ingreso.
+2. **Subida automática.** Al abrir el panel, al volver internet, al guardar una foto nueva y cada 30 s, las fotos pendientes se mandan al servidor (`uploadMemberPhoto`). Una sola subida a la vez aunque haya varias ventanas abiertas.
+3. **Sin duplicados.** El nombre del archivo sale del DNI y del momento exacto en que se sacó la foto (`member-DNI-<ms>.webp`). Si una subida se repite (respuesta perdida, corte a mitad), se reescribe el mismo archivo y la base queda igual.
+4. **Socio correcto.** La foto queda asociada por id del socio. Las fotos de altas hechas sin internet se asocian al socio real cuando el alta se sube. Una foto vieja que se sube tarde no reemplaza a una más nueva (columna `photoUpdatedAt`).
+5. **Estados** de cada foto en el dispositivo: pendiente, sincronizando, sincronizada o error. La ficha del socio muestra el estado de su foto y el panel avisa cuántas faltan subir (botón "Subir ahora"). Si falla, la foto queda guardada y se reintenta cada vez más espaciado (hasta 30 min).
+6. **Nunca se pierde una foto.** La copia del dispositivo se borra recién cuando el servidor confirmó que la guardó (y pasados 30 días, o si hay una foto sincronizada más nueva del mismo socio). Al reemplazar la foto de un socio, la anterior no se borra.
+7. **Bucket privado.** Nadie lee el bucket directo: `/api/members/[dni]/photo` busca primero la copia en el disco de la notebook y si no está, la baja de Supabase con la clave del servidor (y en la notebook guarda una copia para verla sin internet).
+
+### Configuración (una sola vez)
+1. Crear un proyecto gratis en https://supabase.com (el plan Free alcanza: 1 GB; 300 socios ≈ 10 MB).
+2. *Storage* → *New bucket* → nombre `member-photos` → **NO** marcar "Public bucket".
+3. *Project Settings* → *API*: copiar la **Project URL** y la clave **service_role** (secreta: solo va en el servidor, nunca en el navegador ni en el repositorio).
+4. Cargar las variables en Vercel (*Settings → Environment Variables*) y en el `.env` de la notebook:
+   ```env
+   SUPABASE_URL="https://xxxxxxxx.supabase.co"
+   SUPABASE_SERVICE_ROLE_KEY="eyJ..."
+   # Opcional, si el bucket tiene otro nombre:
+   SUPABASE_PHOTOS_BUCKET="member-photos"
+   ```
+5. Agregar la columna nueva en la base (una sola vez, desde una PC con el `.env` de producción):
+   ```powershell
+   npx prisma db push
+   ```
+   Solo agrega `Member.photoUpdatedAt` (vacía): no toca datos existentes.
+6. Volver a desplegar.
+
+Sin Supabase configurado: con el servidor en la notebook las fotos se guardan en disco como siempre; en Vercel quedan guardadas en cada dispositivo (no se pierden) y se suben cuando se configure Supabase.

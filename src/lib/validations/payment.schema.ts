@@ -24,3 +24,13 @@ export const createPaymentSchema = z.object({
 });
 
 export type CreatePaymentInput = z.infer<typeof createPaymentSchema>;
+
+// Renovación rápida: sin plan elegido se mantiene el plan actual del socio.
+export const quickRenewalSchema = z.object({
+  memberId: z.string().trim().min(1, "El identificador del socio es obligatorio"),
+  planId: z.string().trim().min(1).optional(),
+  amount: z.coerce.number().positive("El monto a cobrar debe ser mayor a cero").optional(),
+  method: z.enum(["EFECTIVO", "TRANSFERENCIA"]),
+});
+
+export type QuickRenewalInput = z.infer<typeof quickRenewalSchema>;

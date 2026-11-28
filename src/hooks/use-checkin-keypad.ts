@@ -26,6 +26,16 @@ export function useCheckInKeypad(
     const unsub = gymBroadcast.subscribe((msg) => {
       if (msg.type === "CHECKIN_KEY") onKeyEvt(msg.key);
       else if (msg.type === "RESET_CHECKIN") onResetEvt();
+      else if (msg.type === "CLOSE_ALL_SCREENS" || msg.type === "SESSION_LOGOUT") {
+        try {
+          window.close();
+        } catch {
+          // ignore
+        }
+        if (!window.closed) {
+          window.location.replace("/login");
+        }
+      }
     });
     const aliveId = window.setInterval(() => gymBroadcast.postMessage({ type: "CHECKIN_ALIVE" }), 2000);
     requestFullscreen();

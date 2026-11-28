@@ -1,4 +1,5 @@
 import React, { Suspense } from "react";
+import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { connection } from "next/server";
 import { Navbar } from "@/components/landing/Navbar";
@@ -8,6 +9,52 @@ import { ScheduleSection } from "@/components/landing/ScheduleSection";
 import { Footer } from "@/components/landing/Footer";
 import { getActiveMembersCount } from "@/actions/dashboard.actions";
 import { getPublicPlans } from "@/lib/public-plans";
+import { getSiteUrl } from "@/lib/site-url";
+
+const SEO_TITLE = "Gimnasio Ave Fénix | Musculación y Funcional en Ingeniero White";
+const SEO_DESCRIPTION =
+  "Gimnasio Ave Fénix en Ingeniero White (Bahía Blanca): musculación, funcional y planes mensuales o por día. Conocé horarios, precios y escribinos por WhatsApp.";
+
+export const metadata: Metadata = {
+  title: SEO_TITLE,
+  description: SEO_DESCRIPTION,
+  keywords: ["gimnasio", "Ingeniero White", "Bahía Blanca", "musculación", "funcional", "Ave Fénix", "planes de gimnasio"],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    url: "/",
+    siteName: "Gimnasio Ave Fénix",
+    title: SEO_TITLE,
+    description: SEO_DESCRIPTION,
+    images: [{ url: "/Portada1.png", alt: "Gimnasio Ave Fénix" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SEO_TITLE,
+    description: SEO_DESCRIPTION,
+    images: ["/Portada1.png"],
+  },
+  robots: { index: true, follow: true },
+};
+
+// Datos estructurados (schema.org) para que Google muestre el gimnasio con dirección y contacto.
+const GYM_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "ExerciseGym",
+  name: "Gimnasio Ave Fénix",
+  description: SEO_DESCRIPTION,
+  image: new URL("/Portada1.png", getSiteUrl()).toString(),
+  url: getSiteUrl().origin,
+  telephone: "+5492915768403",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Lautaro 3322",
+    addressLocality: "Ingeniero White",
+    addressRegion: "Buenos Aires",
+    addressCountry: "AR",
+  },
+};
 
 const Files = dynamic(
   () => import("@/components/landing/Files").then((mod) => mod.Files),
@@ -42,6 +89,11 @@ async function PlansWithData() {
 export default function PublicLandingPage() {
   return (
     <div className="min-h-screen bg-[#0B0B0C] text-[#F4F5F7] flex flex-col">
+      <script
+        type="application/ld+json"
+        // Contenido fijo del propio sitio (no viene del usuario).
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(GYM_JSON_LD).replace(/</g, "\\u003c") }}
+      />
       <Navbar />
       <main className="flex-1">
         <Suspense fallback={<Hero />}>

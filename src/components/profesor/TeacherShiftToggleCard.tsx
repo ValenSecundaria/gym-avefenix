@@ -36,11 +36,15 @@ export function TeacherShiftToggleCard({ userId, initialShift = null }: { userId
     setLoading(true);
     setFeedback(null);
     try {
-      const res = await toggleTeacherShiftAction({ userId });
+      // expect: si el turno ya cambió en otro lado (teclado del molinete, otra pestaña), no se invierte.
+      const res = await toggleTeacherShiftAction({ userId, expect: shift ? "CHECK_OUT" : "CHECK_IN" });
       if (!res.success || !res.data) return setFeedback(res.error || "Error al actualizar turno");
       if (res.data.action === "CHECK_IN") {
         setShift(res.data.shift);
         setFeedback("¡Ingreso registrado! Turno en curso.");
+      } else if (res.data.action === "ALREADY_ACTIVE") {
+        setShift(res.data.shift);
+        setFeedback("Ya tenías un turno activo: no se registró otra entrada. Podés marcar la salida.");
       } else {
         setShift(null);
         const mins = res.data.totalMinutes ?? 0;
@@ -67,7 +71,7 @@ export function TeacherShiftToggleCard({ userId, initialShift = null }: { userId
         {shift ? (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#10B981]/15 border border-[#10B981]/40 text-xs font-black text-[#10B981]">
             <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-            Iniciado {inTime} hs ({elapsed})
+            Turno activo • desde {inTime} hs ({elapsed})
           </span>
         ) : (
           <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#2C2D35]/50 text-xs font-bold text-[#8A909A]">
@@ -92,7 +96,7 @@ export function TeacherShiftToggleCard({ userId, initialShift = null }: { userId
         }`}
       >
         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : shift ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-        <span>{shift ? "■ Marcar Salida del Gimnasio" : "▶ Marcar Entrada al Gimnasio"}</span>
+        <span>{shift ? "Turno activo • Marcar salida" : "Marcar entrada al gimnasio"}</span>
       </button>
     </div>
   );

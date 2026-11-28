@@ -23,6 +23,25 @@ export interface RenewalResult {
   from: "VENCIMIENTO" | "HOY";
 }
 
+// Renovación rápida (botón "Renovar +30 días"): para regularizar los desfasajes de la carga inicial.
+// No suma sobre el vencimiento: el período arranca el día del cobro, así quien tenía días de más
+// queda alineado con la fecha en que realmente paga.
+export const QUICK_RENEWAL_DAYS = 30;
+
+export interface QuickRenewalPreview {
+  validUntil: Date;
+  /** Días que cambian respecto del vencimiento actual: negativo = se le descuentan días que tenía de más. */
+  diffDays: number | null;
+}
+
+export function computeQuickRenewal(currentValidUntil: Date | null, now: Date): QuickRenewalPreview {
+  const validUntil = new Date(now.getTime() + QUICK_RENEWAL_DAYS * MS_PER_DAY);
+  return {
+    validUntil,
+    diffDays: currentValidUntil ? calendarDaysBetween(currentValidUntil, validUntil) : null,
+  };
+}
+
 export function computeRenewal(currentValidUntil: Date | null, now: Date, durationDays: number): RenewalResult {
   const period = durationDays * MS_PER_DAY;
   if (!currentValidUntil) return { validUntil: new Date(now.getTime() + period), daysLate: 0, from: "HOY" };

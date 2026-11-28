@@ -4,6 +4,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 export const metadata: Metadata = {
   title: "Iniciar Sesión | Gimnasio Ave Fénix",
   description: "Acceso para operadores y administración del Gimnasio Ave Fénix.",
+  robots: { index: false, follow: false },
 };
 
 export default function LoginPage() {

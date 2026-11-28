@@ -1,3 +1,5 @@
+import { buildWhatsAppUrl } from "@/lib/whatsapp-dispatcher";
+
 export function cn(...classes: Array<string | undefined | null | false>): string {
   return classes.filter(Boolean).join(" ");
 }
@@ -34,17 +36,12 @@ export function formatTimeAR(dateInput: Date | string | null | undefined): strin
   }).format(d);
 }
 
+/**
+ * Enlace wa.me de la web pública (escribirle al gimnasio). Sin un teléfono válido abre WhatsApp para elegir
+ * el contacto. Los avisos a socios del panel usan lib/whatsapp-dispatcher.
+ */
 export function buildWhatsAppLink(phone: string | null | undefined, message: string): string {
-  const cleanPhone = (phone || "").replace(/\D/g, "");
-  const normalizedPhone = cleanPhone.startsWith("54")
-    ? cleanPhone
-    : cleanPhone
-      ? `549${cleanPhone}`
-      : "";
-  const encodedMsg = encodeURIComponent(message);
-  return normalizedPhone
-    ? `https://wa.me/${normalizedPhone}?text=${encodedMsg}`
-    : `https://wa.me/?text=${encodedMsg}`;
+  return buildWhatsAppUrl(phone, message, "auto") ?? `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
 
 export function getMemberPhotoUrl(dni: string, photoFilename?: string | null): string {

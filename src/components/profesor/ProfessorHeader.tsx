@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Flame, Moon, RefreshCw, Sun, UserPlus } from "lucide-react";
+import { Flame, MonitorCheck, MonitorX, Moon, RefreshCw, Sun, UserPlus } from "lucide-react";
 import { LogoutButton } from "@/components/admin/logout-button";
 import { NO_PLANS_HINT } from "@/components/admin/HeaderStats";
 
@@ -16,6 +16,8 @@ interface Props {
   onToggleTheme: () => void;
   onOpenNewMember: () => void;
   canCreateMember: boolean;
+  checkInScreenOnline: boolean;
+  onOpenCheckInScreen: () => void;
 }
 
 export function ProfessorHeader({
@@ -26,6 +28,8 @@ export function ProfessorHeader({
   onToggleTheme,
   onOpenNewMember,
   canCreateMember,
+  checkInScreenOnline,
+  onOpenCheckInScreen,
 }: Props) {
   const ThemeIcon = theme === "light" ? Moon : Sun;
   const themeLabel = theme === "light" ? "Modo oscuro" : "Modo claro";
@@ -45,6 +49,24 @@ export function ProfessorHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-2.5">
+        {checkInScreenOnline ? (
+          <span
+            title="El teclado numérico escribe en la pantalla de ingreso"
+            className="min-h-[48px] px-4 rounded-xl bg-fx-green/10 border border-fx-green/40 text-sm font-bold text-fx-green hidden md:inline-flex items-center gap-2"
+          >
+            <MonitorCheck className="w-5 h-5" />
+            Pantalla de ingreso conectada
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={onOpenCheckInScreen}
+            className="min-h-[48px] px-4 rounded-xl bg-fx-amber/10 border border-fx-amber/50 hover:bg-fx-amber/20 text-sm font-bold text-fx-amber hidden md:inline-flex items-center gap-2 transition-colors cursor-pointer"
+          >
+            <MonitorX className="w-5 h-5" />
+            Abrir pantalla de ingreso
+          </button>
+        )}
         <button type="button" onClick={onRefresh} disabled={isRefreshing} aria-label="Actualizar datos" className={ICON_BTN}>
           <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin text-fx-orange" : ""}`} />
           <span className="hidden sm:inline">Actualizar</span>

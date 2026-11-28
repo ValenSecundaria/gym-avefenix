@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertCircle, BarChart3, CheckCircle2, Search, Users } from "lucide-react";
+import { Activity, AlertCircle, BarChart3, CheckCircle2, Search, Users } from "lucide-react";
 import type { DashboardStats, PlanOption, StaffMemberItem } from "@/types";
 import { useAdminTheme, type AdminTheme } from "@/lib/use-admin-theme";
 import { useAuthSession } from "@/context/auth-session-context";
@@ -10,8 +10,14 @@ import { MetricsPanel } from "@/components/admin/MetricsPanel";
 import { StaffPaymentModal } from "./StaffPaymentModal";
 import { TeacherShiftToggleCard } from "./TeacherShiftToggleCard";
 import { StaffClientsTable } from "./StaffClientsTable";
+import { TeacherLiveFeedTable } from "./TeacherLiveFeedTable";
 import { ProfessorHeader } from "./ProfessorHeader";
 import { useProfessorDashboard } from "./use-professor-dashboard";
+import { useTeacherLiveFeed } from "./use-teacher-live-feed";
+import { useCheckInKeyForwarding } from "@/hooks/use-checkin-key-forwarding";
+import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
+import { usePhotoSync } from "@/lib/offline/use-local-photos";
+import { PendingPhotosNotice } from "@/components/admin/PendingPhotosNotice";
 
 interface Props {
   userId?: string;
@@ -24,14 +30,16 @@ interface Props {
 export function ProfessorDashboardClient({ userId, initialStats, initialPlans, initialTheme, professorName }: Props) {
   const { theme, toggleTheme } = useAdminTheme(initialTheme);
   const { status: authStatus, user } = useAuthSession();
-  const [activeTab, setActiveTab] = useState<"CLIENTS" | "METRICS">("CLIENTS");
+  const [activeTab, setActiveTab] = useState<"LIVE_FEED" | "CLIENTS" | "METRICS">("LIVE_FEED");
   const [isNewMemberOpen, setIsNewMemberOpen] = useState(false);
   const [newMemberFormKey, setNewMemberFormKey] = useState(0);
   const [payingMember, setPayingMember] = useState<StaffMemberItem | null>(null);
 
   const d = useProfessorDashboard(initialStats, initialPlans, authStatus, user);
+  const feed = useTeacherLiveFeed();
   const canCreate = d.plans.length > 0;
-  const effectiveUserId = userId || user?.id || "";
+  const checkInScreenOnline = useCheckInKeyForwarding();
+  usePhotoSync();
 
   return (
     <div data-theme={theme} className="min-h-screen bg-fx-base text-fx-text">
@@ -39,17 +47,17 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
         <ProfessorHeader
           displayName={user?.name || professorName}
           isRefreshing={d.isRefreshing}
-          onRefresh={() => void d.refreshAll()}
+          onRefresh={() => { void d.refreshAll(); void feed.refreshCheckIns(); }}
           theme={theme}
           onToggleTheme={toggleTheme}
-          onOpenNewMember={() => {
-            setNewMemberFormKey((k) => k + 1);
-            setIsNewMemberOpen(true);
-          }}
+          onOpenNewMember={() => { setNewMemberFormKey((k) => k + 1); setIsNewMemberOpen(true); }}
           canCreateMember={canCreate}
+          checkInScreenOnline={checkInScreenOnline}
+          onOpenCheckInScreen={() => void dispatchScreens()}
         />
 
-        {effectiveUserId && <TeacherShiftToggleCard userId={effectiveUserId} />}
+        {(userId || user?.id) && <TeacherShiftToggleCard userId={userId || user?.id || ""} />}
+        <PendingPhotosNotice />
 
         {!canCreate && (
           <div role="status" className="flex items-center gap-2.5 p-4 rounded-2xl bg-fx-amber/15 border border-fx-amber/50 text-sm font-bold text-fx-amber">
@@ -67,8 +75,9 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
 
         <div className="flex flex-col rounded-2xl bg-fx-surface border border-fx-border shadow-lg p-4 sm:p-6 gap-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-fx-border">
-            <div className="flex gap-2" role="tablist">
+            <div className="flex flex-wrap gap-2" role="tablist">
               {[
+                { tab: "LIVE_FEED", label: "Ingresos de Hoy", icon: Activity },
                 { tab: "CLIENTS", label: "Clientes", icon: Users },
                 { tab: "METRICS", label: "Métricas", icon: BarChart3 },
               ].map(({ tab, label, icon: Icon }) => (
@@ -77,13 +86,18 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
                   type="button"
                   role="tab"
                   aria-selected={activeTab === tab}
-                  onClick={() => setActiveTab(tab as "CLIENTS" | "METRICS")}
-                  className={`min-h-[48px] px-5 rounded-xl inline-flex items-center gap-2 text-base font-bold transition-colors cursor-pointer ${
+                  onClick={() => setActiveTab(tab as typeof activeTab)}
+                  className={`min-h-[48px] px-4 sm:px-5 rounded-xl inline-flex items-center gap-2 text-sm sm:text-base font-bold transition-colors cursor-pointer ${
                     activeTab === tab ? "bg-fx-orange text-white" : "text-fx-muted hover:text-fx-text hover:bg-fx-hover"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  {label}
+                  <span>{label}</span>
+                  {tab === "LIVE_FEED" && feed.checkIns.length > 0 && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${activeTab === tab ? "bg-white/20 text-white" : "bg-fx-base text-fx-muted"}`}>
+                      {feed.checkIns.length}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -102,23 +116,22 @@ export function ProfessorDashboardClient({ userId, initialStats, initialPlans, i
             )}
           </div>
 
-          {activeTab === "CLIENTS" ? (
+          {activeTab === "LIVE_FEED" ? (
+            <TeacherLiveFeedTable
+              items={feed.checkIns}
+              isLoading={feed.isLoadingCheckIns}
+            />
+          ) : activeTab === "CLIENTS" ? (
             <StaffClientsTable
               data={d.data}
               statusFilter={d.statusFilter}
-              onChangeFilter={(f) => {
-                d.setStatusFilter(f);
-                d.setPage(1);
-                d.setIsLoading(true);
-              }}
+              onChangeFilter={(f) => { d.setStatusFilter(f); d.setPage(1); d.setIsLoading(true); }}
               isLoading={d.isLoading}
               listError={d.listError}
-              onGoToPage={(p) => {
-                d.setPage(p);
-                d.setIsLoading(true);
-              }}
+              onGoToPage={(p) => { d.setPage(p); d.setIsLoading(true); }}
               onPayMember={setPayingMember}
               canCreateMember={canCreate}
+              onSuccessSync={(msg: string) => { d.setToast(msg); void feed.refreshCheckIns(); void d.refreshAll(); }}
             />
           ) : (
             <div className="hidden lg:block">

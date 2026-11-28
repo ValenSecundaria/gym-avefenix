@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Flame, Lock, User, ArrowLeft, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useAuthSession } from "@/context/auth-session-context";
 import { warmCacheRoutes } from "@/lib/pwa/register-sw";
-import { dispatchScreens } from "@/lib/screens/screen-dispatcher";
+import { dispatchScreens, ensureOnPrimaryScreen } from "@/lib/screens/screen-dispatcher";
 import { ADMIN_HOME, homePathFor } from "@/lib/auth/auth-constants";
 
 export function LoginForm() {
@@ -18,8 +18,14 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsManualLaunch, setNeedsManualLaunch] = useState(false);
+  const [homePath, setHomePath] = useState<string>(ADMIN_HOME);
 
   const isPending = isLoading;
+
+  // Al prender el equipo el login tiene que quedar en la pantalla de la notebook, no en el monitor del socio.
+  useEffect(() => {
+    void ensureOnPrimaryScreen();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,20 +60,17 @@ export function LoginForm() {
         }
       }
 
-      // La cuenta de profesor va a su propio panel, sin pantalla de ingreso.
+      // Cada rol va a su panel (administración o profesor); los dos atienden el mostrador.
       const home = homePathFor(userData);
-      if (home !== ADMIN_HOME) {
-        warmCacheRoutes([home]);
-        router.push(home);
-        router.refresh();
-        return;
-      }
+      setHomePath(home);
 
       // 3. Precalentamiento de rutas en el Service Worker PWA
-      warmCacheRoutes(["/admin", "/check-in"]);
+      warmCacheRoutes([home, "/check-in"]);
 
-      // 4. Despliegue de pantallas (pantalla principal y monitor secundario de Check-in).
-      // Con un solo monitor no se abre: el panel queda al frente.
+      // 4. Despliegue de pantallas para cualquier rol: el panel en la pantalla principal y la
+      // pantalla de ingreso (Check-in) en el monitor secundario. Con un solo monitor no se abre.
+      // (La ventana ya se movió a la pantalla principal al cargar el login: acá no se espera nada más,
+      // así el navegador no bloquea la ventana emergente por haber pasado mucho tiempo desde el clic.)
       const dispatchRes = await dispatchScreens({ skipIfSingleScreen: true });
       if (dispatchRes.popupBlocked) {
         setNeedsManualLaunch(true);
@@ -76,7 +79,7 @@ export function LoginForm() {
       }
 
       // 5. Redirección al panel
-      router.push("/admin");
+      router.push(home);
       router.refresh();
     } catch {
       setError("Error de conexión al intentar iniciar sesión.");
@@ -88,7 +91,7 @@ export function LoginForm() {
   const handleManualLaunch = async () => {
     setIsLoading(true);
     await dispatchScreens();
-    router.push("/admin");
+    router.push(homePath);
     router.refresh();
   };
 
